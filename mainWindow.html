@@ -14,16 +14,16 @@
 </select>
 <button id="button">GO!</button>
 <script>
-  const electron = require('electron')
-  const {ipcRenderer} = electron 
+  const electron = require('electron');
+  const {ipcRenderer} = electron ;
 
-  const btn = document.querySelector('#button')
+  const btn = document.querySelector('#button');
   btn.addEventListener('click', buttonClick);
 
   function buttonClick(){
     const item = document.querySelector('#cars').value;
     ipcRenderer.send('item:select', item);
-  };
+  }
 </script>
 <!-- <a href="http://127.0.0.1:5000/">Go</a> -->
 </body>

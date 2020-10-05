@@ -10,7 +10,7 @@ def hello():
 
 @app.route("/run/<car>")
 def run(car):
-    return f'{car} is your choice!!!'
+    return f'{car} from flask'
 
 
 if __name__ == "__main__":

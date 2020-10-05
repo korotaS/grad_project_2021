@@ -12,51 +12,33 @@ let subpy = null;
 const PY_MODULE = "main.py"; // the name of the main module
 
 const startPythonSubprocess = () => {
-	subpy = require("child_process").spawn("python", [PY_MODULE], {
-		cwd: process.cwd(),
-		detached: true,
-  		stdio: "inherit"
-	});
-	subpy.on('data', function(data) {
-    	process.stdout.write("python script output",data);
-	});
+	subpy = require("child_process").spawn("python", [PY_MODULE]);
+    console.log(`started process at ${subpy.pid}`);
 };
 
-const killPythonSubprocesses = main_pid => {
-  const python_script_name = PY_MODULE;
+function killPythonSubprocess(){
   let cleanup_completed = false;
-  const psTree = require("ps-tree");
-  psTree(main_pid, function(err, children) {
-    let python_pids = children
-      .filter(function(el) {
-        return el.COMMAND == python_script_name;
-      })
-      .map(function(p) {
-        return p.PID;
-      });
-    // kill all the spawned python processes
-    python_pids.forEach(function(pid) {
-      process.kill(pid);
-    });
-    subpy = null;
-    cleanup_completed = true;
-  });
+  if (!subpy.killed)  {
+    console.log(`killing ${subpy.pid}`);
+    subpy.kill();
+  }
+  cleanup_completed = true;
   return new Promise(function(resolve, reject) {
     (function waitForSubProcessCleanup() {
-      if (cleanup_completed) return resolve();
+      cleanup_completed ? resolve() : reject();
       setTimeout(waitForSubProcessCleanup, 30);
     })();
   });
-};
+}
 
 ipcMain.on('item:select', function(e, item){
 	console.log(item);
-	const request = net.request('http://localhost:5000/run/'+item)
+	const request = net.request('http://localhost:5000/run/'+item);
 	request.on('response', (response) => {
 	    response.on('data', (data) => {
 	      console.log(`${data}`)
 	    })
-  	})
+  	});
   	request.end()
 });
 
@@ -110,9 +92,10 @@ app.on("window-all-closed", () => {
   // On macOS it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform !== "darwin") {
-    let main_process_pid = process.pid;
-    killPythonSubprocesses(main_process_pid).then(() => {
+    killPythonSubprocess().then(() => {
       app.quit();
+    }).catch(function () {
+      console.log(`rejected`)
     });
   }
 });
@@ -123,11 +106,8 @@ app.on("activate", () => {
   if (subpy == null) {
     startPythonSubprocess();
   }
-  if (win === null) {
-    createWindow();
-  }
 });
 
 app.on("quit", function() {
-  // do some additional cleanup
+    killPythonSubprocess()
 });
