@@ -1,0 +1,23 @@
+{
+  "name": "grad_project_2021",
+  "version": "1.0.0",
+  "description": "Graduation project at HSE SE",
+  "main": "index.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/korotaS/grad_project_2021.git"
+  },
+  "author": "korotaS",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/korotaS/grad_project_2021/issues"
+  },
+  "homepage": "https://github.com/korotaS/grad_project_2021#readme",
+  "dependencies": {
+    "electron": "^10.1.3",
+    "ps-tree": "^1.2.0"
+  }
+}
