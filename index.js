@@ -31,16 +31,35 @@ function killPythonSubprocess(){
   });
 }
 
+
 ipcMain.on('item:select', function(e, item){
-	console.log(item);
-	const request = net.request('http://localhost:5000/run/'+item);
+    console.log(item);
+	const request = net.request('http://localhost:5000/run/123');
 	request.on('response', (response) => {
 	    response.on('data', (data) => {
 	      console.log(`${data}`)
+	      startChecking();
 	    })
   	});
   	request.end()
 });
+
+function startChecking() {
+      let rl = setInterval(function () {
+        const request = net.request('http://localhost:5000/test');
+        request.on('response', (response) => {
+            response.on('data', (data) => {
+              let json = JSON.parse(data.toString());
+              console.log(`${json.done}, arr: ${json.data}`);
+              if (json.done) {
+                clearInterval(rl);
+                console.log(`done!`)
+              }
+            })
+        });
+        request.end()
+      }, 100)
+}
 
 const createMainWindow = (x_custom, y_custom) => {
   // Create the browser mainWindow
