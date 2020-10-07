@@ -1,12 +1,13 @@
 "use strict";
 
-const {app, BrowserWindow, ipcMain, net, screen} = require("electron");
+const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
 const url = require('url');
 
-const PY_MODULE = "back/main.py";
+const PY_MODULE = "src/python/main.py";
 const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
+const DEV = false;
 
 // Keep a global reference of the mainWindow object, if you don't, the mainWindow will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -38,11 +39,11 @@ const createMainWindow = (x_custom, y_custom) => {
     });
 
     // Load the index page
-    mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'front/mainWindow.html'),
-        protocol: 'file:',
-        slashes: true
-    }));
+    mainWindow.loadURL(
+        DEV
+        ? "http://localhost:3000"
+        : `file://${path.join(__dirname, "../build/index.html")}`
+    );
 
     // Open the DevTools.
     //mainWindow.webContents.openDevTools();
@@ -123,7 +124,7 @@ function killPythonSubprocess() {
     if (!SERVER_RUNNING) {
         let cleanup_completed = false;
         if (!subpy.killed) {
-            console.log(`killing ${subpy.pid}`);
+            console.log(`killing python subprocess with pid=${subpy.pid}`);
             subpy.kill();
         }
         cleanup_completed = true;
@@ -153,7 +154,7 @@ app.on("window-all-closed", () => {
 });
 
 app.on("quit", function () {
-    killPythonSubprocess()
+    // last chance to clear something
 });
 
 // -----END OF QUITING-----
