@@ -5,6 +5,12 @@
   "description": "Graduation project at HSE SE",
   "main": "public/electron.js",
   "homepage": "./",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/korotaS/grad_project_2021.git"
+  },
+  "author": "korotaS",
+  "license": "MIT",
   "dependencies": {
     "@testing-library/jest-dom": "^4.2.4",
     "@testing-library/react": "^9.5.0",
