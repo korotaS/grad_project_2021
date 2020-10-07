@@ -1,10 +1,10 @@
 "use strict";
 
-const {app, BrowserWindow, ipcMain, net, screen} = require("electron");
+const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
 const url = require('url');
 
-const PY_MODULE = "back/main.py";
+const PY_MODULE = "src/python/main.py";
 const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
 
@@ -39,7 +39,7 @@ const createMainWindow = (x_custom, y_custom) => {
 
     // Load the index page
     mainWindow.loadURL(url.format({
-        pathname: path.join(__dirname, 'front/mainWindow.html'),
+        pathname: path.join(__dirname, 'public/index.html'),
         protocol: 'file:',
         slashes: true
     }));
