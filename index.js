@@ -4,41 +4,56 @@ const { app, BrowserWindow, ipcMain, net, screen } = require("electron");
 const path = require("path");
 const url = require('url');
 
-// Keep a global reference of the mainWindowdow object, if you don't, the mainWindowdow will
+const PY_MODULE = "back/main.py";
+const SERVER_RUNNING = false;
+
+// Keep a global reference of the mainWindow object, if you don't, the mainWindow will
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let subpy = null;
-
-const PY_MODULE = "main.py"; // the name of the main module
+let PROJECT_NAME = '';
+let LAST_EPOCH = 0;
 
 const startPythonSubprocess = () => {
-	subpy = require("child_process").spawn("python", [PY_MODULE]);
-    console.log(`started process at ${subpy.pid}`);
+    if (!SERVER_RUNNING){
+      	subpy = require("child_process").spawn("python", [PY_MODULE]);
+        console.log(`started process at ${subpy.pid}`);
+    }
 };
 
 function killPythonSubprocess(){
-  let cleanup_completed = false;
-  if (!subpy.killed)  {
-    console.log(`killing ${subpy.pid}`);
-    subpy.kill();
+  if (!SERVER_RUNNING){
+      let cleanup_completed = false;
+      if (!subpy.killed)  {
+        console.log(`killing ${subpy.pid}`);
+        subpy.kill();
+      }
+      cleanup_completed = true;
+      return new Promise(function(resolve, reject) {
+        (function waitForSubProcessCleanup() {
+          cleanup_completed ? resolve() : reject();
+          setTimeout(waitForSubProcessCleanup, 30);
+        })();
+      });
   }
-  cleanup_completed = true;
   return new Promise(function(resolve, reject) {
-    (function waitForSubProcessCleanup() {
-      cleanup_completed ? resolve() : reject();
-      setTimeout(waitForSubProcessCleanup, 30);
-    })();
+      (function waitForSubProcessCleanup() {
+          resolve();
+      })();
   });
 }
 
 
-ipcMain.on('item:select', function(e, item){
-    console.log(item);
-	const request = net.request('http://localhost:5000/run/123');
+ipcMain.on('startTraining', function(e, item){
+    PROJECT_NAME = item;
+	const request = net.request('http://localhost:5000/runTrain/' + PROJECT_NAME);
 	request.on('response', (response) => {
 	    response.on('data', (data) => {
-	      console.log(`${data}`)
-	      startChecking();
+	      let json = JSON.parse(data.toString());
+	      if (json.status === 'ready') {
+            mainWindow.webContents.send('changeStatus', json.status);
+            startChecking();
+          }
 	    })
   	});
   	request.end()
@@ -46,19 +61,23 @@ ipcMain.on('item:select', function(e, item){
 
 function startChecking() {
       let rl = setInterval(function () {
-        const request = net.request('http://localhost:5000/test');
+        const request = net.request('http://localhost:5000/trainStatus/'+PROJECT_NAME+'/'+LAST_EPOCH);
         request.on('response', (response) => {
             response.on('data', (data) => {
               let json = JSON.parse(data.toString());
-              console.log(`${json.done}, arr: ${json.data}`);
-              if (json.done) {
+              mainWindow.webContents.send('changeStatus', json.status);
+              if (json.status === 'done') {
+                mainWindow.webContents.send('addEpochs', JSON.stringify(json.new_epochs));
                 clearInterval(rl);
-                console.log(`done!`)
+              }
+              else if (!!json.new_epochs) {
+                LAST_EPOCH = json.new_epochs[json.new_epochs.length-1].epoch_num;
+                mainWindow.webContents.send('addEpochs', JSON.stringify(json.new_epochs));
               }
             })
         });
         request.end()
-      }, 100)
+      }, 1500)
 }
 
 const createMainWindow = (x_custom, y_custom) => {
@@ -76,7 +95,7 @@ const createMainWindow = (x_custom, y_custom) => {
 
   // Load the index page
   mainWindow.loadURL(url.format({
-    pathname: path.join(__dirname, 'mainWindow.html'),
+    pathname: path.join(__dirname, 'front/mainWindow.html'),
     protocol: 'file:',
     slashes:true
   }));
