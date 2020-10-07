@@ -7,6 +7,8 @@ import os
 class TrainThread(Thread):
     def __init__(self, project_name):
         super().__init__()
+        if not os.path.exists('./projects/'):
+            os.mkdir('./projects/')
         self.project_folder = os.path.join('./projects/', project_name)
         if not os.path.exists(self.project_folder):
             os.mkdir(self.project_folder)
