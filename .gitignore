@@ -3,3 +3,5 @@
 /.idea/
 /projects/
 /build/
+.DS_Store
+__pycache__/

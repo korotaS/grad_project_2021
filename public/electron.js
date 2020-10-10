@@ -2,12 +2,11 @@
 
 const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
-const url = require('url');
 
 const PY_MODULE = "src/python/main.py";
 const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
-const DEV = false;
+const DEV = true;
 
 // Keep a global reference of the mainWindow object, if you don't, the mainWindow will
 // be closed automatically when the JavaScript object is garbage collected.

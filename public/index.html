@@ -4,41 +4,5 @@
     <title>React App</title>
   </head>
   <body>
-    <div id="root"></div>
-    <h1>TEST</h1>
-    <h2>STATUS: </h2>
-    <h2 id="status">ready</h2>
-    <input type="text" id="project_name" value="project_1">
-    <button id="button">Start training!</button>
-    <script>
-        const electron = require('electron');
-        const {ipcRenderer} = electron;
-
-        const btn = document.querySelector('#button');
-        btn.addEventListener('click', function () {
-            const item = document.querySelector('#project_name').value;
-            ipcRenderer.send('startTraining', item);
-        });
-
-        ipcRenderer.on('changeStatus', function (e, item) {
-            document.getElementById("status").innerHTML = item
-        });
-
-        ipcRenderer.on('addEpochs', function (e, epochs) {
-            let epochsArray = JSON.parse(epochs)
-            epochsArray.forEach(epoch => {
-                let ul = document.getElementById("epochList");
-                let li = document.createElement("li");
-                li.appendChild(document.createTextNode(
-                    `Epoch: ${epoch.epoch_num}, loss: ${epoch.loss}, metrics: ${epoch.metrics}`
-                ));
-                ul.appendChild(li);
-            })
-        });
-
-    </script>
-    <h2>Epochs:</h2>
-    <ul id="epochList">
-    </ul>
   </body>
 </html>

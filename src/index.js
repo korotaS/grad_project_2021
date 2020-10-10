@@ -1,13 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './react/index.css';
-import App from './react/App';
+// import App from './react/App';
+import Epochs from './react/Epochs'
 import * as serviceWorker from './react/serviceWorker';
 
 ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
+    <Epochs />,
   document.getElementById('root')
 );
 
