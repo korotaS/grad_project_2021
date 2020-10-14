@@ -3,10 +3,16 @@ import React, { Component } from 'react';
 const {ipcRenderer} = window.require("electron");
 
 class Epochs extends Component {
-    state = {
-        epochs: [],
-        status: 'ready',
-        project_name: 'project_1'
+    constructor(props) {
+        super(props);
+        this.state = {
+            epochs: [],
+            status: 'ready',
+            project_name: 'project_1'
+        }
+
+        this.buttonClick = this.buttonClick.bind(this);
+        this.changeProjectName = this.changeProjectName.bind(this);
     }
 
     buttonClick(project_name) {
@@ -17,7 +23,7 @@ class Epochs extends Component {
         this.setState(state => {
                 state.status = event.target.value;
                 return state;
-            })
+        })
     }
 
     componentDidMount() {

@@ -115,6 +115,10 @@ function checkStatus() {
     }, 1500)
 }
 
+ipcMain.on('submitChoice1', function (e, item) {
+    console.log(item);
+});
+
 // -----END OF RUNTIME-----
 
 // -----QUITING-----
