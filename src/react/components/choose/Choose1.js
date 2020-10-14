@@ -6,7 +6,7 @@ class Choose1 extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            choice: 'cv',
+            taskClass: 'cv',
             pushed: false
         }
 
@@ -20,12 +20,12 @@ class Choose1 extends Component {
             state.pushed = true;
             return state
         });
-        ipcRenderer.send('submitChoice1', this.state.choice);
+        ipcRenderer.send('submitChoice1', this.state.taskClass);
     }
 
     changeChoice(event){
         this.setState(state => {
-            state.choice = event.target.value;
+            state.taskClass = event.target.value;
             return state
         })
     }
