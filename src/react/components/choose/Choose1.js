@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Button, ButtonGroup, ToggleButton } from 'react-bootstrap';
 
 const {ipcRenderer} = window.require("electron");
 
@@ -8,7 +9,7 @@ class Choose1 extends Component {
         this.state = {
             taskClass: 'cv',
             pushed: false
-        }
+        };
 
         this.submitChoice = this.submitChoice.bind(this);
         this.changeChoice = this.changeChoice.bind(this);
@@ -38,21 +39,37 @@ class Choose1 extends Component {
         return (
             <div className="Choose1">
                 <header className="choose1">
-                    <form name="choice1Form">
-                        <p>CHOOSE YOUR FIGHTER</p>
-                        <div onChange={(event) => {
-                            event.persist();
-                            this.changeChoice(event)
-                        }}>
-                            <input type="radio" name="choice1" id="choice_cv" value="cv" defaultChecked/>
-                                <label htmlFor="choice_cv">CV</label>
-
-                            <input type="radio" name="choice1" id="choice_nlp" value="nlp"/>
-                                <label htmlFor="choice_nlp">NLP</label>
-
-                            <button type="submit" onClick={this.submitChoice}>Submit</button>
-                        </div>
-                    </form>
+                    <ButtonGroup toggle>
+                        <ToggleButton
+                            type="radio"
+                            variant="secondary"
+                            value={'cv'}
+                            checked={this.state.taskClass === 'cv'}
+                            onChange={(event) => {
+                                event.persist();
+                                this.changeChoice(event)
+                            }}
+                        >
+                            {'CV'}
+                        </ToggleButton>
+                        <ToggleButton
+                            type="radio"
+                            variant="secondary"
+                            value={'nlp'}
+                            checked={this.state.taskClass === 'nlp'}
+                            onChange={(event) => {
+                                event.persist();
+                                this.changeChoice(event)
+                            }}
+                        >
+                            {'NLP'}
+                        </ToggleButton>
+                    </ButtonGroup>
+                    <Button
+                        variant="success"
+                        type="submit"
+                        onClick={this.submitChoice}
+                    >Submit</Button>
                 </header>
             </div>
         );
