@@ -18,7 +18,7 @@ ReactDOM.render(
 );
 ipcRenderer.on('afterChoice1', function (e, item) {
     ReactDOM.render(
-        <Choose2 taskClass={item}/>,
+        <Choose2 {...item}/>,
         document.getElementById('choose2')
     );
 });

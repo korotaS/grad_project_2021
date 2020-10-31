@@ -57,11 +57,12 @@ class TrainThread(Thread):
 
         model.train()
         optimizer = optim.Adam(model.parameters(), lr=0.001)
+        NUM_BATCHES = 10
 
         for epoch in range(10):
             epoch_loss = 0
             for batch, (data, target) in enumerate(train_loader):
-                if batch >= 50:
+                if batch >= NUM_BATCHES:
                     break
                 optimizer.zero_grad()
                 output = model(data)
@@ -69,8 +70,9 @@ class TrainThread(Thread):
                 epoch_loss += loss.item()
                 loss.backward()
                 optimizer.step()
+                print(epoch, batch, epoch_loss)
 
-            epoch_loss /= len(train_loader)
+            epoch_loss /= NUM_BATCHES
 
             epochs = self.read_log()
             epochs['epochs'].append({'loss': epoch_loss,

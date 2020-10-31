@@ -9,6 +9,7 @@ class Choose3 extends Component {
         this.state = {
             taskClass: props.taskClass,
             taskSubClass: props.taskSubClass,
+            projectName: props.projectName,
             datasetName: 'MNIST',
             pushed: false,
         };
@@ -22,6 +23,7 @@ class Choose3 extends Component {
             return {
                 taskClass: props.taskClass,
                 taskSubClass: props.taskClass,
+                projectName: props.projectName,
                 pushed: false,
                 datasetName: 'MNIST', //TODO: change it to relevant task subclass!!!
             }
@@ -38,7 +40,8 @@ class Choose3 extends Component {
         ipcRenderer.send('submitChoice3', {
             taskClass: this.state.taskClass,
             taskSubClass: this.state.taskSubClass,
-            datasetName: this.state.datasetName
+            datasetName: this.state.datasetName,
+            projectName: this.state.projectName,
         });
     }
 

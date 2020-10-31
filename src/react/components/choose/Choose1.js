@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, ButtonGroup, ToggleButton } from 'react-bootstrap';
+import { Button, ButtonGroup, ToggleButton, InputGroup, FormControl } from 'react-bootstrap';
 
 const {ipcRenderer} = window.require("electron");
 
@@ -8,11 +8,13 @@ class Choose1 extends Component {
         super(props);
         this.state = {
             taskClass: 'cv',
+            projectName: 'Project1',
             pushed: false
         };
 
         this.submitChoice = this.submitChoice.bind(this);
         this.changeChoice = this.changeChoice.bind(this);
+        this.changeProjectName = this.changeProjectName.bind(this);
     }
 
     submitChoice(event) {
@@ -21,12 +23,22 @@ class Choose1 extends Component {
             state.pushed = true;
             return state
         });
-        ipcRenderer.send('submitChoice1', this.state.taskClass);
+        ipcRenderer.send('submitChoice1', {
+            projectName: this.state.projectName,
+            taskClass: this.state.taskClass
+        });
     }
 
     changeChoice(event){
         this.setState(state => {
             state.taskClass = event.target.value;
+            return state
+        })
+    }
+
+    changeProjectName(event){
+        this.setState(state => {
+            state.projectName = event.target.value;
             return state
         })
     }
@@ -39,6 +51,16 @@ class Choose1 extends Component {
         return (
             <div className="Choose1">
                 <header className="choose1">
+                    <InputGroup className="w-25 projectNameInput">
+                        <FormControl
+                            value={this.state.projectName}
+                            onChange={(event) => {
+                                event.persist();
+                                this.changeProjectName(event)
+                            }}
+                            xs="auto"
+                        />
+                    </InputGroup>
                     <ButtonGroup toggle>
                         <ToggleButton
                             type="radio"

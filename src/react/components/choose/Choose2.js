@@ -8,6 +8,7 @@ class Choose2 extends Component {
         super(props);
         this.state = {
             taskClass: props.taskClass,
+            projectName: props.projectName,
             taskSubClass: props.taskClass === 'cv' ? 'imclf' : 'txtclf',
             pushed: false,
         };
@@ -20,6 +21,7 @@ class Choose2 extends Component {
         if (props.taskClass !== state.taskClass) {
             return {
                 taskClass: props.taskClass,
+                projectName: props.projectName,
                 taskSubClass: props.taskClass === 'cv' ? 'imclf' : 'txtclf',
                 pushed: false,
             }
@@ -35,7 +37,8 @@ class Choose2 extends Component {
         });
         ipcRenderer.send('submitChoice2', {
             taskClass: this.state.taskClass,
-            taskSubClass: this.state.taskSubClass
+            taskSubClass: this.state.taskSubClass,
+            projectName: this.state.projectName
         });
     }
 
