@@ -23,7 +23,7 @@ class Choose3 extends Component {
                 taskClass: props.taskClass,
                 taskSubClass: props.taskClass,
                 pushed: false,
-                datasetName: 'MNIST', //change it to relevant task subclass!!!
+                datasetName: 'MNIST', //TODO: change it to relevant task subclass!!!
             }
         }
         return state
@@ -35,7 +35,6 @@ class Choose3 extends Component {
             state.pushed = true;
             return state
         });
-        console.log(this.state);
         ipcRenderer.send('submitChoice3', {
             taskClass: this.state.taskClass,
             taskSubClass: this.state.taskSubClass,

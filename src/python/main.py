@@ -1,7 +1,7 @@
 import os
 import json
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 
 from train import TrainThread
 
@@ -29,12 +29,17 @@ def train_status(project_name, last_epoch):
     return jsonify(response)
 
 
-@app.route("/runTrain/<project_name>")
-def run(project_name):
-    global STATUS
-    thread = TrainThread(project_name)
-    thread.start()
-    return jsonify({'status': STATUS})
+@app.route("/runTrain", methods=['POST'])
+def run_train():
+    return jsonify({'status': 'success'})
+
+
+# @app.route("/runTrain/<project_name>")
+# def run(project_name):
+#     global STATUS
+#     thread = TrainThread(project_name)
+#     thread.start()
+#     return jsonify({'status': STATUS})
 
 
 if __name__ == "__main__":

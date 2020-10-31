@@ -1,12 +1,10 @@
-"use strict";
-
 const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
 
 const PY_MODULE = "src/python/main.py";
 const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
-const DEV = true;
+const DEV = false;
 
 // Keep a global reference of the mainWindow object, if you don't, the mainWindow will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -124,7 +122,29 @@ ipcMain.on('submitChoice2', function (e, item) {
 });
 
 ipcMain.on('submitChoice3', function (e, item) {
-    console.log(item);
+    let http = require('http');
+    let post_data = JSON.stringify(item);
+
+    let post_options = {
+          host: 'localhost',
+          port: '5000',
+          path: '/runTrain',
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'Content-Length': post_data.length
+          }
+    };
+
+    let post_req = http.request(post_options, function(res) {
+          res.setEncoding('utf8');
+          res.on('data', function (chunk) {
+              console.log('Response: ' + chunk);
+          });
+    });
+
+    post_req.write(post_data);
+    post_req.end();
 });
 
 // -----END OF RUNTIME-----
