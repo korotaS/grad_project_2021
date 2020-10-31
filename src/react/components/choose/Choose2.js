@@ -25,7 +25,7 @@ class Choose2 extends Component {
             }
         }
         return state;
-      }
+    }
 
     submitChoice(event) {
         event.preventDefault();
@@ -33,7 +33,10 @@ class Choose2 extends Component {
             state.pushed = true;
             return state
         });
-        ipcRenderer.send('submitChoice2', [this.state.taskClass, this.state.taskSubClass]);
+        ipcRenderer.send('submitChoice2', {
+            taskClass: this.state.taskClass,
+            taskSubClass: this.state.taskSubClass
+        });
     }
 
     changeChoice(event){

@@ -120,7 +120,11 @@ ipcMain.on('submitChoice1', function (e, item) {
 });
 
 ipcMain.on('submitChoice2', function (e, item) {
-    // console.log(item);
+    mainWindow.webContents.send('afterChoice2', item);
+});
+
+ipcMain.on('submitChoice3', function (e, item) {
+    console.log(item);
 });
 
 // -----END OF RUNTIME-----

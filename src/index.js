@@ -4,6 +4,7 @@ import './react/index.css';
 import Epochs from './react/components/epochs/Epochs'
 import Choose1 from "./react/components/choose/Choose1";
 import Choose2 from "./react/components/choose/Choose2";
+import Choose3 from "./react/components/choose/Choose3";
 import * as serviceWorker from './react/serviceWorker';
 const {ipcRenderer} = window.require("electron");
 
@@ -19,6 +20,12 @@ ipcRenderer.on('afterChoice1', function (e, item) {
     ReactDOM.render(
         <Choose2 taskClass={item}/>,
         document.getElementById('choose2')
+    );
+});
+ipcRenderer.on('afterChoice2', function (e, item) {
+    ReactDOM.render(
+        <Choose3 taskClass={item.taskClass} taskSubClass={item.taskSubClass}/>,
+        document.getElementById('choose3')
     );
 });
 
