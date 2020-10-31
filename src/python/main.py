@@ -31,6 +31,11 @@ def train_status(project_name, last_epoch):
 
 @app.route("/runTrain", methods=['POST'])
 def run_train():
+    data = request.json
+    project_name = data['taskSubClass'] + '_' + data['datasetName']
+    global STATUS
+    thread = TrainThread(project_name, data)
+    thread.start()
     return jsonify({'status': 'success'})
 
 
