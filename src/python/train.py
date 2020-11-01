@@ -14,10 +14,11 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class TrainThread(Thread):
-    def __init__(self, project_name, data):
+    def __init__(self, data):
         super().__init__()
         self.status = 'NOT INITIALIZED'
-        self.dataset_name = data['datasetName']
+        self.dataset_folder = data['datasetFolder']
+        self.project_name = data['projectName']
         if not os.path.exists('./projects/'):
             os.mkdir('./projects/')
         self.project_folder = os.path.join('./projects/', project_name)
@@ -41,7 +42,7 @@ class TrainThread(Thread):
 
     def train(self):
         try:
-            dataset_class = getattr(datasets, self.dataset_name)
+            dataset_class = getattr(datasets, self.dataset_folder)
         except AttributeError:
             dataset_class = datasets.MNIST
 

@@ -2,7 +2,7 @@ const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = true;
+const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
 const DEV = true;
 
@@ -25,13 +25,14 @@ const startPythonSubprocess = () => {
 const createMainWindow = (x_custom, y_custom) => {
     // Create the browser mainWindow
     mainWindow = new BrowserWindow({
-        width: 800,
+        width: 1200,
         height: 600,
         x: x_custom,
         y: y_custom,
         resizeable: true,
         webPreferences: {
-            nodeIntegration: true
+            nodeIntegration: true,
+            enableRemoteModule: true
         }
     });
 

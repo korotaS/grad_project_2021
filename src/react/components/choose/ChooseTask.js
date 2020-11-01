@@ -8,7 +8,7 @@ class ChooseTask extends Component {
         super(props);
         this.state = {
             taskClass: 'cv',
-            projectName: 'Project1',
+            projectName: 'project_1',
             pushed: false
         };
 

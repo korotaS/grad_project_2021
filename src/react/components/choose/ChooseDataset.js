@@ -1,5 +1,7 @@
-import React, { Component } from 'react';
-import { Button, Form, Col } from 'react-bootstrap';
+import React, {Component} from 'react';
+import {Button, Form, Col, FormLabel} from 'react-bootstrap';
+
+const {dialog} = window.require('electron').remote;
 
 const {ipcRenderer} = window.require("electron");
 
@@ -10,22 +12,23 @@ class ChooseDataset extends Component {
             taskClass: props.taskClass,
             taskSubClass: props.taskSubClass,
             projectName: props.projectName,
-            datasetName: 'MNIST',
+            datasetFolder: '',
             pushed: false,
         };
 
         this.submitChoice = this.submitChoice.bind(this);
-        this.changeChoice = this.changeChoice.bind(this);
+        this.chooseDir = this.chooseDir.bind(this);
+        this.getCurrentDatasetFolder = this.getCurrentDatasetFolder.bind(this);
     }
 
     static getDerivedStateFromProps(props, state) {
-        if(props.taskClass !== state.taskClass || props.taskSubClass !== state.taskSubClass){
+        if (props.taskClass !== state.taskClass || props.taskSubClass !== state.taskSubClass) {
             return {
                 taskClass: props.taskClass,
                 taskSubClass: props.taskClass,
                 projectName: props.projectName,
                 pushed: false,
-                datasetName: 'MNIST', //TODO: change it to relevant task subclass!!!
+                datasetFolder: ''
             }
         }
         return state
@@ -33,23 +36,37 @@ class ChooseDataset extends Component {
 
     submitChoice(event) {
         event.preventDefault();
-        this.setState(state => {
-            state.pushed = true;
-            return state
-        });
-        ipcRenderer.send('submitChoice3', {
-            taskClass: this.state.taskClass,
-            taskSubClass: this.state.taskSubClass,
-            datasetName: this.state.datasetName,
-            projectName: this.state.projectName,
-        });
+        console.log(this.state)
+        if (this.state.datasetFolder === "") {
+            alert("Choose dataset folder please!")
+        } else {
+            this.setState(state => {
+                state.pushed = true;
+                return state
+            });
+            ipcRenderer.send('submitChoice3', {
+                taskClass: this.state.taskClass,
+                taskSubClass: this.state.taskSubClass,
+                datasetFolder: this.state.datasetFolder,
+                projectName: this.state.projectName,
+            });
+        }
     }
 
-    changeChoice(event){
+    chooseDir(event) {
+        event.preventDefault();
+        let paths = dialog.showOpenDialogSync({
+            properties: ['openDirectory'],
+            defaultPath: '.'
+        });
         this.setState(state => {
-            state.datasetName = event.target.value;
+            state.datasetFolder = paths[0];
             return state
         })
+    }
+
+    getCurrentDatasetFolder() {
+        return this.state.datasetFolder === "" ? "No selected folder" : this.state.datasetFolder;
     }
 
     componentDidMount() {
@@ -63,21 +80,17 @@ class ChooseDataset extends Component {
                     <Form>
                         <Form.Row className="align-items-center">
                             <Col xs="auto">
-                                <Form.Control
-                                    as="select" id={'selectDataset'}
-                                    onChange={(event) => {
-                                        event.persist();
-                                        this.changeChoice(event)
-                                    }}>
-                                  <option value={'MNIST'}>MNIST</option>
-                                  <option value={'CIFAR10'}>CIFAR10</option>
-                                </Form.Control>
+                                <Button
+                                    variant="success" type="submit"
+                                    onClick={this.chooseDir}
+                                >choose path</Button>
                             </Col>
                             <Col xs="auto">
                                 <Button
                                     variant="success" type="submit" onClick={this.submitChoice}
                                 >Submit</Button>
                             </Col>
+                            <FormLabel>{this.getCurrentDatasetFolder()}</FormLabel>
                         </Form.Row>
                     </Form>
                 </header>
