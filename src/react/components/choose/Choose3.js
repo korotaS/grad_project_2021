@@ -64,8 +64,7 @@ class Choose3 extends Component {
                         <Form.Row className="align-items-center">
                             <Col xs="auto">
                                 <Form.Control
-                                    as="select"
-                                    id={'selectDataset'}
+                                    as="select" id={'selectDataset'}
                                     onChange={(event) => {
                                         event.persist();
                                         this.changeChoice(event)
@@ -76,9 +75,7 @@ class Choose3 extends Component {
                             </Col>
                             <Col xs="auto">
                                 <Button
-                                    variant="success"
-                                    type="submit"
-                                    onClick={this.submitChoice}
+                                    variant="success" type="submit" onClick={this.submitChoice}
                                 >Submit</Button>
                             </Col>
                         </Form.Row>

@@ -58,15 +58,11 @@ class Choose1 extends Component {
                                 event.persist();
                                 this.changeProjectName(event)
                             }}
-                            xs="auto"
                         />
                     </InputGroup>
                     <ButtonGroup toggle>
                         <ToggleButton
-                            type="radio"
-                            variant="secondary"
-                            value={'cv'}
-                            checked={this.state.taskClass === 'cv'}
+                            type="radio" variant="secondary" value={'cv'} checked={this.state.taskClass === 'cv'}
                             onChange={(event) => {
                                 event.persist();
                                 this.changeChoice(event)
@@ -75,10 +71,7 @@ class Choose1 extends Component {
                             {'CV'}
                         </ToggleButton>
                         <ToggleButton
-                            type="radio"
-                            variant="secondary"
-                            value={'nlp'}
-                            checked={this.state.taskClass === 'nlp'}
+                            type="radio" variant="secondary" value={'nlp'} checked={this.state.taskClass === 'nlp'}
                             onChange={(event) => {
                                 event.persist();
                                 this.changeChoice(event)
@@ -88,9 +81,7 @@ class Choose1 extends Component {
                         </ToggleButton>
                     </ButtonGroup>
                     <Button
-                        variant="success"
-                        type="submit"
-                        onClick={this.submitChoice}
+                        variant="success" type="submit" onClick={this.submitChoice}
                     >Submit</Button>
                 </header>
             </div>

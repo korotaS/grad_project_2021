@@ -62,11 +62,8 @@ class Choose2 extends Component {
                             <Form.Row className="align-items-center">
                                 <Col xs="auto">
                                     <Form.Check
-                                    type={'radio'}
-                                    id={'choiceImclf'}
-                                    label={'Image classification'}
-                                    value={'imclf'}
-                                    checked={this.state.taskSubClass === 'imclf'}
+                                    type={'radio'} id={'choiceImclf'} label={'Image classification'}
+                                    value={'imclf'} checked={this.state.taskSubClass === 'imclf'}
                                     onChange={(event) => {
                                         event.persist();
                                         this.changeChoice(event)
@@ -75,11 +72,8 @@ class Choose2 extends Component {
                                 </Col>
                                 <Col xs="auto">
                                     <Form.Check
-                                    type={'radio'}
-                                    id={'choiceImsgm'}
-                                    label={'Image segmentation'}
-                                    value={'imsgm'}
-                                    checked={this.state.taskSubClass === 'imsgm'}
+                                    type={'radio'} id={'choiceImsgm'} label={'Image segmentation'}
+                                    value={'imsgm'} checked={this.state.taskSubClass === 'imsgm'}
                                     onChange={(event) => {
                                         event.persist();
                                         this.changeChoice(event)
@@ -88,11 +82,8 @@ class Choose2 extends Component {
                                 </Col>
                                 <Col xs="auto">
                                     <Form.Check
-                                    type={'radio'}
-                                    id={'choiceObjdet'}
-                                    label={'Object detection'}
-                                    value={'objdet'}
-                                    checked={this.state.taskSubClass === 'objdet'}
+                                    type={'radio'} id={'choiceObjdet'} label={'Object detection'}
+                                    value={'objdet'} checked={this.state.taskSubClass === 'objdet'}
                                     onChange={(event) => {
                                         event.persist();
                                         this.changeChoice(event)
@@ -101,9 +92,7 @@ class Choose2 extends Component {
                                 </Col>
                                 <Col xs="auto">
                                     <Button
-                                        variant="success"
-                                        type="submit"
-                                        onClick={this.submitChoice}
+                                        variant="success" type="submit" onClick={this.submitChoice}
                                     >Submit</Button>
                                 </Col>
                             </Form.Row>
@@ -120,11 +109,8 @@ class Choose2 extends Component {
                             <Form.Row className="align-items-center">
                                 <Col xs="auto">
                                     <Form.Check
-                                    type={'radio'}
-                                    id={'choiceTxtclf'}
-                                    label={'Test classification'}
-                                    value={'txtclf'}
-                                    checked={this.state.taskSubClass === 'txtclf'}
+                                    type={'radio'} id={'choiceTxtclf'} label={'Test classification'}
+                                    value={'txtclf'} checked={this.state.taskSubClass === 'txtclf'}
                                     onChange={(event) => {
                                         event.persist();
                                         this.changeChoice(event)
@@ -133,11 +119,8 @@ class Choose2 extends Component {
                                 </Col>
                                 <Col xs="auto">
                                     <Form.Check
-                                    type={'radio'}
-                                    id={'choiceNer'}
-                                    label={'Named entity recognition'}
-                                    value={'ner'}
-                                    checked={this.state.taskSubClass === 'ner'}
+                                    type={'radio'} id={'choiceNer'} label={'Named entity recognition'}
+                                    value={'ner'} checked={this.state.taskSubClass === 'ner'}
                                     onChange={(event) => {
                                         event.persist();
                                         this.changeChoice(event)
@@ -146,9 +129,7 @@ class Choose2 extends Component {
                                 </Col>
                                 <Col xs="auto">
                                     <Button
-                                        variant="success"
-                                        type="submit"
-                                        onClick={this.submitChoice}
+                                        variant="success" type="submit" onClick={this.submitChoice}
                                     >Submit</Button>
                                 </Col>
                             </Form.Row>
