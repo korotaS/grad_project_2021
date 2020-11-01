@@ -128,7 +128,7 @@ ipcMain.on('submitChoice3', function (e, item) {
     let post_options = {
           host: 'localhost',
           port: '5000',
-          path: '/runTrain',
+          path: '/init',
           method: 'POST',
           headers: {
               'Content-Type': 'application/json',
@@ -138,8 +138,11 @@ ipcMain.on('submitChoice3', function (e, item) {
 
     let post_req = http.request(post_options, function(res) {
           res.setEncoding('utf8');
-          res.on('data', function (chunk) {
-              console.log('Response: ' + chunk);
+          res.on('data', function (data) {
+              let json = JSON.parse(data.toString());
+              if(json.status === 'INITIALIZED'){
+                  mainWindow.webContents.send('projectInitialized', item.projectName);
+              }
           });
     });
 

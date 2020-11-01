@@ -16,6 +16,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 class TrainThread(Thread):
     def __init__(self, project_name, data):
         super().__init__()
+        self.status = 'NOT INITIALIZED'
         self.dataset_name = data['datasetName']
         if not os.path.exists('./projects/'):
             os.mkdir('./projects/')
@@ -25,6 +26,7 @@ class TrainThread(Thread):
             os.mkdir(self.project_folder)
         if not os.path.exists(self.data_folder):
             os.mkdir(self.data_folder)
+        self.status = 'INITIALIZED'
 
     def run(self):
         self.train()

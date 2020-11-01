@@ -3,7 +3,7 @@ import { Button, Form, Col } from 'react-bootstrap';
 
 const {ipcRenderer} = window.require("electron");
 
-class Choose2 extends Component {
+class ChooseSubTask extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -56,8 +56,8 @@ class Choose2 extends Component {
     render() {
         if (this.state.taskClass === 'cv') {
             return (
-                <div className="Choose2">
-                    <header className="choose2">
+                <div className="ChooseSubTask">
+                    <header className="chooseSubTask">
                         <Form>
                             <Form.Row className="align-items-center">
                                 <Col xs="auto">
@@ -141,4 +141,4 @@ class Choose2 extends Component {
     }
 }
 
-export default Choose2;
+export default ChooseSubTask;

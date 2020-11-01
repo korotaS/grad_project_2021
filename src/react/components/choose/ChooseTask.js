@@ -3,7 +3,7 @@ import { Button, ButtonGroup, ToggleButton, InputGroup, FormControl } from 'reac
 
 const {ipcRenderer} = window.require("electron");
 
-class Choose1 extends Component {
+class ChooseTask extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -49,8 +49,8 @@ class Choose1 extends Component {
 
     render() {
         return (
-            <div className="Choose1">
-                <header className="choose1">
+            <div className="ChooseTask">
+                <header className="chooseTask">
                     <InputGroup className="w-25 projectNameInput">
                         <FormControl
                             value={this.state.projectName}
@@ -89,4 +89,4 @@ class Choose1 extends Component {
     }
 }
 
-export default Choose1;
+export default ChooseTask;

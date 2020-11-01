@@ -3,7 +3,7 @@ import { Button, Form, Col } from 'react-bootstrap';
 
 const {ipcRenderer} = window.require("electron");
 
-class Choose3 extends Component {
+class ChooseDataset extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -58,8 +58,8 @@ class Choose3 extends Component {
 
     render() {
         return (
-            <div className="Choose3">
-                <header className="choose3">
+            <div className="ChooseDataset">
+                <header className="chooseDataset">
                     <Form>
                         <Form.Row className="align-items-center">
                             <Col xs="auto">
@@ -86,4 +86,4 @@ class Choose3 extends Component {
     }
 }
 
-export default Choose3;
+export default ChooseDataset;

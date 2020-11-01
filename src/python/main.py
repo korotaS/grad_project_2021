@@ -3,11 +3,12 @@ import json
 
 from flask import Flask, jsonify, request
 
-from train import TrainThread
+from src.python.train import TrainThread
 
 app = Flask(__name__)
 
 STATUS = 'ready'
+THREAD = None
 
 
 @app.route("/")
@@ -29,14 +30,15 @@ def train_status(project_name, last_epoch):
     return jsonify(response)
 
 
-@app.route("/runTrain", methods=['POST'])
+@app.route("/init", methods=['POST'])
 def run_train():
     data = request.json
     project_name = data['projectName']
     global STATUS
-    thread = TrainThread(project_name, data)
-    thread.start()
-    return jsonify({'status': 'success'})
+    global THREAD
+    THREAD = TrainThread(project_name, data)
+    # thread.start()
+    return jsonify({'status': THREAD.status})
 
 
 # @app.route("/runTrain/<project_name>")

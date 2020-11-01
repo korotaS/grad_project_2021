@@ -1,31 +1,33 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './react/index.css';
-import Epochs from './react/components/epochs/Epochs'
-import Choose1 from "./react/components/choose/Choose1";
-import Choose2 from "./react/components/choose/Choose2";
-import Choose3 from "./react/components/choose/Choose3";
+import ChooseTask from "./react/components/choose/ChooseTask";
+import ChooseSubTask from "./react/components/choose/ChooseSubTask";
+import ChooseDataset from "./react/components/choose/ChooseDataset";
+import Status from "./react/components/utils/Utils"
 import * as serviceWorker from './react/serviceWorker';
 const {ipcRenderer} = window.require("electron");
 
-// ReactDOM.render(
-//     <Epochs />,
-//   document.getElementById('root')
-// );
 ReactDOM.render(
-    <Choose1 />,
-  document.getElementById('choose1')
+    <ChooseTask />,
+  document.getElementById('chooseTask')
 );
 ipcRenderer.on('afterChoice1', function (e, item) {
     ReactDOM.render(
-        <Choose2 {...item}/>,
-        document.getElementById('choose2')
+        <ChooseSubTask {...item}/>,
+        document.getElementById('chooseSubTask')
     );
 });
 ipcRenderer.on('afterChoice2', function (e, item) {
     ReactDOM.render(
-        <Choose3 {...item}/>,
-        document.getElementById('choose3')
+        <ChooseDataset {...item}/>,
+        document.getElementById('chooseDataset')
+    );
+});
+ipcRenderer.on('projectInitialized', function (e, projectName) {
+    ReactDOM.render(
+        <Status projectName={projectName} status={'initialized'}/>,
+      document.getElementById('projectStatus')
     );
 });
 
