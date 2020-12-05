@@ -32,7 +32,7 @@ def train_status(project_name, last_epoch):
 
 @app.route("/init", methods=['POST'])
 def run_train():
-    data = request.json
+    data = request.get_json(force=True)
     global STATUS
     global THREAD
     THREAD = TrainThread(data)

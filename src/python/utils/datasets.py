@@ -30,7 +30,7 @@ class ImageClassificationDataset(BaseDataset):
 
     def check_structure(self):
         if not os.path.exists(os.path.join(self.path, 'data.pt')) or \
-           not os.path.exists(os.path.join(self.path, 'labels.pt')):
+                not os.path.exists(os.path.join(self.path, 'labels.pt')):
             raise DatasetStructureError(f"folder {self.path} doesn\'t have data.pt or labels.pt")
 
     def check_content(self):
@@ -52,5 +52,5 @@ class DatasetStructureError(ValueError):
 
 
 class DatasetContentError(ValueError):
-    """Raised when structure of dataset folder is incorrect"""
+    """Raised when content of dataset folder is incorrect"""
     pass

@@ -16,6 +16,7 @@ except ImportError:
     from utils.datasets import ImageClassificationDataset
 
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
@@ -79,12 +80,15 @@ class TrainThread(Thread):
 
     def train(self):
         model = models.mobilenet_v2(pretrained=True)
-        model.classifier[1] = nn.Linear(model.classifier[1].in_features, 10)
+        model = nn.Sequential(
+            model,
+            nn.Linear(model.classifier[1].out_features, 10)
+        )
 
         self.write_log({'project': self.project_folder, 'epochs': [], 'status': 'training'})
 
         model.train()
-        optimizer = optim.Adam(model.parameters(), lr=0.0001)
+        optimizer = optim.Adam(model.parameters(), lr=0.0003)
         NUM_TR_BATCHES = 10
         NUM_TE_BATCHES = 5
 
@@ -121,6 +125,5 @@ class TrainThread(Thread):
         epochs['status'] = 'done'
         self.write_log(epochs)
 
-
-thread = TrainThread({'projectName': 'project_1', 'datasetFolder': './projects/datasets/dataset_cifar/'})
-thread.start()
+# thread = TrainThread({'projectName': 'project_1', 'datasetFolder': './projects/datasets/dataset_cifar/'})
+# thread.start()

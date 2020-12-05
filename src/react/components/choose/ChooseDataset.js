@@ -36,7 +36,6 @@ class ChooseDataset extends Component {
 
     submitChoice(event) {
         event.preventDefault();
-        console.log(this.state)
         if (this.state.datasetFolder === "") {
             alert("Choose dataset folder please!")
         } else {
@@ -59,10 +58,12 @@ class ChooseDataset extends Component {
             properties: ['openDirectory'],
             defaultPath: '.'
         });
-        this.setState(state => {
-            state.datasetFolder = paths[0];
-            return state
-        })
+        if (paths != null) {
+            this.setState(state => {
+                state.datasetFolder = paths[0];
+                return state
+            })
+        }
     }
 
     getCurrentDatasetFolder() {

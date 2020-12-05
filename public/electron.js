@@ -2,7 +2,7 @@ const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = false;
+const SERVER_RUNNING = true;
 const QUIT_ON_CLOSING = true;
 const DEV = true;
 
@@ -39,8 +39,8 @@ const createMainWindow = (x_custom, y_custom) => {
     // Load the index page
     mainWindow.loadURL(
         DEV
-        ? "http://localhost:3000"
-        : `file://${path.join(__dirname, "../build/index.html")}`
+            ? "http://localhost:3000"
+            : `file://${path.join(__dirname, "../build/index.html")}`
     );
 
     // Open the DevTools.
@@ -123,32 +123,27 @@ ipcMain.on('submitChoice2', function (e, item) {
 });
 
 ipcMain.on('submitChoice3', function (e, item) {
-    let http = require('http');
+    const request = net.request({
+        method: 'POST',
+        hostname: 'localhost',
+        port: 5000,
+        path: '/init'
+    })
+
+    request.on('response', (response) => {
+        if (response.statusCode === 200) {
+            response.on('data', (data) => {
+                let json = JSON.parse(data.toString());
+                if (json.status === 'INITIALIZED') {
+                    mainWindow.webContents.send('projectInitialized', item.projectName);
+                }
+            })
+        }
+    })
+
     let post_data = JSON.stringify(item);
-
-    let post_options = {
-          host: 'localhost',
-          port: '5000',
-          path: '/init',
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json',
-              'Content-Length': post_data.length
-          }
-    };
-
-    let post_req = http.request(post_options, function(res) {
-          res.setEncoding('utf8');
-          res.on('data', function (data) {
-              let json = JSON.parse(data.toString());
-              if(json.status === 'INITIALIZED'){
-                  mainWindow.webContents.send('projectInitialized', item.projectName);
-              }
-          });
-    });
-
-    post_req.write(post_data);
-    post_req.end();
+    request.write(post_data);
+    request.end();
 });
 
 // -----END OF RUNTIME-----
