@@ -4,6 +4,7 @@ import './react/index.css';
 import ChooseTask from "./react/components/choose/ChooseTask";
 import ChooseSubTask from "./react/components/choose/ChooseSubTask";
 import ChooseDataset from "./react/components/choose/ChooseDataset";
+import ChooseArchitecture from "./react/components/choose/ChooseArchitecture";
 import Status from "./react/components/utils/Utils"
 import * as serviceWorker from './react/serviceWorker';
 const {ipcRenderer} = window.require("electron");
@@ -22,6 +23,12 @@ ipcRenderer.on('afterChoice2', function (e, item) {
     ReactDOM.render(
         <ChooseDataset {...item}/>,
         document.getElementById('chooseDataset')
+    );
+});
+ipcRenderer.on('afterChoice3', function (e, item) {
+    ReactDOM.render(
+        <ChooseArchitecture {...item}/>,
+        document.getElementById('chooseArchitecture')
     );
 });
 ipcRenderer.on('projectInitialized', function (e, projectName) {
