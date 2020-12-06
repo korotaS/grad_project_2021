@@ -2,7 +2,7 @@ const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = true;
+const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
 const DEV = true;
 
