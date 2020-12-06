@@ -3,7 +3,8 @@ import json
 
 from flask import Flask, jsonify, request
 
-from train import TrainThread
+from src.python.train import TrainThread
+from src.python.utils.architectures import get_architectures_by_type
 
 app = Flask(__name__)
 
@@ -38,6 +39,12 @@ def run_train():
     THREAD = TrainThread(data)
     # thread.start()
     return jsonify({'status': THREAD.status})
+
+
+@app.route("/getArchs/<task>")
+def get_archs(task):
+    archs = get_architectures_by_type(task)
+    return jsonify({'architectures': archs})
 
 
 # @app.route("/runTrain/<project_name>")

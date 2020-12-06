@@ -2,7 +2,7 @@ const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = false;
+const SERVER_RUNNING = true;
 const QUIT_ON_CLOSING = true;
 const DEV = true;
 
@@ -123,6 +123,19 @@ ipcMain.on('submitChoice2', function (e, item) {
 });
 
 ipcMain.on('submitChoice3', function (e, item) {
+    const task = item.taskSubClass;
+    const request = net.request('http://localhost:5000/getArchs/' + task);
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString())
+            item.architectures = json.architectures
+            mainWindow.webContents.send('afterChoice3', item);
+        })
+    });
+    request.end()
+});
+
+ipcMain.on('submitChoice4', function (e, item) {
     const request = net.request({
         method: 'POST',
         hostname: 'localhost',
