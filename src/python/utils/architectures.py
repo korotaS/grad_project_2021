@@ -40,23 +40,26 @@ class ImageClassificationModel(nn.Module):
     def forward(self, batch):
         x = batch
         x = self.backbone(x)
-        for i in range(len(self.fc_layers)):
-            x = self.fc_layers[i](x)
-            if self.bn:
-                x = self.bns[i](x)
-            x = self.relu(x)
-        x = self.fc_final(x)
-        return F.softmax(x)
+
+        # x = self.relu(x)
+        # for i in range(len(self.fc_layers)):
+        #     x = self.fc_layers[i](x)
+        #     if self.bn:
+        #         x = self.bns[i](x)
+        #     x = self.relu(x)
+        # x = self.fc_final(x)
+        return x
 
 
-def get_im_clf_model(architecture, input_shape=None, num_classes=None, pretrained=False, bn=True, **kwargs):
+# TODO: change to https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
+def get_im_clf_model(architecture, fc_layers=(), num_classes=2, pretrained=False, bn=True, **kwargs):
     """Returns model by arch name and parameters"""
-    # TODO: make other arguments (FC layers, number of neurons etc)
+    # TODO: make other arguments (BN, activation)
     backbone_func = getattr(models, architecture, None)
     if backbone_func is None:
         raise NotImplementedError('Architecture type is not supported!')
-    backbone = backbone_func(pretrained)
-    model = ImageClassificationModel(backbone=backbone, fc_layers=(), num_classes=num_classes, bn=bn)
+    backbone = backbone_func(pretrained, num_classes=num_classes)
+    model = ImageClassificationModel(backbone=backbone, fc_layers=fc_layers, num_classes=num_classes, bn=bn)
     return model
 
 
