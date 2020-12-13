@@ -10,13 +10,12 @@ import torch.nn as nn
 from torch import optim
 from torchvision import datasets, models, transforms
 
-try:
-    from src.python.utils.datasets import ImageClassificationDataset
-except ImportError:
-    from utils.datasets import ImageClassificationDataset
+from src.python.utils.datasets import ImageClassificationDataset
+from src.python.utils.architectures import get_im_clf_model
+# except ImportError:
+#     from utils.datasets import ImageClassificationDataset
 
 import ssl
-
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
@@ -58,8 +57,8 @@ class TrainThread(Thread):
         shutil.copytree(os.path.join(self.raw_dataset_folder, 'test/'), self.test_folder)
 
     def init_datasets(self):
-        tr_dataset = ImageClassificationDataset(self.train_folder)
-        te_dataset = ImageClassificationDataset(self.test_folder)
+        tr_dataset = ImageClassificationDataset(self.train_folder, transform=transforms.Resize(224))
+        te_dataset = ImageClassificationDataset(self.test_folder, transform=transforms.Resize(224))
         tr_loader = torch.utils.data.DataLoader(
             tr_dataset,
             batch_size=32,
@@ -79,16 +78,13 @@ class TrainThread(Thread):
             return json.load(r)
 
     def train(self):
-        model = models.mobilenet_v2(pretrained=True)
-        model = nn.Sequential(
-            model,
-            nn.Linear(model.classifier[1].out_features, 10)
-        )
+        model = get_im_clf_model('mobilenet_v2', num_classes=10, pretrained=True)
 
         self.write_log({'project': self.project_folder, 'epochs': [], 'status': 'training'})
 
         model.train()
         optimizer = optim.Adam(model.parameters(), lr=0.0003)
+        criterion = nn.CrossEntropyLoss()
         NUM_TR_BATCHES = 10
         NUM_TE_BATCHES = 5
 
@@ -99,7 +95,7 @@ class TrainThread(Thread):
                     break
                 optimizer.zero_grad()
                 output = model(data)
-                loss = F.cross_entropy(output, target)
+                loss = criterion(output, target)
                 loss.backward()
                 optimizer.step()
                 print(f'train: epoch {epoch}, batch {batch}, loss {loss.item()}')
@@ -109,7 +105,7 @@ class TrainThread(Thread):
                     if batch >= NUM_TE_BATCHES:
                         break
                     output = model(data)
-                    loss = F.cross_entropy(output, target)
+                    loss = criterion(output, target)
                     epoch_loss += loss.item()
                     print(f'test: epoch {epoch}, batch {batch}, loss {loss.item()}')
             print()
@@ -125,5 +121,6 @@ class TrainThread(Thread):
         epochs['status'] = 'done'
         self.write_log(epochs)
 
-# thread = TrainThread({'projectName': 'project_1', 'datasetFolder': './projects/datasets/dataset_cifar/'})
-# thread.start()
+
+thread = TrainThread({'projectName': 'project_1', 'datasetFolder': './projects/datasets/dataset_cifar/'})
+thread.start()

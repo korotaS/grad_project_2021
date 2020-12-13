@@ -6,7 +6,6 @@ from torch.utils.data import Dataset
 
 class BaseDataset(Dataset):
     def __len__(self):
-        super().__init__()
         pass
 
     def __getitem__(self, item):
@@ -20,13 +19,15 @@ class BaseDataset(Dataset):
 
 
 class ImageClassificationDataset(BaseDataset):
-    def __init__(self, path, device='cpu'):
+    def __init__(self, path, device='cpu', transform=None):
         super().__init__()
         self.path = path
         self.device = device
         self.check_structure()
+        # TODO: make loading data one at a time
         self.data = torch.load(os.path.join(self.path, 'data.pt')).to(self.device)
         self.labels = torch.load(os.path.join(self.path, 'labels.pt')).to(self.device)
+        self.transform = transform
 
     def check_structure(self):
         if not os.path.exists(os.path.join(self.path, 'data.pt')) or \
@@ -43,7 +44,11 @@ class ImageClassificationDataset(BaseDataset):
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
-        return self.data[idx], self.labels[idx]
+        data = self.data[idx]
+        if self.transform:
+            data = self.transform(data)
+        labels = self.labels[idx]
+        return data, labels
 
 
 class DatasetStructureError(ValueError):
