@@ -1,9 +1,9 @@
+import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torchvision import models
-from torchvision import transforms
 
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
@@ -12,55 +12,76 @@ ssl._create_default_https_context = ssl._create_unverified_context
 def get_im_clf_architectures():
     """Returns the list of atchitectures which are available"""
     return [
-        'resnet18', 'resnet50', 'resnet152', 'alexnet', 'vgg16', 'densenet161', 'inception_v3',
-        'googlenet', 'mobilenet_v2', 'resnext50_32x4d', 'resnext101_32x8d'
+        'resnet18', 'resnet50', 'resnet152', 'alexnet', 'vgg16', 'inception_v3',
+        'mobilenet_v2', 'resnext50_32x4d', 'resnext101_32x8d'
     ]
 
 
-class ImageClassificationModel(nn.Module):
-    def __init__(self, backbone, fc_layers=(), num_classes=2, bn=True):
-        super(ImageClassificationModel, self).__init__()
-        self.backbone = backbone
-        self.fc_layers = []
-        self.bn = bn
-        if self.bn:
-            self.bns = []
-        for i, n_hid in enumerate(fc_layers):
-            if i == 0:
-                curr_layer = nn.Linear(1000, n_hid)
-            else:
-                curr_layer = nn.Linear(fc_layers[i-1], n_hid)
-            self.fc_layers.append(curr_layer)
-            if self.bn:
-                self.bns.append(nn.BatchNorm1d(n_hid))
-        last_n_hid = fc_layers[-1] if fc_layers else 1000
-        self.fc_final = nn.Linear(last_n_hid, num_classes if num_classes > 2 else 1)
-        self.relu = nn.ReLU()
+def get_im_clf_model(model_name, num_classes, use_pretrained=True):
+    """
+    https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
+    """
+    # Initialize these variables which will be set in this if statement. Each of these
+    #   variables is model specific.
+    model_ft = None
+    input_size = 0
 
-    def forward(self, batch):
-        x = batch
-        x = self.backbone(x)
+    if model_name.startswith("resnet") or model_name.startswith('resnext'):
+        """ Resnet and Resnext
+        """
+        model_ft = getattr(models, model_name, None)(pretrained=use_pretrained)
+        num_ftrs = model_ft.fc.in_features
+        model_ft.fc = nn.Linear(num_ftrs, num_classes)
+        input_size = 224
 
-        # x = self.relu(x)
-        # for i in range(len(self.fc_layers)):
-        #     x = self.fc_layers[i](x)
-        #     if self.bn:
-        #         x = self.bns[i](x)
-        #     x = self.relu(x)
-        # x = self.fc_final(x)
-        return x
+    elif model_name == "alexnet":
+        """ Alexnet
+        """
+        model_ft = models.alexnet(pretrained=use_pretrained)
+        num_ftrs = model_ft.classifier[6].in_features
+        model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
+        input_size = 224
+
+    elif model_name == "vgg16":
+        """ VGG16_bn
+        """
+        model_ft = models.vgg16_bn(pretrained=use_pretrained)
+        num_ftrs = model_ft.classifier[6].in_features
+        model_ft.classifier[6] = nn.Linear(num_ftrs, num_classes)
+        input_size = 224
+
+    elif model_name == "inception_v3":
+        """ Inception v3
+        Be careful, expects (299,299) sized images and has auxiliary output
+        """
+        model_ft = models.inception_v3(pretrained=use_pretrained)
+        # Handle the auxilary net
+        num_ftrs = model_ft.AuxLogits.fc.in_features
+        model_ft.AuxLogits.fc = nn.Linear(num_ftrs, num_classes)
+        # Handle the primary net
+        num_ftrs = model_ft.fc.in_features
+        model_ft.fc = nn.Linear(num_ftrs, num_classes)
+        input_size = 299
+
+    elif model_name == 'mobilenet_v2':
+        """MobileNet
+        """
+        model_ft = torch.hub.load('pytorch/vision', 'mobilenet_v2', pretrained=use_pretrained)
+        num_ftrs = model_ft.classifier[1].in_features
+        model_ft.classifier[1] = torch.nn.Linear(num_ftrs, num_classes)
+        input_size = 224
+
+    else:
+        print("Invalid model name, exiting...")
+        exit()
+
+    return model_ft, input_size
 
 
-# TODO: change to https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
-def get_im_clf_model(architecture, fc_layers=(), num_classes=2, pretrained=False, bn=True, **kwargs):
-    """Returns model by arch name and parameters"""
-    # TODO: make other arguments (BN, activation)
-    backbone_func = getattr(models, architecture, None)
-    if backbone_func is None:
-        raise NotImplementedError('Architecture type is not supported!')
-    backbone = backbone_func(pretrained, num_classes=num_classes)
-    model = ImageClassificationModel(backbone=backbone, fc_layers=fc_layers, num_classes=num_classes, bn=bn)
-    return model
+# IMAGE SEGMENTATION
+
+
+# OBJECT DETECTION
 
 
 TASK_TO_FUNC = {
@@ -73,6 +94,5 @@ def get_architectures_by_type(task_type):
     if task_type not in TASK_TO_FUNC:
         return []
     return TASK_TO_FUNC[task_type]()
-
 
 # get_im_clf_model('mobilenet_v2', pretrained=False)

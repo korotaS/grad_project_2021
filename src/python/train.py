@@ -78,7 +78,7 @@ class TrainThread(Thread):
             return json.load(r)
 
     def train(self):
-        model = get_im_clf_model('mobilenet_v2', num_classes=10, pretrained=False)
+        model, input_size = get_im_clf_model('mobilenet_v2', num_classes=10, use_pretrained=False)
 
         self.write_log({'project': self.project_folder, 'epochs': [], 'status': 'training'})
 
