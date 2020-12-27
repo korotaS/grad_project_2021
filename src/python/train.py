@@ -16,6 +16,7 @@ from src.python.utils.architectures import get_im_clf_model
 #     from utils.datasets import ImageClassificationDataset
 
 import ssl
+
 ssl._create_default_https_context = ssl._create_unverified_context
 
 
@@ -24,6 +25,7 @@ class TrainThread(Thread):
         super().__init__()
         self.status = 'NOT INITIALIZED'
         self.raw_dataset_folder = data['datasetFolder']
+        self.architecture = data['architecture']
 
         self.project_name = data['projectName']
         if not os.path.exists('./projects/'):
@@ -37,14 +39,17 @@ class TrainThread(Thread):
         if not os.path.exists(data_folder):
             os.mkdir(data_folder)
         self.train_folder = os.path.join(data_folder, 'train/')
-        self.test_folder = os.path.join(data_folder, 'test/')
-
-        self.copy_data()
-
-        self.train_dataset, self.test_dataset, self.train_loader, self.test_loader = self.init_datasets()
+        self.test_folder = os.path.join(data_folder, 'val/')
         self.status = 'INITIALIZED'
 
+        self.train_dataset = self.test_dataset = self.train_loader = self.test_loader = None
+        self.model = None
+        self.input_size = None
+
     def run(self):
+        # self.copy_data()
+        self.init_model()
+        self.train_dataset, self.test_dataset, self.train_loader, self.test_loader = self.init_datasets()
         self.train()
 
     def copy_data(self):
@@ -54,18 +59,26 @@ class TrainThread(Thread):
 
         if os.path.exists(self.test_folder):
             shutil.rmtree(self.test_folder)
-        shutil.copytree(os.path.join(self.raw_dataset_folder, 'test/'), self.test_folder)
+        shutil.copytree(os.path.join(self.raw_dataset_folder, 'val/'), self.test_folder)
+
+    def init_model(self):
+        self.model, self.input_size = get_im_clf_model(self.architecture, num_classes=10, use_pretrained=False)
 
     def init_datasets(self):
-        tr_dataset = ImageClassificationDataset(self.train_folder, transform=transforms.Resize(224))
-        te_dataset = ImageClassificationDataset(self.test_folder, transform=transforms.Resize(224))
+        transform = transforms.Compose([
+            transforms.Resize((self.input_size, self.input_size)),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        tr_dataset = ImageClassificationDataset(self.train_folder, transform=transform)
+        te_dataset = ImageClassificationDataset(self.test_folder, transform=transform)
         tr_loader = torch.utils.data.DataLoader(
             tr_dataset,
-            batch_size=32,
+            batch_size=16,
             shuffle=True)
         te_loader = torch.utils.data.DataLoader(
             te_dataset,
-            batch_size=32,
+            batch_size=16,
             shuffle=True)
         return tr_dataset, te_dataset, tr_loader, te_loader
 
@@ -78,12 +91,10 @@ class TrainThread(Thread):
             return json.load(r)
 
     def train(self):
-        model, input_size = get_im_clf_model('mobilenet_v2', num_classes=10, use_pretrained=False)
-
         self.write_log({'project': self.project_folder, 'epochs': [], 'status': 'training'})
 
-        model.train()
-        optimizer = optim.Adam(model.parameters(), lr=0.0003)
+        self.model.train()
+        optimizer = optim.Adam(self.model.parameters(), lr=0.0003)
         criterion = nn.CrossEntropyLoss()
         NUM_TR_BATCHES = 10
         NUM_TE_BATCHES = 5
@@ -94,7 +105,7 @@ class TrainThread(Thread):
                 if batch >= NUM_TR_BATCHES:
                     break
                 optimizer.zero_grad()
-                output = model(data)
+                output = self.model(data)
                 loss = criterion(output, target)
                 loss.backward()
                 optimizer.step()
@@ -104,7 +115,7 @@ class TrainThread(Thread):
                 for batch, (data, target) in enumerate(self.test_loader):
                     if batch >= NUM_TE_BATCHES:
                         break
-                    output = model(data)
+                    output = self.model(data)
                     loss = criterion(output, target)
                     epoch_loss += loss.item()
                     print(f'test: epoch {epoch}, batch {batch}, loss {loss.item()}')
@@ -122,5 +133,7 @@ class TrainThread(Thread):
         self.write_log(epochs)
 
 
-thread = TrainThread({'projectName': 'project_1', 'datasetFolder': './projects/datasets/dataset_cifar/'})
+thread = TrainThread({'projectName': 'project_1',
+                      'datasetFolder': './projects/datasets/dogscats/',
+                      'architecture': 'mobilenet_v2'})
 thread.start()
