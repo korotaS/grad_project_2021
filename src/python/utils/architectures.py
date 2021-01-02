@@ -25,6 +25,8 @@ def get_im_clf_model(model_name, num_classes, use_pretrained=True):
     #   variables is model specific.
     model = None
     input_size = 0
+    if num_classes == 2:
+        num_classes = 1
 
     if model_name.startswith("resnet") or model_name.startswith('resnext'):
         """ Resnet and Resnext

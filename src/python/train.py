@@ -26,6 +26,7 @@ class TrainThread(Thread):
         self.status = 'NOT INITIALIZED'
         self.raw_dataset_folder = data['datasetFolder']
         self.architecture = data['architecture']
+        self.num_classes = data['num_classes']
 
         self.project_name = data['projectName']
         if not os.path.exists('./projects/'):
@@ -62,7 +63,9 @@ class TrainThread(Thread):
         shutil.copytree(os.path.join(self.raw_dataset_folder, 'val/'), self.test_folder)
 
     def init_model(self):
-        self.model, self.input_size = get_im_clf_model(self.architecture, num_classes=10, use_pretrained=False)
+        self.model, self.input_size = get_im_clf_model(self.architecture,
+                                                       num_classes=self.num_classes,
+                                                       use_pretrained=False)
 
     def init_datasets(self):
         transform = transforms.Compose([
@@ -94,8 +97,8 @@ class TrainThread(Thread):
         self.write_log({'project': self.project_folder, 'epochs': [], 'status': 'training'})
 
         self.model.train()
-        optimizer = optim.Adam(self.model.parameters(), lr=0.0003)
-        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(self.model.parameters(), lr=0.0001)
+        criterion = nn.CrossEntropyLoss() if self.num_classes > 2 else nn.BCELoss()
         NUM_TR_BATCHES = 10
         NUM_TE_BATCHES = 5
 
@@ -106,7 +109,7 @@ class TrainThread(Thread):
                     break
                 optimizer.zero_grad()
                 output = self.model(data)
-                loss = criterion(output, target)
+                loss = criterion(torch.sigmoid(output) if self.num_classes == 2 else output, target.unsqueeze(1))
                 loss.backward()
                 optimizer.step()
                 print(f'train: epoch {epoch}, batch {batch}, loss {loss.item()}')
@@ -116,7 +119,7 @@ class TrainThread(Thread):
                     if batch >= NUM_TE_BATCHES:
                         break
                     output = self.model(data)
-                    loss = criterion(output, target)
+                    loss = criterion(torch.sigmoid(output) if self.num_classes == 2 else output, target.unsqueeze(1))
                     epoch_loss += loss.item()
                     print(f'test: epoch {epoch}, batch {batch}, loss {loss.item()}')
             print()
@@ -135,5 +138,6 @@ class TrainThread(Thread):
 
 thread = TrainThread({'projectName': 'project_1',
                       'datasetFolder': './projects/datasets/dogscats/',
-                      'architecture': 'mobilenet_v2'})
+                      'architecture': 'mobilenet_v2',
+                      'num_classes': 2})
 thread.start()

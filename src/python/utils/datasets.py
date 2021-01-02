@@ -1,4 +1,5 @@
 import os
+import json
 
 import torch
 from torch.utils.data import Dataset
@@ -26,38 +27,39 @@ class ImageClassificationDataset(BaseDataset):
         super().__init__()
         self.path = path
         self.device = device
-        # self.check_structure()
-        # TODO: make loading data one at a time
-        # self.data = torch.load(os.path.join(self.path, 'data.pt')).to(self.device)
-        # self.labels = torch.load(os.path.join(self.path, 'labels.pt')).to(self.device)
         self.transform = transform
 
-    # def check_structure(self):
-    #     if not os.path.exists(os.path.join(self.path, 'data.pt')) or \
-    #             not os.path.exists(os.path.join(self.path, 'labels.pt')):
-    #         raise DatasetStructureError(f"folder {self.path} doesn\'t have data.pt or labels.pt")
-    #
-    # def check_content(self):
-    #     if len(self.data) != len(self.labels):
-    #         raise DatasetContentError('Data and labels have different lengths')
+        self.info_path = os.path.join(self.path, 'info.json')
+        self.images_path = os.path.join(self.path, 'images/')
+        self.check_structure()
+        with open(self.path+'info.json', 'r') as r:
+            self.info = json.load(r)
+        self.check_content()
+
+    def check_structure(self):
+        if not os.path.exists(self.info_path):
+            raise DatasetStructureError(f'info.json not found in dataset folder: {self.path}')
+        if not os.path.exists(self.images_path):
+            raise DatasetStructureError(f'"images/" folder not found in dataset folder: {self.path}')
+
+    def check_content(self):
+        for value in self.info.values():
+            if not os.path.exists(os.path.join(self.images_path, value['filename'])):
+                raise DatasetContentError(f'file with name {value["filename"]} not found in {self.images_path}')
 
     def __len__(self):
-        return len(os.listdir(self.path)) - 1
+        return len(self.info)
 
     def __getitem__(self, idx):
-        # if torch.is_tensor(idx):
-        #     idx = idx.tolist()
-        # data = self.data[idx]
-        # if self.transform:
-        #     data = self.transform(data)
-        # labels = self.labels[idx]
-        # return data, labels
-        name = f'{idx}.cat.jpg' if os.path.exists(self.path + f'{idx}.cat.jpg') else f'{idx}.dog.jpg'
-        image = Image.open(self.path + name)
-        label = int('dog' in name)
+        data = self.info[str(idx)]
+        filename = data['filename']
+        image = Image.open(os.path.join(self.images_path + filename))
         if self.transform:
             image = self.transform(image)
-        label = torch.tensor(label, dtype=torch.long)
+        image = image.to(self.device)
+
+        label = data['label']
+        label = torch.tensor(label, dtype=torch.float, device=self.device)
         return image, label
 
 
