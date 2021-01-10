@@ -1,11 +1,9 @@
-import os
 import json
+import os
 
 import torch
-from torch.utils.data import Dataset
-from torchvision import transforms
 from PIL import Image
-import cv2
+from torch.utils.data import Dataset
 
 
 class BaseDataset(Dataset):

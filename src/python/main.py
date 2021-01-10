@@ -1,13 +1,10 @@
-import os
 import json
 
 from flask import jsonify, request
-from flask_socketio import send
 
+from src.python.app import socketio, app
 from src.python.train import TrainThread
 from src.python.utils.architectures import get_architectures_by_type
-from src.python.app import socketio, app
-
 
 STATUS = 'ready'
 THREAD = None

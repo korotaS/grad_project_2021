@@ -1,8 +1,8 @@
+import ssl
+
 import torch
 import torch.nn as nn
 from torchvision import models
-
-import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 

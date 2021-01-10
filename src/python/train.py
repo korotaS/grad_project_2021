@@ -1,20 +1,17 @@
-import json
-from threading import Thread
-from time import sleep
 import os
 import shutil
+import ssl
+from threading import Thread
 
 import torch
-import torch.nn.functional as F
 import torch.nn as nn
 from torch import optim
-from torchvision import datasets, models, transforms
-import numpy as np
-import ssl
+from torch.utils.data import DataLoader
+from torchvision import transforms
 
-from src.python.utils.datasets import ImageClassificationDataset
-from src.python.utils.architectures import get_im_clf_model
 from src.python.app import socketio
+from src.python.utils.architectures import get_im_clf_model
+from src.python.utils.datasets import ImageClassificationDataset
 
 # except ImportError:
 #     from utils.datasets import ImageClassificationDataset
@@ -84,11 +81,11 @@ class TrainThread(Thread):
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
         te_dataset = ImageClassificationDataset(self.test_folder, transform=transform_val)
-        tr_loader = torch.utils.data.DataLoader(
+        tr_loader = DataLoader(
             tr_dataset,
             batch_size=8,
             shuffle=True)
-        te_loader = torch.utils.data.DataLoader(
+        te_loader = DataLoader(
             te_dataset,
             batch_size=8,
             shuffle=True)
