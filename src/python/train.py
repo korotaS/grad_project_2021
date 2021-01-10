@@ -10,13 +10,14 @@ import torch.nn as nn
 from torch import optim
 from torchvision import datasets, models, transforms
 import numpy as np
+import ssl
 
 from src.python.utils.datasets import ImageClassificationDataset
 from src.python.utils.architectures import get_im_clf_model
+from src.python.app import socketio
+
 # except ImportError:
 #     from utils.datasets import ImageClassificationDataset
-
-import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -27,7 +28,7 @@ class TrainThread(Thread):
         self.status = 'NOT INITIALIZED'
         self.raw_dataset_folder = data['datasetFolder']
         self.architecture = data['architecture']
-        self.num_classes = data['num_classes']
+        self.num_classes = 2
 
         self.project_name = data['projectName']
         if not os.path.exists('./projects/'):
@@ -93,14 +94,6 @@ class TrainThread(Thread):
             shuffle=True)
         return tr_dataset, te_dataset, tr_loader, te_loader
 
-    def write_log(self, data):
-        with open(f'{self.project_folder}/log.json', 'w+') as w:
-            w.write(json.dumps(data, indent=4))
-
-    def read_log(self):
-        with open(f'{self.project_folder}/log.json', 'r') as r:
-            return json.load(r)
-
     def train(self):
         params_to_update = self.model.parameters()
         print("Params to learn:")
@@ -124,35 +117,30 @@ class TrainThread(Thread):
             print('Epoch {}/{}'.format(epoch, num_epochs - 1))
             print('-' * 10)
 
-            # Each epoch has a training and validation phase
             for phase in ['train', 'val']:
                 if phase == 'train':
-                    self.model.train()  # Set model to training mode
+                    self.model.train()
                 else:
-                    self.model.eval()  # Set model to evaluate mode
+                    self.model.eval()
 
                 running_loss = 0.0
                 running_corrects = 0
 
-                # Iterate over data.
                 for batch, (inputs, labels) in enumerate(dataloaders[phase]):
                     # inputs = inputs.to(device)
                     # labels = labels.to(device)
                     if batch % 10 == 0:
                         print(f'batch: {batch}')
+                        socketio.emit('batch', {'batch': str(batch)})
 
-                    # zero the parameter gradients
                     optimizer.zero_grad()
 
-                    # forward
-                    # track history if only in train
                     with torch.set_grad_enabled(phase == 'train'):
                         # Get model outputs and calculate loss
                         # Special case for inception because in training it has an auxiliary output. In train
                         #   mode we calculate the loss by summing the final output and the auxiliary output
                         #   but in testing we only consider the final output.
                         if self.architecture == 'inception_v3' and phase == 'train':
-                            # From https://discuss.pytorch.org/t/how-to-optimize-inception-model-with-auxiliary-classifiers/7958
                             outputs, aux_outputs = self.model(inputs)
                             loss1 = criterion(outputs, labels)
                             loss2 = criterion(aux_outputs, labels)
@@ -163,12 +151,10 @@ class TrainThread(Thread):
 
                         _, preds = torch.max(outputs, 1)
 
-                        # backward + optimize only if in training phase
                         if phase == 'train':
                             loss.backward()
                             optimizer.step()
 
-                    # statistics
                     running_loss += loss.item() * inputs.size(0)
                     running_corrects += torch.sum(preds == labels.data)
 
@@ -178,8 +164,8 @@ class TrainThread(Thread):
                 print(f'{phase} Loss: {epoch_loss} Acc: {epoch_acc}')
 
 
-thread = TrainThread({'projectName': 'project_1',
-                      'datasetFolder': './projects/datasets/dogscats/',
-                      'architecture': 'mobilenet_v2',
-                      'num_classes': 2})
-thread.start()
+# thread = TrainThread({'projectName': 'project_1',
+#                       'datasetFolder': './projects/datasets/dogscats/',
+#                       'architecture': 'mobilenet_v2',
+#                       'num_classes': 2})
+# thread.start()

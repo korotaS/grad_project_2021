@@ -1,12 +1,13 @@
 import os
 import json
 
-from flask import Flask, jsonify, request
+from flask import jsonify, request
+from flask_socketio import send
 
 from src.python.train import TrainThread
 from src.python.utils.architectures import get_architectures_by_type
+from src.python.app import socketio, app
 
-app = Flask(__name__)
 
 STATUS = 'ready'
 THREAD = None
@@ -37,7 +38,7 @@ def run_train():
     global STATUS
     global THREAD
     THREAD = TrainThread(data)
-    # thread.start()
+    THREAD.start()
     return jsonify({'status': THREAD.status})
 
 
@@ -47,13 +48,5 @@ def get_archs(task):
     return jsonify({'architectures': archs})
 
 
-# @app.route("/runTrain/<project_name>")
-# def run(project_name):
-#     global STATUS
-#     thread = TrainThread(project_name)
-#     thread.start()
-#     return jsonify({'status': STATUS})
-
-
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000)
+    socketio.run(app, host='127.0.0.1', port=5000, debug=True)

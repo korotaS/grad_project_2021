@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Button, ButtonGroup, ToggleButton, InputGroup, FormControl } from 'react-bootstrap';
+import openSocket from 'socket.io-client';
 
+const socket = openSocket('http://localhost:5000');
 const {ipcRenderer} = window.require("electron");
 
 class ChooseTask extends Component {
@@ -15,6 +17,16 @@ class ChooseTask extends Component {
         this.submitChoice = this.submitChoice.bind(this);
         this.changeChoice = this.changeChoice.bind(this);
         this.changeProjectName = this.changeProjectName.bind(this);
+
+        socket.on('message', message => {
+            console.log(message);
+            socket.send('received from server: ' + message);
+        })
+
+        socket.on('batch', data => {
+            console.log(data);
+            socket.send('received from server: ' + JSON.stringify(data));
+        })
     }
 
     submitChoice(event) {
