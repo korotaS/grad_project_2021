@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import torch.nn as nn
 from torch import optim
 from torchvision import datasets, models, transforms
+import numpy as np
 
 from src.python.utils.datasets import ImageClassificationDataset
 from src.python.utils.architectures import get_im_clf_model
@@ -65,23 +66,30 @@ class TrainThread(Thread):
     def init_model(self):
         self.model, self.input_size = get_im_clf_model(self.architecture,
                                                        num_classes=self.num_classes,
-                                                       use_pretrained=False)
+                                                       use_pretrained=True)
 
     def init_datasets(self):
-        transform = transforms.Compose([
-            transforms.Resize((self.input_size, self.input_size)),
+        transform_train = transforms.Compose([
+            transforms.RandomResizedCrop(self.input_size),
+            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])
-        tr_dataset = ImageClassificationDataset(self.train_folder, transform=transform)
-        te_dataset = ImageClassificationDataset(self.test_folder, transform=transform)
+        tr_dataset = ImageClassificationDataset(self.train_folder, transform=transform_train)
+        transform_val = transforms.Compose([
+            transforms.Resize(self.input_size),
+            transforms.CenterCrop(self.input_size),
+            transforms.ToTensor(),
+            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+        ])
+        te_dataset = ImageClassificationDataset(self.test_folder, transform=transform_val)
         tr_loader = torch.utils.data.DataLoader(
             tr_dataset,
-            batch_size=16,
+            batch_size=8,
             shuffle=True)
         te_loader = torch.utils.data.DataLoader(
             te_dataset,
-            batch_size=16,
+            batch_size=8,
             shuffle=True)
         return tr_dataset, te_dataset, tr_loader, te_loader
 
@@ -94,46 +102,80 @@ class TrainThread(Thread):
             return json.load(r)
 
     def train(self):
-        self.write_log({'project': self.project_folder, 'epochs': [], 'status': 'training'})
+        params_to_update = self.model.parameters()
+        print("Params to learn:")
+        freeze = True
+        if freeze:
+            params_to_update = []
+            for name, param in self.model.named_parameters():
+                if param.requires_grad:
+                    params_to_update.append(param)
+                    print("\t", name)
+        else:
+            for name, param in self.model.named_parameters():
+                if param.requires_grad:
+                    print("\t", name)
+        optimizer = optim.Adam(params_to_update, lr=0.001)
+        criterion = nn.CrossEntropyLoss()
+        dataloaders = {'train': self.train_loader, 'val': self.test_loader}
 
-        self.model.train()
-        optimizer = optim.Adam(self.model.parameters(), lr=0.0001)
-        criterion = nn.CrossEntropyLoss() if self.num_classes > 2 else nn.BCELoss()
-        NUM_TR_BATCHES = 10
-        NUM_TE_BATCHES = 5
+        num_epochs = 10
+        for epoch in range(num_epochs):
+            print('Epoch {}/{}'.format(epoch, num_epochs - 1))
+            print('-' * 10)
 
-        for epoch in range(10):
-            epoch_loss = 0
-            for batch, (data, target) in enumerate(self.train_loader):
-                if batch >= NUM_TR_BATCHES:
-                    break
-                optimizer.zero_grad()
-                output = self.model(data)
-                loss = criterion(torch.sigmoid(output) if self.num_classes == 2 else output, target.unsqueeze(1))
-                loss.backward()
-                optimizer.step()
-                print(f'train: epoch {epoch}, batch {batch}, loss {loss.item()}')
-            print()
-            with torch.no_grad():
-                for batch, (data, target) in enumerate(self.test_loader):
-                    if batch >= NUM_TE_BATCHES:
-                        break
-                    output = self.model(data)
-                    loss = criterion(torch.sigmoid(output) if self.num_classes == 2 else output, target.unsqueeze(1))
-                    epoch_loss += loss.item()
-                    print(f'test: epoch {epoch}, batch {batch}, loss {loss.item()}')
-            print()
-            epoch_loss /= NUM_TE_BATCHES
+            # Each epoch has a training and validation phase
+            for phase in ['train', 'val']:
+                if phase == 'train':
+                    self.model.train()  # Set model to training mode
+                else:
+                    self.model.eval()  # Set model to evaluate mode
 
-            epochs = self.read_log()
-            epochs['epochs'].append({'loss': epoch_loss,
-                                     'metrics': epoch_loss,
-                                     'epoch_num': epoch})
-            self.write_log(epochs)
+                running_loss = 0.0
+                running_corrects = 0
 
-        epochs = self.read_log()
-        epochs['status'] = 'done'
-        self.write_log(epochs)
+                # Iterate over data.
+                for batch, (inputs, labels) in enumerate(dataloaders[phase]):
+                    # inputs = inputs.to(device)
+                    # labels = labels.to(device)
+                    if batch % 10 == 0:
+                        print(f'batch: {batch}')
+
+                    # zero the parameter gradients
+                    optimizer.zero_grad()
+
+                    # forward
+                    # track history if only in train
+                    with torch.set_grad_enabled(phase == 'train'):
+                        # Get model outputs and calculate loss
+                        # Special case for inception because in training it has an auxiliary output. In train
+                        #   mode we calculate the loss by summing the final output and the auxiliary output
+                        #   but in testing we only consider the final output.
+                        if self.architecture == 'inception_v3' and phase == 'train':
+                            # From https://discuss.pytorch.org/t/how-to-optimize-inception-model-with-auxiliary-classifiers/7958
+                            outputs, aux_outputs = self.model(inputs)
+                            loss1 = criterion(outputs, labels)
+                            loss2 = criterion(aux_outputs, labels)
+                            loss = loss1 + 0.4 * loss2
+                        else:
+                            outputs = self.model(inputs)
+                            loss = criterion(outputs, labels.long())
+
+                        _, preds = torch.max(outputs, 1)
+
+                        # backward + optimize only if in training phase
+                        if phase == 'train':
+                            loss.backward()
+                            optimizer.step()
+
+                    # statistics
+                    running_loss += loss.item() * inputs.size(0)
+                    running_corrects += torch.sum(preds == labels.data)
+
+                epoch_loss = running_loss / len(dataloaders[phase].dataset)
+                epoch_acc = running_corrects.double() / len(dataloaders[phase].dataset)
+
+                print(f'{phase} Loss: {epoch_loss} Acc: {epoch_acc}')
 
 
 thread = TrainThread({'projectName': 'project_1',

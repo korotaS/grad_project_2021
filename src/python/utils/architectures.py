@@ -17,7 +17,13 @@ def get_im_clf_architectures():
     ]
 
 
-def get_im_clf_model(model_name, num_classes, use_pretrained=True):
+def set_parameter_requires_grad(model, feature_extracting):
+    if feature_extracting:
+        for param in model.parameters():
+            param.requires_grad = False
+
+
+def get_im_clf_model(model_name, num_classes, use_pretrained=True, freeze=True):
     """
     https://pytorch.org/tutorials/beginner/finetuning_torchvision_models_tutorial.html
     """
@@ -25,13 +31,12 @@ def get_im_clf_model(model_name, num_classes, use_pretrained=True):
     #   variables is model specific.
     model = None
     input_size = 0
-    if num_classes == 2:
-        num_classes = 1
 
     if model_name.startswith("resnet") or model_name.startswith('resnext'):
         """ Resnet and Resnext
         """
         model = getattr(models, model_name, None)(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, freeze)
         num_ftrs = model.fc.in_features
         model.fc = nn.Linear(num_ftrs, num_classes)
         input_size = 224
@@ -40,6 +45,7 @@ def get_im_clf_model(model_name, num_classes, use_pretrained=True):
         """ Alexnet
         """
         model = models.alexnet(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, freeze)
         num_ftrs = model.classifier[6].in_features
         model.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
@@ -48,6 +54,7 @@ def get_im_clf_model(model_name, num_classes, use_pretrained=True):
         """ VGG16_bn
         """
         model = models.vgg16_bn(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, freeze)
         num_ftrs = model.classifier[6].in_features
         model.classifier[6] = nn.Linear(num_ftrs, num_classes)
         input_size = 224
@@ -57,6 +64,7 @@ def get_im_clf_model(model_name, num_classes, use_pretrained=True):
         Be careful, expects (299,299) sized images and has auxiliary output
         """
         model = models.inception_v3(pretrained=use_pretrained)
+        set_parameter_requires_grad(model, freeze)
         # Handle the auxilary net
         num_ftrs = model.AuxLogits.fc.in_features
         model.AuxLogits.fc = nn.Linear(num_ftrs, num_classes)
@@ -69,6 +77,7 @@ def get_im_clf_model(model_name, num_classes, use_pretrained=True):
         """MobileNet
         """
         model = torch.hub.load('pytorch/vision', 'mobilenet_v2', pretrained=use_pretrained)
+        set_parameter_requires_grad(model, freeze)
         num_ftrs = model.classifier[1].in_features
         model.classifier[1] = torch.nn.Linear(num_ftrs, num_classes)
         input_size = 224
