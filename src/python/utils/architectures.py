@@ -116,6 +116,7 @@ class ImageClassificationModel(pl.LightningModule):
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels.long())
         # socketio.emit('batch', {'batch': str(batch_idx)})
+        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -130,10 +131,10 @@ class ImageClassificationModel(pl.LightningModule):
             loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
         accuracy = self.val_acc(preds, labels.data)
-        self.log('val_loss', loss, on_epoch=True, logger=True, prog_bar=True)
+        self.log('val_loss', loss, on_epoch=True, on_step=True, logger=True)
 
     def validation_epoch_end(self, outputs):
-        self.log('val_acc', self.val_acc.compute(), on_epoch=True, logger=True, prog_bar=True)
+        self.log('val_acc', self.val_acc.compute(), on_epoch=True, on_step=False, logger=True, prog_bar=True)
 
     def configure_optimizers(self):
         return self.optimizer

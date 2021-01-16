@@ -4,15 +4,18 @@ import ssl
 from threading import Thread
 
 import torch.nn as nn
+from pytorch_lightning import Trainer
+from pytorch_lightning.loggers import TensorBoardLogger
 from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from pytorch_lightning import Trainer
 
 from src.python.utils.architectures import get_im_clf_model, ImageClassificationModel
 from src.python.utils.datasets import ImageClassificationDataset
 
 ssl._create_default_https_context = ssl._create_unverified_context
+
+FREEZE = True
 
 
 class TrainThread(Thread):
@@ -62,7 +65,7 @@ class TrainThread(Thread):
         self.model_raw, self.input_size = get_im_clf_model(self.architecture,
                                                            num_classes=self.num_classes,
                                                            use_pretrained=True,
-                                                           freeze=False)
+                                                           freeze=FREEZE)
 
     def init_datasets(self):
         transform_train = transforms.Compose([
@@ -85,23 +88,24 @@ class TrainThread(Thread):
 
     def train(self):
         params_to_update = self.model_raw.parameters()
-        print("Params to learn:")
-        freeze = True
-        if freeze:
+        # print("Params to learn:")
+        if FREEZE:
             params_to_update = []
             for name, param in self.model_raw.named_parameters():
                 if param.requires_grad:
                     params_to_update.append(param)
-                    print("\t", name)
+                    # print("\t", name)
         else:
             for name, param in self.model_raw.named_parameters():
                 if param.requires_grad:
-                    print("\t", name)
+                    # print("\t", name)
+                    pass
         optimizer = optim.Adam(params_to_update, lr=0.001)
         criterion = nn.CrossEntropyLoss()
         self.model = ImageClassificationModel(self.model_raw, self.architecture, optimizer, criterion)
 
-        trainer = Trainer(max_epochs=10, limit_train_batches=10, limit_val_batches=10)
+        logger = TensorBoardLogger('tb_logs', name='my_model', default_hp_metric=True)
+        trainer = Trainer(max_epochs=10, logger=logger, log_every_n_steps=25)
         trainer.fit(self.model, self.train_loader, self.val_loader)
 
 
