@@ -3,6 +3,9 @@ import ssl
 import torch
 import torch.nn as nn
 from torchvision import models
+import pytorch_lightning as pl
+
+from src.python.app import socketio
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -87,6 +90,53 @@ def get_im_clf_model(model_name, num_classes, use_pretrained=True, freeze=True):
         exit()
 
     return model, input_size
+
+
+class ImageClassificationModel(pl.LightningModule):
+    def __init__(self, model, architecture, optimizer, criterion):
+        super().__init__()
+        self.model = model
+        self.architecture = architecture
+        self.optimizer = optimizer
+        self.criterion = criterion
+
+        self.val_acc = pl.metrics.Accuracy()
+
+    def forward(self, x):
+        return self.model(x)
+
+    def training_step(self, batch, batch_idx):
+        inputs, labels = batch
+        if self.architecture == 'inception_v3':
+            outputs, aux_outputs = self.model(inputs)
+            loss1 = self.criterion(outputs, labels)
+            loss2 = self.criterion(aux_outputs, labels)
+            loss = loss1 + 0.4 * loss2
+        else:
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs, labels.long())
+        # socketio.emit('batch', {'batch': str(batch_idx)})
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        inputs, labels = batch
+        if self.architecture == 'inception_v3':
+            outputs, aux_outputs = self.model(inputs)
+            loss1 = self.criterion(outputs, labels)
+            loss2 = self.criterion(aux_outputs, labels)
+            loss = loss1 + 0.4 * loss2
+        else:
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs, labels.long())
+        _, preds = torch.max(outputs, 1)
+        accuracy = self.val_acc(preds, labels.data)
+        self.log('val_loss', loss, on_epoch=True, logger=True, prog_bar=True)
+
+    def validation_epoch_end(self, outputs):
+        self.log('val_acc', self.val_acc.compute(), on_epoch=True, logger=True, prog_bar=True)
+
+    def configure_optimizers(self):
+        return self.optimizer
 
 
 # IMAGE SEGMENTATION
