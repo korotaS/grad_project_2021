@@ -64,7 +64,7 @@ class TrainThread(Thread):
     def init_model(self):
         self.model_raw, self.input_size = get_im_clf_model(self.architecture,
                                                            num_classes=self.num_classes,
-                                                           use_pretrained=True,
+                                                           pretrained=True,
                                                            freeze=FREEZE)
 
     def init_datasets(self):
