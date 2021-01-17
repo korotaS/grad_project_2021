@@ -42,13 +42,13 @@ class ImageClassificationDataset(BaseDataset):
             raise DatasetStructureError(f'info.json not found in dataset folder: {self.path}')
         if not os.path.exists(self.images_path):
             raise DatasetStructureError(f'"images/" folder not found in dataset folder: {self.path}')
-        print('Structure OK!')
+        print(f'{self.path}: Structure OK!')
 
     def check_content(self):
         for value in self.info.values():
             if not os.path.exists(os.path.join(self.images_path, value['filename'])):
                 raise DatasetContentError(f'File with name {value["filename"]} not found in {self.images_path}')
-        print('Content OK!')
+        print(f'{self.path}: Content OK!')
 
     def __len__(self):
         return len(self.info)
@@ -92,7 +92,7 @@ class ImageSegmentationDataset(BaseDataset):
         if not self.use_rle:
             if not os.path.exists(self.masks_path):
                 raise DatasetStructureError(f'"masks/" folder not found in dataset folder: {self.path}')
-        print('Structure OK!')
+        print(f'{self.path}: Structure OK!')
 
     def check_content(self):
         for image in self.info.values():
@@ -101,7 +101,7 @@ class ImageSegmentationDataset(BaseDataset):
             if not self.use_rle:
                 if not os.path.exists(os.path.join(self.masks_path, image['mask_filename'])):
                     raise DatasetContentError(f'File with name {image["mask_filename"]} not found in {self.masks_path}')
-        print('Content OK!')
+        print(f'{self.path}: Content OK!')
 
     def __len__(self):
         return len(os.listdir(self.images_path))
