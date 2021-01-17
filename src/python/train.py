@@ -37,18 +37,18 @@ class TrainThread(Thread):
         self.trainer.run()
 
 
-# thread = TrainThread({'task': 'cv',
-#                       'subtask': 'imclf',
-#                       'projectName': 'project_1',
-#                       'rawDatasetFolder': '',
-#                       'architecture': 'mobilenet_v2',
-#                       'numClasses': '2',
-#                       'criterion': 'CrossEntropyLoss',
-#                       'optimizer': 'Adam',
-#                       'pretrained': True,
-#                       'batchSize': '8',
-#                       'freeze': True,
-#                       'lr': '0.001'})
+thread = TrainThread({'task': 'cv',
+                      'subtask': 'imclf',
+                      'projectName': 'project_1',
+                      'rawDatasetFolder': '',
+                      'architecture': 'mobilenet_v2',
+                      'numClasses': '2',
+                      'criterion': 'CrossEntropyLoss',
+                      'optimizer': 'Adam',
+                      'pretrained': True,
+                      'batchSize': '8',
+                      'freeze': True,
+                      'lr': '0.001'})
 # thread = TrainThread({'task': 'cv',
 #                       'subtask': 'imsgm',
 #                       'projectName': 'project_2',
