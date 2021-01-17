@@ -157,7 +157,8 @@ def get_im_sgm_model(model_name, encoder_name, num_classes, in_channels, pretrai
         encoder_name=encoder_name,
         encoder_weights='imagenet' if pretrained else None,  # Only ImageNet for now
         in_channels=in_channels,
-        classes=num_classes
+        classes=num_classes,
+        activation='sigmoid' if num_classes == 1 else 'softmax'
     )
     return model
 
@@ -175,7 +176,7 @@ class ImageSegmentationModel(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         images, masks = batch
-        outputs = self.model(images, masks)
+        outputs = self.model(images)
         loss = self.criterion(outputs, masks.long())
         # socketio.emit('batch', {'batch': str(batch_idx)})
         self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
@@ -183,9 +184,8 @@ class ImageSegmentationModel(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         images, masks = batch
-        outputs = self.model(images, masks)
-        loss = self.criterion(outputs, masks.long())
-        _, preds = torch.max(outputs, 1)
+        outputs = self.model(images)
+        loss = self.criterion(outputs, masks.long())  # TODO: check dice loss
         self.log('val_loss', loss, on_epoch=True, on_step=True, logger=True)
 
     def configure_optimizers(self):

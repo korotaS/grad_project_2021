@@ -77,11 +77,11 @@ class ImageSegmentationDataset(BaseDataset):
 
         self.images_path = os.path.join(self.path, 'images/')
         self.info_path = os.path.join(self.path, 'info.json')
+        if not self.use_rle:
+            self.masks_path = os.path.join(self.path, 'masks/')
         self.check_structure()
         with open(self.info_path, 'r') as r:
             self.info = json.load(r)
-        if not self.use_rle:
-            self.masks_path = os.path.join(self.path, 'masks/')
         self.check_content()
 
     def check_structure(self):
@@ -119,6 +119,7 @@ class ImageSegmentationDataset(BaseDataset):
             mask = rle_decode_mask(values, counts, shape)
         else:
             mask = cv2.imread(os.path.join(self.masks_path, data['mask_filename']))
+            mask = mask[:, :, 0]  # TODO: fix it
         if self.mask_transform:
             mask = self.mask_transform(mask)
         return image, mask
