@@ -1,17 +1,20 @@
 import os
 import shutil
+import ssl
 
-from torch import optim
-from torch import nn
-from torch.utils.data import DataLoader
-from torchvision import transforms
 from pytorch_lightning import Trainer as PLTrainer
 from pytorch_lightning.loggers import TensorBoardLogger
 from segmentation_models_pytorch.utils import losses as smp_losses
+from torch import nn
+from torch import optim
+from torch.utils.data import DataLoader
+from torchvision import transforms
 
 from src.python.utils.architectures import (get_im_clf_model, ImageClassificationModel, get_im_sgm_model,
                                             ImageSegmentationModel)
 from src.python.utils.datasets import ImageClassificationDataset, ImageSegmentationDataset
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class BaseImageTrainer:
@@ -161,9 +164,3 @@ class ImageSegmentationTrainer(BaseImageTrainer):
         logger = TensorBoardLogger('tb_logs', name='my_model')
         pl_trainer = PLTrainer(max_epochs=self.max_epochs, logger=logger, log_every_n_steps=25)
         pl_trainer.fit(self.model, self.train_loader, self.val_loader)
-
-
-# trainer = ImageClassificationTrainer('project_1', '', 'mobilenet_v2', 2, 'CrossEntropyLoss', 'Adam', True, 8,
-#                                      freeze=True)
-# trainer = ImageSegmentationTrainer('project_2', '', 'FPN', 'mobilenet_v2', 1, 'DiceLoss', 'Adam', True, 8)
-# trainer.run()

@@ -1,5 +1,6 @@
 from functools import reduce as _reduce
 import numpy as np
+import re
 
 
 def rle_encode(seq):
@@ -42,3 +43,8 @@ def rle_decode_mask(values, counts, image_shape):
     seq = rle_decode(values, counts)
     mask = np.reshape(seq, (w, h))
     return mask
+
+
+def camel_to_snake(name):
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
