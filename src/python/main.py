@@ -1,4 +1,5 @@
 import json
+import argparse
 
 from flask import jsonify, request
 
@@ -46,4 +47,8 @@ def get_archs(task):
 
 
 if __name__ == "__main__":
-    socketio.run(app, host='127.0.0.1', port=5000, debug=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=5000)
+    args = parser.parse_args()
+    port = args.port
+    socketio.run(app, host='127.0.0.1', port=port, debug=True)

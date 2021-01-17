@@ -1,5 +1,6 @@
 const {app, BrowserWindow, ipcMain, net} = require("electron");
 const path = require("path");
+const getPort = require('get-port');
 
 const PY_MODULE = "src/python/main.py";
 const SERVER_RUNNING = true;
@@ -12,13 +13,17 @@ let mainWindow = null;
 let subpy = null;
 let PROJECT_NAME = '';
 let LAST_EPOCH = 0;
+let port = 0;
 
 // -----INITIALIZATION-----
 
 const startPythonSubprocess = () => {
     if (!SERVER_RUNNING) {
-        subpy = require("child_process").spawn("python", [PY_MODULE]);
-        console.log(`started process at ${subpy.pid}`);
+        (async () => {
+            port = await getPort({port: 5000});
+            subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
+            console.log(`started process at ${subpy.pid} on port ${port}`);
+        })();
     }
 };
 
@@ -81,7 +86,7 @@ app.on("activate", () => {
 
 ipcMain.on('startTraining', function (e, item) {
     PROJECT_NAME = item;
-    const request = net.request('http://localhost:5000/runTrain/' + PROJECT_NAME);
+    const request = net.request(`http://localhost:${port}/runTrain/` + PROJECT_NAME);
     request.on('response', (response) => {
         response.on('data', (data) => {
             let json = JSON.parse(data.toString());
@@ -96,7 +101,7 @@ ipcMain.on('startTraining', function (e, item) {
 
 function checkStatus() {
     let rl = setInterval(function () {
-        const request = net.request('http://localhost:5000/trainStatus/' + PROJECT_NAME + '/' + LAST_EPOCH);
+        const request = net.request(`http://localhost:${port}/trainStatus/` + PROJECT_NAME + '/' + LAST_EPOCH);
         request.on('response', (response) => {
             response.on('data', (data) => {
                 let json = JSON.parse(data.toString());
@@ -124,7 +129,7 @@ ipcMain.on('submitChoice2', function (e, item) {
 
 ipcMain.on('submitChoice3', function (e, item) {
     const task = item.taskSubClass;
-    const request = net.request('http://localhost:5000/getArchs/' + task);
+    const request = net.request(`http://localhost:${port}/getArchs/` + task);
     request.on('response', (response) => {
         response.on('data', (data) => {
             let json = JSON.parse(data.toString())
