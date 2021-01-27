@@ -37,29 +37,29 @@ class TrainThread(Thread):
         self.trainer.run()
 
 
-thread = TrainThread({'task': 'cv',
-                      'subtask': 'imclf',
-                      'projectName': 'project_1',
-                      'rawDatasetFolder': '',
-                      'architecture': 'mobilenet_v2',
-                      'numClasses': '2',
-                      'criterion': 'CrossEntropyLoss',
-                      'optimizer': 'Adam',
-                      'pretrained': True,
-                      'batchSize': '8',
-                      'freeze': True,
-                      'lr': '0.001'})
 # thread = TrainThread({'task': 'cv',
-#                       'subtask': 'imsgm',
-#                       'projectName': 'project_2',
+#                       'subtask': 'imclf',
+#                       'projectName': 'project_1',
 #                       'rawDatasetFolder': '',
-#                       'architecture': 'FPN',
-#                       'backbone': 'mobilenet_v2',
-#                       'numClasses': '1',
-#                       'criterion': 'DiceLoss',
+#                       'architecture': 'mobilenet_v2',
+#                       'numClasses': '2',
+#                       'criterion': 'CrossEntropyLoss',
 #                       'optimizer': 'Adam',
 #                       'pretrained': True,
 #                       'batchSize': '8',
+#                       'freeze': True,
 #                       'lr': '0.001'})
-# thread.start()
+thread = TrainThread({'task': 'cv',
+                      'subtask': 'imsgm',
+                      'projectName': 'project_2',
+                      'rawDatasetFolder': '',
+                      'architecture': 'FPN',
+                      'backbone': 'mobilenet_v2',
+                      'numClasses': '1',
+                      'criterion': 'JaccardLoss',
+                      'optimizer': 'Adam',
+                      'pretrained': True,
+                      'batchSize': '8',
+                      'lr': '0.001'})
+thread.start()
 

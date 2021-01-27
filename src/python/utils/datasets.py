@@ -67,9 +67,10 @@ class ImageClassificationDataset(BaseDataset):
 
 
 class ImageSegmentationDataset(BaseDataset):
-    def __init__(self, path, device='cpu', image_transform=None, mask_transform=None, use_rle=False):
+    def __init__(self, path, num_classes, device='cpu', image_transform=None, mask_transform=None, use_rle=False):
         super().__init__()
         self.path = path
+        self.num_classes = num_classes
         self.device = device
         self.image_transform = image_transform
         self.mask_transform = mask_transform
@@ -104,7 +105,7 @@ class ImageSegmentationDataset(BaseDataset):
         print(f'{self.path}: Content OK!')
 
     def __len__(self):
-        return len(os.listdir(self.images_path))
+        return len(self.info)
 
     def __getitem__(self, idx):
         data = self.info[str(idx)]
@@ -118,8 +119,12 @@ class ImageSegmentationDataset(BaseDataset):
             shape = image.shape
             mask = rle_decode_mask(values, counts, shape)
         else:
-            mask = cv2.imread(os.path.join(self.masks_path, data['mask_filename']))
-            mask = mask[:, :, 0]  # TODO: fix it
+            mask = cv2.imread(os.path.join(self.masks_path, data['mask_filename']), cv2.IMREAD_UNCHANGED)
+            if self.num_classes == 1:
+                assert len(mask.shape) == 2, 'Num_classes is 1, so mask must be a 1-channel image with shape (x, y)'
+            else:
+                assert len(mask.shape) == 3 and mask.shape[2] == 2, \
+                    f'Num_classes is {self.num_classes}, so mask must be a {self.num_classes}-channel image'
         if self.mask_transform:
             mask = self.mask_transform(mask)
         return image, mask

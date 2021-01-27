@@ -119,7 +119,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
         self.val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
 
     def train(self):
-        logger = TensorBoardLogger('tb_logs', name='my_model')
+        logger = TensorBoardLogger('tb_logs', name='imclf')
         pl_trainer = PLTrainer(max_epochs=self.max_epochs, logger=logger, log_every_n_steps=25)
         pl_trainer.fit(self.model, self.train_loader, self.val_loader)
 
@@ -153,14 +153,16 @@ class ImageSegmentationTrainer(BaseImageTrainer):
             mask_transform = transforms.Compose([
                 transforms.ToTensor()
             ])
-        self.train_dataset = ImageSegmentationDataset(self.train_folder, image_transform=image_transform,
+        self.train_dataset = ImageSegmentationDataset(self.train_folder, self.num_classes,
+                                                      image_transform=image_transform,
                                                       mask_transform=mask_transform)
-        self.val_dataset = ImageSegmentationDataset(self.val_folder, image_transform=image_transform,
+        self.val_dataset = ImageSegmentationDataset(self.val_folder, self.num_classes,
+                                                    image_transform=image_transform,
                                                     mask_transform=mask_transform)
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
         self.val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
 
     def train(self):
-        logger = TensorBoardLogger('tb_logs', name='my_model')
+        logger = TensorBoardLogger('tb_logs', name='imsgm')
         pl_trainer = PLTrainer(max_epochs=self.max_epochs, logger=logger, log_every_n_steps=25)
         pl_trainer.fit(self.model, self.train_loader, self.val_loader)

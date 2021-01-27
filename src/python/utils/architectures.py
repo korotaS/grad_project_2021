@@ -185,7 +185,7 @@ class ImageSegmentationModel(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         images, masks = batch
         outputs = self.model(images)
-        loss = self.criterion(outputs, masks.long())  # TODO: check dice loss
+        loss = self.criterion(outputs, masks.long())
         self.log('val_loss', loss, on_epoch=True, on_step=True, logger=True)
 
     def configure_optimizers(self):
