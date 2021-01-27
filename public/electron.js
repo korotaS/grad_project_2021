@@ -11,6 +11,7 @@ const DEV = true;
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let subpy = null;
+let subtb = null;
 let PROJECT_NAME = '';
 let LAST_EPOCH = 0;
 let port = 0;
@@ -23,6 +24,8 @@ const startPythonSubprocess = () => {
             port = await getPort({port: 5000});
             subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
             console.log(`started process at ${subpy.pid} on port ${port}`);
+            // subtb = require("child_process").spawn("tensorboard", ['--logdir', 'tb_logs/']);
+            // console.log(`started tensorboard process at ${subtb.pid}`);
         })();
     }
 };
@@ -174,6 +177,8 @@ function killPythonSubprocess() {
         if (!subpy.killed) {
             console.log(`killing python subprocess with pid=${subpy.pid}`);
             subpy.kill();
+            // console.log(`killing tensorboard subprocess with pid=${subtb.pid}`);
+            // subtb.kill();
         }
         cleanup_completed = true;
         return new Promise(function (resolve, reject) {

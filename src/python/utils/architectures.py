@@ -102,7 +102,9 @@ class ImageClassificationModel(pl.LightningModule):
         self.optimizer = optimizer
         self.criterion = criterion
 
-        self.val_acc = pl.metrics.Accuracy()
+        self.metrics = {
+            'acc': pl.metrics.Accuracy()
+        }
 
     def forward(self, x):
         return self.model(x)
@@ -117,9 +119,17 @@ class ImageClassificationModel(pl.LightningModule):
         else:
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels.long())
+        _, preds = torch.max(outputs, 1)
         # socketio.emit('batch', {'batch': str(batch_idx)})
-        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
-        return loss
+        tb_logs = {
+            'train_loss': loss.cpu()
+        }
+        for metric_name, metric in self.metrics.items():
+            tb_logs['train_' + metric_name] = metric(preds, labels.data)
+        return {
+            'loss': loss.cpu(),
+            'log': tb_logs
+        }
 
     def validation_step(self, batch, batch_idx):
         inputs, labels = batch
@@ -132,11 +142,15 @@ class ImageClassificationModel(pl.LightningModule):
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
-        accuracy = self.val_acc(preds, labels.data)
-        self.log('val_loss', loss, on_epoch=True, on_step=True, logger=True)
-
-    def validation_epoch_end(self, outputs):
-        self.log('val_acc', self.val_acc.compute(), on_epoch=True, on_step=False, logger=True, prog_bar=True)
+        tb_logs = {
+            'val_loss': loss.cpu()
+        }
+        for metric_name, metric in self.metrics.items():
+            tb_logs['val_' + metric_name] = metric(preds, labels.data)
+        return {
+            'loss': loss.cpu(),
+            'log': tb_logs
+        }
 
     def configure_optimizers(self):
         return self.optimizer
@@ -170,6 +184,9 @@ class ImageSegmentationModel(pl.LightningModule):
         self.model = model
         self.optimizer = optimizer
         self.criterion = criterion
+        self.metrics = {
+            'IOU': smp.utils.metrics.IoU()
+        }
 
     def forward(self, x):
         return self.model(x)
@@ -179,14 +196,29 @@ class ImageSegmentationModel(pl.LightningModule):
         outputs = self.model(images)
         loss = self.criterion(outputs, masks.long())
         # socketio.emit('batch', {'batch': str(batch_idx)})
-        self.log('train_loss', loss, on_step=True, on_epoch=True, logger=True)
-        return loss
+        tb_logs = {
+            'train_loss': loss.cpu()
+        }
+        for metric_name, metric in self.metrics.items():
+            tb_logs['train_'+metric_name] = metric(outputs, images)
+        return {
+            'loss': loss.cpu(),
+            'log': tb_logs
+        }
 
     def validation_step(self, batch, batch_idx):
         images, masks = batch
         outputs = self.model(images)
         loss = self.criterion(outputs, masks.long())
-        self.log('val_loss', loss, on_epoch=True, on_step=True, logger=True)
+        tb_logs = {
+            'val_loss': loss.cpu()
+        }
+        for metric_name, metric in self.metrics.items():
+            tb_logs['val_' + metric_name] = metric(outputs, images)
+        return {
+            'loss': loss.cpu(),
+            'log': tb_logs
+        }
 
     def configure_optimizers(self):
         return self.optimizer
