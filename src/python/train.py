@@ -51,6 +51,7 @@ class TrainThread(Thread):
 #                       'freeze': True,
 #                       'lr': '0.001',
 #                       'labels': ['cat', 'dog']})
+
 # thread = TrainThread({'task': 'cv',
 #                       'subtask': 'imsgm',
 #                       'projectName': 'project_2',
