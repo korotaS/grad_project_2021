@@ -1,6 +1,7 @@
 import json
 import os
 
+import numpy as np
 import torch
 import cv2
 from PIL import Image
@@ -24,11 +25,12 @@ class BaseDataset(Dataset):
 
 
 class ImageClassificationDataset(BaseDataset):
-    def __init__(self, path, device='cpu', transform=None):
+    def __init__(self, path, input_size, device='cpu', transform=None):
         super().__init__()
         self.path = path
         self.device = device
         self.transform = transform
+        self.input_size = input_size
 
         self.info_path = os.path.join(self.path, 'info.json')
         self.images_path = os.path.join(self.path, 'images/')
@@ -57,13 +59,16 @@ class ImageClassificationDataset(BaseDataset):
         data = self.info[str(idx)]
         filename = data['filename']
         image = Image.open(os.path.join(self.images_path, filename))
+        raw_image = np.array(image)
+        raw_image = cv2.resize(raw_image, (self.input_size, self.input_size))
         if self.transform:
             image = self.transform(image)
         image = image.to(self.device)
 
+        # TODO: change labeling
         label = data['label']
         label = torch.tensor(label, dtype=torch.float, device=self.device)
-        return image, label
+        return raw_image, image, label
 
 
 class ImageSegmentationDataset(BaseDataset):

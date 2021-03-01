@@ -73,11 +73,12 @@ class BaseImageTrainer:
 
 class ImageClassificationTrainer(BaseImageTrainer):
     def __init__(self, project_name, raw_dataset_folder, architecture, num_classes, criterion, optimizer, pretrained,
-                 batch_size, max_epochs=10, lr=0.001, freeze=False, transforms='default'):
+                 batch_size, labels, max_epochs=10, lr=0.001, freeze=False, transforms='default'):
         super().__init__(project_name, raw_dataset_folder, architecture, num_classes, criterion, optimizer, pretrained,
                          batch_size, max_epochs, lr)
         self.freeze = freeze
         self.transforms = transforms
+        self.labels = labels
 
         # to be initialized
         self.input_size = None
@@ -95,7 +96,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
                     params_to_update.append(param)
         optimizer = getattr(optim, self.optimizer_name, optim.Adam)(params=params_to_update, lr=self.lr)
         criterion = getattr(nn, self.criterion_name, nn.CrossEntropyLoss)()
-        self.model = ImageClassificationModel(self.model_raw, self.architecture, optimizer, criterion)
+        self.model = ImageClassificationModel(self.model_raw, self.architecture, optimizer, criterion, self.labels)
 
     def init_data(self):
         if self.transforms == 'default':  # TODO: add transforms from UI
@@ -105,7 +106,8 @@ class ImageClassificationTrainer(BaseImageTrainer):
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
-        self.train_dataset = ImageClassificationDataset(self.train_folder, transform=transform_train)
+        self.train_dataset = ImageClassificationDataset(self.train_folder, transform=transform_train,
+                                                        input_size=self.input_size)
         if self.transforms == 'default':
             transform_val = transforms.Compose([
                 transforms.Resize(self.input_size),
@@ -113,7 +115,8 @@ class ImageClassificationTrainer(BaseImageTrainer):
                 transforms.ToTensor(),
                 transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
             ])
-        self.val_dataset = ImageClassificationDataset(self.val_folder, transform=transform_val)
+        self.val_dataset = ImageClassificationDataset(self.val_folder, transform=transform_val,
+                                                      input_size=self.input_size)
 
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
         self.val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)

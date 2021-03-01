@@ -1,10 +1,12 @@
 import ssl
 
-import segmentation_models_pytorch as smp
 import pytorch_lightning as pl
+import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 from torchvision import models
+
+from src.python.utils.draw import draw_im_clf_predictions
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -95,12 +97,13 @@ def get_im_clf_model(model_name, num_classes, pretrained=True, freeze=True):
 
 
 class ImageClassificationModel(pl.LightningModule):
-    def __init__(self, model, architecture, optimizer, criterion):
+    def __init__(self, model, architecture, optimizer, criterion, labels):
         super().__init__()
         self.model = model
         self.architecture = architecture
         self.optimizer = optimizer
         self.criterion = criterion
+        self.labels = labels
 
         self.metrics = {
             'acc': pl.metrics.Accuracy()
@@ -110,7 +113,7 @@ class ImageClassificationModel(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        inputs, labels = batch
+        raw_images, inputs, labels = batch
         if self.architecture == 'inception_v3':
             outputs, aux_outputs = self.model(inputs)
             loss1 = self.criterion(outputs, labels)
@@ -132,7 +135,7 @@ class ImageClassificationModel(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
-        inputs, labels = batch
+        raw_images, inputs, labels = batch
         if self.architecture == 'inception_v3':
             outputs, aux_outputs = self.model(inputs)
             loss1 = self.criterion(outputs, labels)
@@ -142,6 +145,7 @@ class ImageClassificationModel(pl.LightningModule):
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
+        logits = nn.functional.softmax(outputs)
         tb_logs = {
             'val_loss': loss.cpu()
         }
@@ -149,8 +153,16 @@ class ImageClassificationModel(pl.LightningModule):
             tb_logs['val_' + metric_name] = metric(preds, labels.data)
         return {
             'loss': loss.cpu(),
-            'log': tb_logs
+            'log': tb_logs,
+            'images': raw_images,
+            'logits': logits
         }
+
+    def validation_epoch_end(self, outputs):
+        images = outputs[0]['images'].cpu().numpy()
+        logits = outputs[0]['logits'].cpu().numpy()
+        fig = draw_im_clf_predictions(images, logits, self.labels, fontsize=10)
+        self.logger.experiment.add_figure('image', fig, self.current_epoch)
 
     def configure_optimizers(self):
         return self.optimizer

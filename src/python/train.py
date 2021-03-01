@@ -11,6 +11,7 @@ class TrainThread(Thread):
         self.data = data
         converted_params = self.convert_params()
         subtask = converted_params['subtask']
+        trainer_class = None
         if subtask == 'imclf':
             trainer_class = ImageClassificationTrainer
         elif subtask == 'imsgm':
@@ -48,7 +49,8 @@ class TrainThread(Thread):
 #                       'pretrained': True,
 #                       'batchSize': '8',
 #                       'freeze': True,
-#                       'lr': '0.001'})
+#                       'lr': '0.001',
+#                       'labels': ['cat', 'dog']})
 # thread = TrainThread({'task': 'cv',
 #                       'subtask': 'imsgm',
 #                       'projectName': 'project_2',
