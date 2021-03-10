@@ -46,7 +46,7 @@ class ImageClassificationDataset(BaseDataset):
         filename = data['filename']
         image = Image.open(os.path.join(self.images_path, filename))
         raw_image = np.array(image)
-        raw_image = cv2.resize(raw_image, (self.input_size, self.input_size))
+        raw_image = cv2.resize(raw_image, self.input_size)
         if self.transform:
             image = self.transform(image)
         image = image.to(self.device)

@@ -3,18 +3,19 @@ import shutil
 
 
 class BaseImageTrainer:
-    def __init__(self, project_name, raw_dataset_folder, architecture, num_classes, criterion, optimizer, pretrained,
-                 batch_size, max_epochs=10, lr=0.001):
-        self.project_name = project_name
-        self.raw_dataset_folder = raw_dataset_folder
-        self.architecture = architecture
-        self.num_classes = num_classes
-        self.criterion_name = criterion
-        self.optimizer_name = optimizer
-        self.pretrained = pretrained
-        self.batch_size = batch_size
-        self.max_epochs = max_epochs
-        self.lr = lr
+    def __init__(self, cfg):
+        self.project_name = cfg['general']['project_name']
+        self.raw_dataset_folder = cfg['data']['dataset_folder']
+        self.architecture = cfg['model']['architecture']
+        self.criterion_name = cfg['model']['criterion']
+        self.optimizer_name = cfg['model']['optimizer']
+        self.pretrained = cfg['model']['pretrained']
+        self.batch_size = cfg['model']['batch_size']
+        self.max_epochs = cfg['model']['max_epochs']
+        self.lr = cfg['model']['lr']
+        self.width = cfg['data']['width']
+        self.height = cfg['data']['height']
+        self.input_size = (self.height, self.width)
 
         self.train_dataset = self.val_dataset = self.train_loader = self.val_loader = None
         self.model_raw = None
