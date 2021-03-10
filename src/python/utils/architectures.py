@@ -129,9 +129,10 @@ class ImageClassificationModel(pl.LightningModule):
         }
         for metric_name, metric in self.metrics.items():
             tb_logs['train_' + metric_name] = metric(preds, labels.data)
+        for key, value in tb_logs.items():
+            self.log(key, value)
         return {
             'loss': loss.cpu(),
-            'log': tb_logs
         }
 
     def validation_step(self, batch, batch_idx):
@@ -145,15 +146,16 @@ class ImageClassificationModel(pl.LightningModule):
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
-        logits = nn.functional.softmax(outputs)
+        logits = nn.functional.softmax(outputs, dim=1)
         tb_logs = {
             'val_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
             tb_logs['val_' + metric_name] = metric(preds, labels.data)
+        for key, value in tb_logs.items():
+            self.log(key, value)
         return {
             'loss': loss.cpu(),
-            'log': tb_logs,
             'images': raw_images,
             'logits': logits,
             'pred_labels': preds,
@@ -169,11 +171,10 @@ class ImageClassificationModel(pl.LightningModule):
         true_labels = [int(label) for batch in true_labels for label in batch]
 
         pred_figure = draw_im_clf_predictions(images, logits, self.labels, fontsize=10)
-        self.logger.experiment.add_figure('pics/predictions', pred_figure, self.current_epoch)
+        self.logger.experiment.add_figure('predictions', pred_figure, self.current_epoch)
 
         conf_matr_figure = draw_confusion_matrix(pred_labels, true_labels, self.labels)
-        self.logger.experiment.add_figure('pics/confusion matrix', conf_matr_figure, self.current_epoch)
-        return outputs
+        self.logger.experiment.add_figure('confusion matrix', conf_matr_figure, self.current_epoch)
 
     def configure_optimizers(self):
         return self.optimizer
