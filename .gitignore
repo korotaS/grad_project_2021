@@ -1,3 +1,10 @@
 /node_modules/
 /venv/
+/env/
 /.idea/
+/projects/
+/build/
+.DS_Store
+__pycache__/
+/lightning_logs/
+/tb_logs/
