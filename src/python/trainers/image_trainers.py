@@ -3,6 +3,7 @@ import ssl
 from pytorch_lightning import Trainer as PLTrainer
 from pytorch_lightning.loggers import TensorBoardLogger
 from segmentation_models_pytorch.utils import losses as smp_losses
+from segmentation_models_pytorch.encoders import get_preprocessing_fn
 from torch import nn
 from torch import optim
 from torch.utils.data import DataLoader
@@ -19,7 +20,6 @@ ssl._create_default_https_context = ssl._create_unverified_context
 class ImageClassificationTrainer(BaseImageTrainer):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.cfg = cfg
         self.freeze = self.cfg['model']['freeze_backbone']
         self.labels = self.cfg['data']['labels']
         self.num_classes = len(self.labels)
@@ -55,14 +55,13 @@ class ImageClassificationTrainer(BaseImageTrainer):
     def train(self):
         logger = TensorBoardLogger('tb_logs', name='imclf')
         pl_trainer = PLTrainer(max_epochs=self.max_epochs, logger=logger, log_every_n_steps=25,
-                               num_sanity_val_steps=5)
+                               num_sanity_val_steps=5, callbacks=self.callbacks)
         pl_trainer.fit(self.model, self.train_loader, self.val_loader)
 
 
 class ImageSegmentationTrainer(BaseImageTrainer):
     def __init__(self, cfg):
         super().__init__(cfg)
-        self.cfg = cfg
         self.backbone = self.cfg['model']['backbone']
         self.in_channels = self.cfg['data']['in_channels']
         self.num_classes = self.cfg['data']['num_classes']
@@ -76,18 +75,21 @@ class ImageSegmentationTrainer(BaseImageTrainer):
         self.model = ImageSegmentationModel(self.model_raw, optimizer, criterion)
 
     def init_data(self):
-        transform_train = get_transforms(self.cfg, key='transforms_train', imagenet=self.pretrained)
+        preprocessing = get_preprocessing_fn(self.cfg['model']['backbone'],
+                                             pretrained='imagenet' if self.pretrained else False)
+
+        transform_train = get_transforms(self.cfg, key='transforms_train', imagenet=self.pretrained, norm=False)
         self.train_dataset = ImageSegmentationDataset(self.train_folder, self.input_size, self.num_classes,
-                                                      transform=transform_train)
+                                                      transform=transform_train, preprocessing=preprocessing)
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
 
-        transform_val = get_transforms(self.cfg, key='transforms_val', imagenet=self.pretrained)
+        transform_val = get_transforms(self.cfg, key='transforms_val', imagenet=self.pretrained, norm=False)
         self.val_dataset = ImageSegmentationDataset(self.val_folder, self.input_size, self.num_classes,
-                                                    transform=transform_val)
+                                                    transform=transform_val, preprocessing=preprocessing)
         self.val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
 
     def train(self):
         logger = TensorBoardLogger('tb_logs', name='imsgm')
         pl_trainer = PLTrainer(max_epochs=self.max_epochs, logger=logger, log_every_n_steps=25,
-                               num_sanity_val_steps=5)
+                               num_sanity_val_steps=5, callbacks=self.callbacks)
         pl_trainer.fit(self.model, self.train_loader, self.val_loader)

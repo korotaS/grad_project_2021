@@ -4,12 +4,16 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
 
-def get_transforms(config, key='transforms', imagenet=False):
+def get_transforms(config, key='transforms', imagenet=False, norm=True):
     if config['data'][key] == 'default':
-        return A.Compose([
+        if norm:
+            return A.Compose([
+                    A.Resize(config['data']['height'], config['data']['width']),
+                    A.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) if imagenet else A.Normalize(0, 1),
+                ])
+        else:
+            return A.Compose([
                 A.Resize(config['data']['height'], config['data']['width']),
-                A.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) if imagenet else A.Normalize(0, 1),
-                ToTensorV2(),
             ])
     else:
         return get_aug_from_config(config['data'][key])

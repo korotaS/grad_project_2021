@@ -99,7 +99,7 @@ class ImageSegmentationModel(pl.LightningModule):
         self.optimizer = optimizer
         self.criterion = criterion
         self.metrics = {
-            'IOU': smp.utils.metrics.IoU()
+            'iou': smp.utils.metrics.IoU()
         }
 
     def forward(self, x):
@@ -146,7 +146,7 @@ class ImageSegmentationModel(pl.LightningModule):
         true_masks = outputs[0]['true_masks']
         pred_masks = outputs[0]['pred_masks']
         raw_images = outputs[0]['raw_images']
-        metrics = [self.metrics['IOU'](pr, tr) for pr, tr in zip(pred_masks, true_masks)]
+        metrics = [self.metrics['iou'](pr, tr) for pr, tr in zip(pred_masks, true_masks)]
         fig = draw_prediction_masks_on_image(raw_images, pred_masks, true_masks, metrics, 4, 2)
         self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
 

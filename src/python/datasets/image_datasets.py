@@ -58,13 +58,14 @@ class ImageClassificationDataset(BaseDataset):
 
 
 class ImageSegmentationDataset(BaseDataset):
-    def __init__(self, path, input_size, num_classes, device='cpu', transform=None, use_rle=False):
+    def __init__(self, path, input_size, num_classes, device='cpu', transform=None, use_rle=False, preprocessing=None):
         super().__init__()
         self.path = path
         self.input_size = input_size
         self.num_classes = num_classes
         self.device = device
         self.transform = transform
+        self.preprocessing = preprocessing
         self.use_rle = use_rle
 
         self.images_path = os.path.join(self.path, 'images/')
@@ -101,8 +102,6 @@ class ImageSegmentationDataset(BaseDataset):
     def __getitem__(self, idx):
         data = self.info[str(idx)]
         image = np.array(Image.open(os.path.join(self.images_path, data['image_filename'])))
-        raw_image = image.copy()
-        raw_image = cv2.resize(raw_image, self.input_size)
 
         if self.use_rle:
             values, counts = image['rle']['values'], image['rle']['counts']
@@ -115,10 +114,21 @@ class ImageSegmentationDataset(BaseDataset):
             else:
                 assert len(mask.shape) == 3 and mask.shape[2] == self.num_classes, \
                     f'Num_classes is {self.num_classes}, so mask must be a {self.num_classes}-channel image'
+
         if self.transform:
-            sample = self.transform(image=image, mask=mask)
+            sample = self.transform(image=image, mask=mask)  # TODO: check multiple masks
             image = sample['image']
             mask = sample['mask']
-        image = image.to(self.device)
-        mask = mask.to(self.device)
+        raw_image = image.copy()
+
+        if self.preprocessing:
+            image = self.preprocessing(image)
+            image = image.transpose((2, 0, 1)).astype('float32')
+
+        mask = mask / 255.0
+        mask = mask.astype('float32')
+        if self.num_classes == 1:
+            mask = mask[np.newaxis, :, :]
+        else:
+            mask = mask.transpose((2, 0, 1))
         return raw_image, image, mask
