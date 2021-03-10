@@ -1,8 +1,11 @@
+import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from sklearn.metrics import confusion_matrix
 
+
+# IMAGE CLASSIFICATION
 
 def draw_im_clf_predictions(images, logits, labels, columns: int = 4, rows: int = 4, fontsize: int = 6):
     fig = plt.figure(figsize=(int(columns * 2), int(rows * 3)))
@@ -91,10 +94,8 @@ def make_confusion_matrix(cf,
 
     # MAKE THE HEATMAP VISUALIZATION
     fig = plt.figure(figsize=figsize)
-    # sns.set(font_scale=1.6)
     sns.heatmap(cf, annot=box_labels, fmt="", cmap=cmap, cbar=cbar, xticklabels=categories,
                 yticklabels=categories)
-    # sns.set(font_scale=1)
     fontsize = 10
     if xyplotlabels:
         plt.ylabel('True label', fontsize=fontsize)
@@ -106,3 +107,147 @@ def make_confusion_matrix(cf,
         plt.title(title)
     plt.subplots_adjust(bottom=0.25)
     return fig
+
+
+# IMAGE SEGMENTATION
+
+
+COLORS = [(75, 0, 130), (218, 112, 214), (255, 215, 0), (154, 205, 50), (255, 127, 80),
+          (70, 130, 180), (210, 180, 140), (135, 206, 235), (34, 139, 87), (255, 165, 0)]
+
+
+def draw_iterative(mask_pr, mask_gt=None, colors=None, draw_compare=False, num=10):
+    mask_left = colorize_3ch_mask(mask=mask_pr[0], color=colors[0])
+    for j in range(1, len(mask_pr)):
+        mask_left = cv2.bitwise_or(mask_left, colorize_3ch_mask(mask=mask_pr[j],
+                                                                color=colors[j % num]))
+    if draw_compare:
+        mask_right = colorize_mask_gt(mask_binary=mask_gt, colors=colors)
+
+        mask_result = cv2.hconcat([mask_left, mask_right])
+    else:
+        mask_result = mask_left
+
+    return mask_result
+
+
+def draw_masks(mask_pr, mask_gt=None, colors=None, draw_compare=False, seg_type='single', num=10):
+    if seg_type == 'single':
+        if draw_compare:
+            # print(mask_pr.shape, mask_gt.shape)
+            mask_left = colorize_3ch_mask(mask=mask_pr, color=colors[0])
+            mask_right = colorize_mask_gt(mask_binary=mask_gt, colors=colors)
+            mask_result = cv2.hconcat([mask_left, mask_right])
+        else:
+            mask_result = colorize_3ch_mask(mask=mask_pr, color=colors[0])
+    elif seg_type == 'multi':
+        if draw_compare:
+            mask_result = draw_iterative(mask_pr=mask_pr, mask_gt=mask_gt, colors=colors,
+                                         draw_compare=draw_compare, num=num)
+        else:
+            mask_result = draw_iterative(mask_pr=mask_pr, colors=colors,
+                                         draw_compare=draw_compare, num=num)
+
+    return mask_result
+
+
+def draw_prediction_masks(masks_pr, rows, columns,
+                          figsize=(15, 15), seg_type='single', colors_custom=None):
+    fig = plt.figure(figsize=figsize)
+    if colors_custom:
+        colors = colors_custom
+    else:
+        colors = COLORS
+    for i, mask_pr in enumerate(masks_pr):
+        ax = fig.add_subplot(rows, columns, i + 1)
+        ax.grid(False)
+        mask_result = draw_masks(mask_pr=mask_pr, colors=colors, draw_compare=False, seg_type=seg_type,
+                                 num=len(colors))
+        plt.imshow(mask_result)
+
+    return fig
+
+
+def draw_prediction_masks_on_image(images, masks_pr, masks_gt,
+                                   # jaccard_metrics,
+                                   rows, columns, figsize=(20, 20), seg_type='single', colors_custom=None):
+    fig = plt.figure(figsize=figsize)
+    if colors_custom:
+        colors = colors_custom
+    else:
+        colors = COLORS
+    for i, (image, mask_pr, mask_gt) in enumerate(zip(images, masks_pr, masks_gt)):
+        ax = fig.add_subplot(rows, columns, i + 1)
+        ax.grid(False)
+        image = image.detach().cpu().numpy().copy()
+
+        mask_left = draw_masks(mask_pr=mask_pr, colors=colors, draw_compare=False,
+                               seg_type=seg_type, num=len(colors))
+        mask_left = overlay_mask_on_image(mask=mask_left, image=image)
+        mask_right = draw_masks(mask_pr=mask_gt, colors=colors, draw_compare=False,
+                                seg_type=seg_type, num=len(colors))
+        mask_right = overlay_mask_on_image(mask=mask_right, image=image)
+
+        mask_result = cv2.hconcat([mask_left, mask_right])
+        plt.imshow(mask_result)
+        # ax.set_xlabel(f'mIoU: {jaccard_metric}')
+
+    return fig
+
+
+def draw_comparison_prediction_and_gt_masks(masks_pr, masks_gt, jaccard_metrics, rows, columns,
+                                            figsize=(20, 20), seg_type='single', colors_custom=None):
+    fig = plt.figure(figsize=figsize)
+    if colors_custom:
+        colors = colors_custom
+    else:
+        colors = COLORS
+    for i, (mask_pr, mask_gt, jaccard_metric) in enumerate(zip(masks_pr, masks_gt, jaccard_metrics)):
+        ax = fig.add_subplot(rows, columns, i + 1)
+        ax.grid(False)
+        mask_result = draw_masks(mask_pr=mask_pr, mask_gt=mask_gt, colors=colors, draw_compare=True,
+                                 seg_type=seg_type, num=len(colors))
+        plt.imshow(mask_result)
+        ax.set_xlabel(f'mIoU: {jaccard_metric}')
+
+    return fig
+
+
+def overlay_mask_on_image(mask, image, alpha=0.5):
+    return cv2.addWeighted(mask, alpha, image, 1 - alpha, 0)
+
+
+def filtrate_mask(mask, filtrate=True):
+    mask = mask.squeeze().detach().cpu().numpy()
+    if filtrate:
+        mask = np.where(mask > 0.5, 1, 0)
+    mask = mask.astype(np.uint8)
+
+    return mask
+
+
+def colorize_3ch_mask(mask, color):
+    mask_new = filtrate_mask(mask, filtrate=True)
+    mask_new = cv2.merge((mask_new * color[0], mask_new * color[1], mask_new * color[2]))
+
+    return mask_new
+
+
+def colorize_mask_gt(mask_binary, colors):
+    mask_binary = mask_binary.detach().cpu().numpy()
+    c, y, x = mask_binary.shape
+
+    mask_new = np.zeros((3, y, x)).astype(np.uint8)
+
+    for i in range(c):
+        coords = np.argwhere(mask_binary[i] == 1)
+        color = colors[i % c]
+
+        for coord in coords:
+            mask_new[2][coord[0]][coord[1]] = color[0]
+            mask_new[1][coord[0]][coord[1]] = color[1]
+            mask_new[0][coord[0]][coord[1]] = color[2]
+
+    mask_new = mask_new.transpose((1, 2, 0))
+
+    return mask_new

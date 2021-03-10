@@ -72,9 +72,11 @@ class ImageClassificationDataset(BaseDataset):
 
 
 class ImageSegmentationDataset(BaseDataset):
-    def __init__(self, path, num_classes, device='cpu', image_transform=None, mask_transform=None, use_rle=False):
+    def __init__(self, path, input_size, num_classes, device='cpu', image_transform=None,
+                 mask_transform=None, use_rle=False):
         super().__init__()
         self.path = path
+        self.input_size = input_size
         self.num_classes = num_classes
         self.device = device
         self.image_transform = image_transform
@@ -114,7 +116,9 @@ class ImageSegmentationDataset(BaseDataset):
 
     def __getitem__(self, idx):
         data = self.info[str(idx)]
-        image = cv2.imread(os.path.join(self.images_path, data['image_filename']))
+        image = Image.open(os.path.join(self.images_path, data['image_filename']))
+        raw_image = np.array(image)
+        raw_image = cv2.resize(raw_image, (self.input_size, self.input_size))  # TODO: fix it
         if self.image_transform:
             image = self.image_transform(image)
         image = image.to(self.device)
@@ -124,15 +128,15 @@ class ImageSegmentationDataset(BaseDataset):
             shape = image.shape
             mask = rle_decode_mask(values, counts, shape)
         else:
-            mask = cv2.imread(os.path.join(self.masks_path, data['mask_filename']), cv2.IMREAD_UNCHANGED)
+            mask = Image.open(os.path.join(self.masks_path, data['mask_filename']))
             if self.num_classes == 1:
-                assert len(mask.shape) == 2, 'Num_classes is 1, so mask must be a 1-channel image with shape (x, y)'
+                assert len(mask.size) == 2, 'Num_classes is 1, so mask must be a 1-channel image with shape (x, y)'
             else:
-                assert len(mask.shape) == 3 and mask.shape[2] == 2, \
+                assert len(mask.size) == 3 and mask.size[2] == self.num_classes, \
                     f'Num_classes is {self.num_classes}, so mask must be a {self.num_classes}-channel image'
         if self.mask_transform:
             mask = self.mask_transform(mask)
-        return image, mask
+        return raw_image, image, mask
 
 
 class DatasetStructureError(ValueError):

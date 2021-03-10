@@ -139,6 +139,8 @@ class ImageSegmentationTrainer(BaseImageTrainer):
         self.image_transforms = image_transforms
         self.mask_transforms = mask_transforms
 
+        self.input_size = 256
+
     def init_model(self):
         self.model_raw = get_im_sgm_model(self.architecture, self.backbone,
                                           num_classes=self.num_classes, in_channels=self.in_channels,
@@ -150,17 +152,20 @@ class ImageSegmentationTrainer(BaseImageTrainer):
     def init_data(self):
         if self.image_transforms == 'default':
             image_transform = transforms.Compose([
+                transforms.Resize(self.input_size),
                 transforms.ToTensor(),
                 transforms.Normalize(mean=0, std=1)
             ])
         if self.mask_transforms == 'default':
             mask_transform = transforms.Compose([
-                transforms.ToTensor()
+                transforms.Resize(self.input_size),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=0, std=1)
             ])
-        self.train_dataset = ImageSegmentationDataset(self.train_folder, self.num_classes,
+        self.train_dataset = ImageSegmentationDataset(self.train_folder, self.input_size, self.num_classes,
                                                       image_transform=image_transform,
                                                       mask_transform=mask_transform)
-        self.val_dataset = ImageSegmentationDataset(self.val_folder, self.num_classes,
+        self.val_dataset = ImageSegmentationDataset(self.val_folder, self.input_size, self.num_classes,
                                                     image_transform=image_transform,
                                                     mask_transform=mask_transform)
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)

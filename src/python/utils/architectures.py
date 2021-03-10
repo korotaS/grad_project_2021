@@ -6,7 +6,8 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix
+from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix, \
+    draw_prediction_masks_on_image
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -216,7 +217,7 @@ class ImageSegmentationModel(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        images, masks = batch
+        raw_images, images, masks = batch
         outputs = self.model(images)
         loss = self.criterion(outputs, masks.long())
         # socketio.emit('batch', {'batch': str(batch_idx)})
@@ -224,25 +225,40 @@ class ImageSegmentationModel(pl.LightningModule):
             'train_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['train_'+metric_name] = metric(outputs, images)
+            tb_logs['train_'+metric_name] = metric(outputs, masks)
+        for key, value in tb_logs.items():
+            self.log(key, value)
         return {
             'loss': loss.cpu(),
-            'log': tb_logs
         }
 
     def validation_step(self, batch, batch_idx):
-        images, masks = batch
+        raw_images, images, masks = batch
         outputs = self.model(images)
         loss = self.criterion(outputs, masks.long())
         tb_logs = {
             'val_loss': loss.cpu()
         }
+        res_metrics = {}
         for metric_name, metric in self.metrics.items():
-            tb_logs['val_' + metric_name] = metric(outputs, images)
+            res_metric = metric(outputs, masks).item()
+            tb_logs['val_' + metric_name] = res_metric
+            res_metrics[metric_name] = res_metric
+        for key, value in tb_logs.items():
+            self.log(key, value)
         return {
             'loss': loss.cpu(),
-            'log': tb_logs
+            'pred_masks': outputs,
+            'true_masks': masks,
+            'raw_images': raw_images
         }
+
+    def validation_epoch_end(self, outputs):
+        true_masks = outputs[0]['true_masks']
+        pred_masks = outputs[0]['pred_masks']
+        raw_images = outputs[0]['raw_images']
+        fig = draw_prediction_masks_on_image(raw_images, pred_masks, true_masks, 4, 2)
+        self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
 
     def configure_optimizers(self):
         return self.optimizer
