@@ -155,14 +155,21 @@ class ImageClassificationModel(pl.LightningModule):
             'loss': loss.cpu(),
             'log': tb_logs,
             'images': raw_images,
-            'logits': logits
+            'logits': logits,
+            'pred_labels': preds,
+            'true_labels': labels
         }
 
     def validation_epoch_end(self, outputs):
         images = outputs[0]['images'].cpu().numpy()
         logits = outputs[0]['logits'].cpu().numpy()
+        pred_labels = [output['pred_labels'].cpu().numpy() for output in outputs]
+        pred_labels = [label for batch in pred_labels for label in batch]
+        true_labels = [output['true_labels'].cpu().numpy() for output in outputs]
+        true_labels = [label for batch in true_labels for label in batch]
         fig = draw_im_clf_predictions(images, logits, self.labels, fontsize=10)
-        self.logger.experiment.add_figure('image', fig, self.current_epoch)
+        self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
+        return outputs
 
     def configure_optimizers(self):
         return self.optimizer
