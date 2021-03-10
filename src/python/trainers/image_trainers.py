@@ -1,5 +1,3 @@
-import os
-import shutil
 import ssl
 
 from pytorch_lightning import Trainer as PLTrainer
@@ -10,65 +8,12 @@ from torch import optim
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
-from src.python.utils.architectures import (get_im_clf_model, ImageClassificationModel, get_im_sgm_model,
-                                            ImageSegmentationModel)
-from src.python.utils.datasets import ImageClassificationDataset, ImageSegmentationDataset
+from src.python.architectures import get_im_clf_model, get_im_sgm_model
+from src.python.models import ImageClassificationModel, ImageSegmentationModel
+from src.python.trainers.base import BaseImageTrainer
+from src.python.datasets import ImageClassificationDataset, ImageSegmentationDataset
 
 ssl._create_default_https_context = ssl._create_unverified_context
-
-
-class BaseImageTrainer:
-    def __init__(self, project_name, raw_dataset_folder, architecture, num_classes, criterion, optimizer, pretrained,
-                 batch_size, max_epochs=10, lr=0.001):
-        self.project_name = project_name
-        self.raw_dataset_folder = raw_dataset_folder
-        self.architecture = architecture
-        self.num_classes = num_classes
-        self.criterion_name = criterion
-        self.optimizer_name = optimizer
-        self.pretrained = pretrained
-        self.batch_size = batch_size
-        self.max_epochs = max_epochs
-        self.lr = lr
-
-        self.train_dataset = self.val_dataset = self.train_loader = self.val_loader = None
-        self.model_raw = None
-        self.model = None
-
-        if not os.path.exists('./projects/'):
-            os.mkdir('./projects/')
-        self.project_folder = os.path.join('./projects/', self.project_name)
-        if not os.path.exists(self.project_folder):
-            os.mkdir(self.project_folder)
-        data_folder = os.path.join(self.project_folder, 'dataset/')
-        if not os.path.exists(data_folder):
-            os.mkdir(data_folder)
-        self.train_folder = os.path.join(data_folder, 'train/')
-        self.val_folder = os.path.join(data_folder, 'val/')
-
-    def copy_data(self):
-        if os.path.exists(self.train_folder):
-            shutil.rmtree(self.train_folder)
-        shutil.copytree(os.path.join(self.raw_dataset_folder, 'train/'), self.train_folder)
-
-        if os.path.exists(self.val_folder):
-            shutil.rmtree(self.val_folder)
-        shutil.copytree(os.path.join(self.raw_dataset_folder, 'val/'), self.val_folder)
-
-    def init_model(self):
-        pass
-
-    def init_data(self):
-        pass
-
-    def train(self):
-        pass
-
-    def run(self):
-        self.init_model()
-        # self.copy_data()
-        self.init_data()
-        self.train()
 
 
 class ImageClassificationTrainer(BaseImageTrainer):
@@ -139,7 +84,7 @@ class ImageSegmentationTrainer(BaseImageTrainer):
         self.image_transforms = image_transforms
         self.mask_transforms = mask_transforms
 
-        self.input_size = 256
+        self.input_size = (256, 256)
 
     def init_model(self):
         self.model_raw = get_im_sgm_model(self.architecture, self.backbone,

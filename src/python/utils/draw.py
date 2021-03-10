@@ -168,15 +168,14 @@ def draw_prediction_masks(masks_pr, rows, columns,
     return fig
 
 
-def draw_prediction_masks_on_image(images, masks_pr, masks_gt,
-                                   # jaccard_metrics,
-                                   rows, columns, figsize=(20, 20), seg_type='single', colors_custom=None):
+def draw_prediction_masks_on_image(images, masks_pr, masks_gt, jaccard_metrics, rows, columns,
+                                   figsize=(20, 20), seg_type='single', colors_custom=None):
     fig = plt.figure(figsize=figsize)
     if colors_custom:
         colors = colors_custom
     else:
         colors = COLORS
-    for i, (image, mask_pr, mask_gt) in enumerate(zip(images, masks_pr, masks_gt)):
+    for i, (image, mask_pr, mask_gt, jaccard_metric) in enumerate(zip(images, masks_pr, masks_gt, jaccard_metrics)):
         ax = fig.add_subplot(rows, columns, i + 1)
         ax.grid(False)
         image = image.detach().cpu().numpy().copy()
@@ -190,7 +189,7 @@ def draw_prediction_masks_on_image(images, masks_pr, masks_gt,
 
         mask_result = cv2.hconcat([mask_left, mask_right])
         plt.imshow(mask_result)
-        # ax.set_xlabel(f'mIoU: {jaccard_metric}')
+        ax.set_xlabel(f'mIoU: {jaccard_metric}')
 
     return fig
 

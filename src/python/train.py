@@ -1,7 +1,7 @@
 from threading import Thread
 import inspect
 
-from src.python.utils.trainers import ImageClassificationTrainer, ImageSegmentationTrainer
+from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer
 from src.python.utils.utils import camel_to_snake
 
 
@@ -63,6 +63,7 @@ class TrainThread(Thread):
 #                       'optimizer': 'Adam',
 #                       'pretrained': True,
 #                       'batchSize': '8',
-#                       'lr': '0.001'})
+#                       'lr': '0.001',
+#                       'max_epochs': 4})
 # thread.start()
 

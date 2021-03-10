@@ -5,7 +5,7 @@ from flask import jsonify, request
 
 from src.python.app import socketio, app
 from src.python.train import TrainThread
-from src.python.utils.architectures import get_architectures_by_type
+from src.python.architectures import get_architectures_by_type
 
 STATUS = 'ready'
 THREAD = None

@@ -1,27 +1,13 @@
 import json
 import os
 
+import cv2
 import numpy as np
 import torch
-import cv2
 from PIL import Image
-from torch.utils.data import Dataset
 
 from src.python.utils.utils import rle_decode_mask
-
-
-class BaseDataset(Dataset):
-    def __len__(self):
-        pass
-
-    def __getitem__(self, item):
-        pass
-
-    def check_structure(self, *args, **kwargs):
-        pass
-
-    def check_content(self, *args, **kwargs):
-        pass
+from src.python.datasets.base import BaseDataset, DatasetContentError, DatasetStructureError
 
 
 class ImageClassificationDataset(BaseDataset):
@@ -118,7 +104,7 @@ class ImageSegmentationDataset(BaseDataset):
         data = self.info[str(idx)]
         image = Image.open(os.path.join(self.images_path, data['image_filename']))
         raw_image = np.array(image)
-        raw_image = cv2.resize(raw_image, (self.input_size, self.input_size))  # TODO: fix it
+        raw_image = cv2.resize(raw_image, self.input_size)  # TODO: fix it
         if self.image_transform:
             image = self.image_transform(image)
         image = image.to(self.device)
@@ -137,13 +123,3 @@ class ImageSegmentationDataset(BaseDataset):
         if self.mask_transform:
             mask = self.mask_transform(mask)
         return raw_image, image, mask
-
-
-class DatasetStructureError(ValueError):
-    """Raised when structure of dataset folder is incorrect"""
-    pass
-
-
-class DatasetContentError(ValueError):
-    """Raised when content of dataset folder is incorrect"""
-    pass
