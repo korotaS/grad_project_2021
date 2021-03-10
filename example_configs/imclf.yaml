@@ -1,0 +1,23 @@
+general:
+  task: 'cv'
+  subtask: 'imclf'
+  project_name: 'project_1'
+
+data:
+  dataset_folder: 'projects/datasets/dogscats/'
+  width: 224
+  height: 224
+  labels:
+    - 'cat'
+    - 'dog'
+  transforms: 'default'
+
+model:
+  architecture: 'mobilenet_v2'
+  criterion: 'CrossEntropyLoss'
+  optimizer: 'Adam'
+  pretrained: true
+  freeze_backbone: true
+  batch_size: 8
+  lr: 0.001
+  max_epochs: 5
