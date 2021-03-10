@@ -1,0 +1,31 @@
+general:
+  task: 'cv'
+  subtask: 'imsgm'
+  project_name: 'project_2'
+  exp_name: 'experiment_1'
+
+data:
+  dataset_folder: 'projects/datasets/shapes/'
+  width: 256
+  height: 256
+  num_classes: 1
+  transforms_train: 'default'
+  transforms_val: 'default'
+  in_channels: 3
+
+model:
+  architecture: 'FPN'
+  backbone: 'mobilenet_v2'
+  criterion: 'JaccardLoss'
+  optimizer: 'Adam'
+  pretrained: true
+  batch_size: 8
+  lr: 0.001
+  max_epochs: 5
+
+checkpoint_callback:
+    mode: max
+    monitor: val_iou
+    save_top_k: 1
+    verbose: True
+    filename: '{epoch}_{val_iou:.2f}'

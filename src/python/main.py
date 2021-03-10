@@ -1,11 +1,11 @@
-import os
 import json
+import argparse
 
-from flask import Flask, jsonify, request
+from flask import jsonify, request
 
-from train import TrainThread
-
-app = Flask(__name__)
+from src.python.app import socketio, app
+from src.python.train import TrainThread
+from src.python.architectures import get_architectures_by_type
 
 STATUS = 'ready'
 THREAD = None
@@ -36,17 +36,19 @@ def run_train():
     global STATUS
     global THREAD
     THREAD = TrainThread(data)
-    # thread.start()
+    THREAD.start()
     return jsonify({'status': THREAD.status})
 
 
-# @app.route("/runTrain/<project_name>")
-# def run(project_name):
-#     global STATUS
-#     thread = TrainThread(project_name)
-#     thread.start()
-#     return jsonify({'status': STATUS})
+@app.route("/getArchs/<task>")
+def get_archs(task):
+    archs = get_architectures_by_type(task)
+    return jsonify({'architectures': archs})
 
 
 if __name__ == "__main__":
-    app.run(host='127.0.0.1', port=5000)
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=5000)
+    args = parser.parse_args()
+    port = args.port
+    socketio.run(app, host='127.0.0.1', port=port, debug=True)

@@ -1,0 +1,32 @@
+general:
+  task: 'cv'
+  subtask: 'imclf'
+  project_name: 'project_1'
+  exp_name: 'experiment_1'
+
+data:
+  dataset_folder: 'projects/datasets/dogscats/'
+  width: 224
+  height: 224
+  labels:
+    - 'cat'
+    - 'dog'
+  transforms_train: 'default'
+  transforms_val: 'default'
+
+model:
+  architecture: 'mobilenet_v2'
+  criterion: 'CrossEntropyLoss'
+  optimizer: 'Adam'
+  pretrained: true
+  freeze_backbone: true
+  batch_size: 8
+  lr: 0.001
+  max_epochs: 5
+
+checkpoint_callback:
+    mode: max
+    monitor: val_acc
+    save_top_k: 1
+    verbose: True
+    filename: '{epoch}_{val_acc:.2f}'
