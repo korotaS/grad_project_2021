@@ -44,11 +44,11 @@ class ImageClassificationDataset(BaseDataset):
     def __getitem__(self, idx):
         data = self.info[str(idx)]
         filename = data['filename']
-        image = Image.open(os.path.join(self.images_path, filename))
-        raw_image = np.array(image)
+        image = np.array(Image.open(os.path.join(self.images_path, filename)))
+        raw_image = image.copy()
         raw_image = cv2.resize(raw_image, self.input_size)
         if self.transform:
-            image = self.transform(image)
+            image = self.transform(image=image)['image']
         image = image.to(self.device)
 
         # TODO: change labeling
@@ -58,15 +58,13 @@ class ImageClassificationDataset(BaseDataset):
 
 
 class ImageSegmentationDataset(BaseDataset):
-    def __init__(self, path, input_size, num_classes, device='cpu', image_transform=None,
-                 mask_transform=None, use_rle=False):
+    def __init__(self, path, input_size, num_classes, device='cpu', transform=None, use_rle=False):
         super().__init__()
         self.path = path
         self.input_size = input_size
         self.num_classes = num_classes
         self.device = device
-        self.image_transform = image_transform
-        self.mask_transform = mask_transform
+        self.transform = transform
         self.use_rle = use_rle
 
         self.images_path = os.path.join(self.path, 'images/')
@@ -102,24 +100,25 @@ class ImageSegmentationDataset(BaseDataset):
 
     def __getitem__(self, idx):
         data = self.info[str(idx)]
-        image = Image.open(os.path.join(self.images_path, data['image_filename']))
-        raw_image = np.array(image)
-        raw_image = cv2.resize(raw_image, self.input_size)  # TODO: fix it
-        if self.image_transform:
-            image = self.image_transform(image)
-        image = image.to(self.device)
+        image = np.array(Image.open(os.path.join(self.images_path, data['image_filename'])))
+        raw_image = image.copy()
+        raw_image = cv2.resize(raw_image, self.input_size)
 
         if self.use_rle:
             values, counts = image['rle']['values'], image['rle']['counts']
             shape = image.shape
             mask = rle_decode_mask(values, counts, shape)
         else:
-            mask = Image.open(os.path.join(self.masks_path, data['mask_filename']))
+            mask = np.array(Image.open(os.path.join(self.masks_path, data['mask_filename'])))
             if self.num_classes == 1:
-                assert len(mask.size) == 2, 'Num_classes is 1, so mask must be a 1-channel image with shape (x, y)'
+                assert len(mask.shape) == 2, 'Num_classes is 1, so mask must be a 1-channel image with shape (x, y)'
             else:
-                assert len(mask.size) == 3 and mask.size[2] == self.num_classes, \
+                assert len(mask.shape) == 3 and mask.shape[2] == self.num_classes, \
                     f'Num_classes is {self.num_classes}, so mask must be a {self.num_classes}-channel image'
-        if self.mask_transform:
-            mask = self.mask_transform(mask)
+        if self.transform:
+            sample = self.transform(image=image, mask=mask)
+            image = sample['image']
+            mask = sample['mask']
+        image = image.to(self.device)
+        mask = mask.to(self.device)
         return raw_image, image, mask

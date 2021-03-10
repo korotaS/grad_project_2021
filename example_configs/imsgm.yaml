@@ -8,8 +8,8 @@ data:
   width: 256
   height: 256
   num_classes: 1
-  image_transforms: 'default'
-  mask_transforms: 'default'
+  transforms_train: 'default'
+  transforms_val: 'default'
   in_channels: 3
 
 model:

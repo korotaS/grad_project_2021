@@ -10,7 +10,8 @@ data:
   labels:
     - 'cat'
     - 'dog'
-  transforms: 'default'
+  transforms_train: 'default'
+  transforms_val: 'default'
 
 model:
   architecture: 'mobilenet_v2'

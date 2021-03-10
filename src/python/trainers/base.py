@@ -1,11 +1,10 @@
 import os
-import shutil
 
 
 class BaseImageTrainer:
     def __init__(self, cfg):
         self.project_name = cfg['general']['project_name']
-        self.raw_dataset_folder = cfg['data']['dataset_folder']
+        self.dataset_folder = cfg['data']['dataset_folder']
         self.architecture = cfg['model']['architecture']
         self.criterion_name = cfg['model']['criterion']
         self.optimizer_name = cfg['model']['optimizer']
@@ -26,20 +25,8 @@ class BaseImageTrainer:
         self.project_folder = os.path.join('./projects/', self.project_name)
         if not os.path.exists(self.project_folder):
             os.mkdir(self.project_folder)
-        data_folder = os.path.join(self.project_folder, 'dataset/')
-        if not os.path.exists(data_folder):
-            os.mkdir(data_folder)
-        self.train_folder = os.path.join(data_folder, 'train/')
-        self.val_folder = os.path.join(data_folder, 'val/')
-
-    def copy_data(self):
-        if os.path.exists(self.train_folder):
-            shutil.rmtree(self.train_folder)
-        shutil.copytree(os.path.join(self.raw_dataset_folder, 'train/'), self.train_folder)
-
-        if os.path.exists(self.val_folder):
-            shutil.rmtree(self.val_folder)
-        shutil.copytree(os.path.join(self.raw_dataset_folder, 'val/'), self.val_folder)
+        self.train_folder = os.path.join(self.dataset_folder, 'train/')
+        self.val_folder = os.path.join(self.dataset_folder, 'val/')
 
     def init_model(self):
         pass
@@ -52,6 +39,5 @@ class BaseImageTrainer:
 
     def run(self):
         self.init_model()
-        # self.copy_data()
         self.init_data()
         self.train()
