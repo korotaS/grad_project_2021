@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 from torchvision import models
 
-from src.python.utils.draw import draw_im_clf_predictions
+from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -164,11 +164,15 @@ class ImageClassificationModel(pl.LightningModule):
         images = outputs[0]['images'].cpu().numpy()
         logits = outputs[0]['logits'].cpu().numpy()
         pred_labels = [output['pred_labels'].cpu().numpy() for output in outputs]
-        pred_labels = [label for batch in pred_labels for label in batch]
+        pred_labels = [int(label) for batch in pred_labels for label in batch]
         true_labels = [output['true_labels'].cpu().numpy() for output in outputs]
-        true_labels = [label for batch in true_labels for label in batch]
-        fig = draw_im_clf_predictions(images, logits, self.labels, fontsize=10)
-        self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
+        true_labels = [int(label) for batch in true_labels for label in batch]
+
+        pred_figure = draw_im_clf_predictions(images, logits, self.labels, fontsize=10)
+        self.logger.experiment.add_figure('pics/predictions', pred_figure, self.current_epoch)
+
+        conf_matr_figure = draw_confusion_matrix(pred_labels, true_labels, self.labels)
+        self.logger.experiment.add_figure('pics/confusion matrix', conf_matr_figure, self.current_epoch)
         return outputs
 
     def configure_optimizers(self):
