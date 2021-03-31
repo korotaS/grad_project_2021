@@ -1,17 +1,32 @@
 import json
 import os
+import ssl
 from glob import glob
+
+import requests
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+import nltk
+nltk.download('stopwords')
+nltk.download('punkt')
+from nltk.corpus import stopwords
+from nltk import sent_tokenize, regexp_tokenize
 
 from src.python.datasets.base import BaseDataset, DatasetContentError, DatasetStructureError
 
 
 class TextClassificationDataset(BaseDataset):
-    def __init__(self, path, device='cpu', mode='train', split=False):
+    def __init__(self, path, lang, device='cpu', mode='train', split=False):
         super().__init__()
         self.path = path
+        self.lang = lang
+        assert self.lang in ['ru', 'en']
         self.device = device
         self.mode = mode
         self.split = split
+
+        self.stopwords = self.get_stopwords()
 
         self.labels = None
 
@@ -24,6 +39,8 @@ class TextClassificationDataset(BaseDataset):
             with open(self.json_path, 'r') as r:
                 self.data = json.load(r)
         self.check_content()
+
+        self.stopwords = self.get_stopwords()
 
     def check_structure(self):
         if self.split:
@@ -69,4 +86,21 @@ class TextClassificationDataset(BaseDataset):
                 item = self.data[str(idx)]
         label = self.labels[item['label']]
         raw_text = item['text']
-        pass
+        text = self.preprocess_text(raw_text)
+        return text, label
+
+    def preprocess_text(self, raw_text: str):
+        text = raw_text.lower().strip()
+        regexp = r'(?u)\b\w{1,}\b'
+        tokens = [w for sent in sent_tokenize(text, language='english' if self.lang == 'en' else 'russian')
+                  for w in regexp_tokenize(sent, regexp)]
+        tokens = [token for token in tokens if token not in self.stopwords]
+        return tokens
+
+    def get_stopwords(self):
+        if self.lang == 'en':
+            return stopwords.words('english')
+        else:
+            url_stopwords_ru = "https://raw.githubusercontent.com/stopwords-iso/stopwords-ru/master/stopwords-ru.txt"
+            r = requests.get(url_stopwords_ru)
+            return r.text.lower().splitlines()
