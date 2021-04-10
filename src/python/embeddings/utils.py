@@ -8,64 +8,33 @@ except ImportError:
 
 import fasttext
 import fasttext.util as ftutil
-import gensim.downloader as api
 from tqdm.auto import tqdm
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
-available_models = {
-    'en_glove-wiki-gigaword-50': 'gensim',
-    'en_glove-wiki-gigaword-100': 'gensim',
-    'en_glove-wiki-gigaword-200': 'gensim',
-    'en_glove-wiki-gigaword-300': 'gensim',
 
-    'ru_fasttext_300': 'fasttext',
-    'ru_fasttext_200': 'fasttext',
-    'ru_fasttext_100': 'fasttext',
-    'ru_fasttext_50': 'fasttext',
-    'en_fasttext_300': 'fasttext',
-    'en_fasttext_200': 'fasttext',
-    'en_fasttext_100': 'fasttext',
-}
-
-
-def download_pretrained(model_name):
-    if model_name not in available_models:
-        raise AttributeError(f'Model name {model_name} is not in model list: {available_models}')
-
-    print(f'Downloading model {model_name}...')
-    if available_models[model_name] == 'gensim':
-        raw_model_name = model_name.split('_')[1]
-        if raw_model_name not in os.listdir(api.base_dir):
-            api.load(raw_model_name)
-    elif available_models[model_name] == 'fasttext':
-        lang, _, dim = model_name.split('_')
-        download_and_copy_ft(lang, dim)
-    else:
-        pass
-    print(f'Loaded model {model_name} from {available_models[model_name]}.')
-
-
-def download_and_copy_ft(lang, dim):
-    emb_folder = 'embeddings/'
+def _download_and_copy_ft(lang, dim, emb_folder):
     loaded_models = [name for name in os.listdir(emb_folder) if name.endswith('.bin')]
+    to_reduce = False
     if f'cc.{lang}.{dim}.bin' not in loaded_models:
         if f'cc.{lang}.300.bin' in loaded_models:
-            ft_full = fasttext.load_model(emb_folder + f'cc.{lang}.300.bin')
-            ft_reduced = ftutil.reduce_model(ft_full, int(dim))
-            ft_reduced.save_model(emb_folder + f'cc.{lang}.{dim}.bin')
-
-            del ft_full
-            del ft_reduced
+            to_reduce = True
         else:
             _download_fasttext(lang, emb_folder)
+            print(f'Loaded model {lang}_fasttext_300 from fasttext.')
             os.remove(emb_folder + f'cc.{lang}.300.bin.gz')
             if dim != '300':
-                ft_full = fasttext.load_model(emb_folder + f'cc.{lang}.300.bin')
-                ft_reduced = ftutil.reduce_model(ft_full, int(dim))
-                ft_reduced.save_model(emb_folder + f'cc.{lang}.{dim}.bin')
-                del ft_reduced
-                del ft_full
+                to_reduce = True
+
+    if to_reduce:
+        print(f'Reducing cc.{lang}.300.bin to dim {dim}')
+        ft_full = fasttext.load_model(emb_folder + f'cc.{lang}.300.bin')
+        ft_reduced = ftutil.reduce_model(ft_full, int(dim))
+        ft_reduced.save_model(emb_folder + f'cc.{lang}.{dim}.bin')
+        print(f'Reducing complete.')
+
+        del ft_reduced
+        del ft_full
 
 
 def _download_fasttext(lang, folder):
