@@ -119,7 +119,7 @@ TASK_TO_FUNC = {
 }
 
 
-def get_architectures_by_type(task_type):
+def get_image_architectures_by_type(task_type):
     """Returns out-of-box architectures list by task type"""
     if task_type not in TASK_TO_FUNC:
         return []

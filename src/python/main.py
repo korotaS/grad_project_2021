@@ -5,7 +5,7 @@ from flask import jsonify, request
 
 from src.python.app import socketio, app
 from src.python.train import TrainThread
-from src.python.architectures import get_architectures_by_type
+from src.python.architectures import get_image_architectures_by_type
 
 STATUS = 'ready'
 THREAD = None
@@ -42,7 +42,7 @@ def run_train():
 
 @app.route("/getArchs/<task>")
 def get_archs(task):
-    archs = get_architectures_by_type(task)
+    archs = get_image_architectures_by_type(task)
     return jsonify({'architectures': archs})
 
 

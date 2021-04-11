@@ -1,1 +1,2 @@
 from .image_trainers import ImageClassificationTrainer, ImageSegmentationTrainer
+from .text_trainers import TextClassificationTrainer

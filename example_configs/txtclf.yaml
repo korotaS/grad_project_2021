@@ -1,0 +1,31 @@
+general:
+  task: 'nlp'
+  subtask: 'txtclf'
+  project_name: 'project_3'
+  exp_name: 'experiment_1'
+
+data:
+  dataset_folder: 'projects/datasets/imdb_dataset/'
+  labels:
+    - 'positive'
+    - 'negative'
+  lang: 'en'
+  split: false
+
+model:
+  criterion: 'CrossEntropyLoss'
+  optimizer: 'Adam'
+  batch_size: 8
+  lr: 0.001
+  max_epochs: 5
+  n_hidden: 256
+  embeddings:
+    model: 'en_glove-wiki-gigaword-50'
+    cache_folder: 'embeddings/'
+
+checkpoint_callback:
+    mode: max
+    monitor: val_acc
+    save_top_k: 1
+    verbose: True
+    filename: '{epoch}_{val_acc:.2f}'

@@ -2,7 +2,7 @@ from threading import Thread
 
 import yaml
 
-from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer
+from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer, TextClassificationTrainer
 from src.python.utils.utils import camel_to_snake
 
 
@@ -15,6 +15,8 @@ class TrainThread(Thread):
             self.trainer = ImageClassificationTrainer(self.cfg)
         elif subtask == 'imsgm':
             self.trainer = ImageSegmentationTrainer(self.cfg)
+        elif subtask == 'txtclf':
+            self.trainer = TextClassificationTrainer(self.cfg)
 
     def convert_params(self, d):
         new_d = {camel_to_snake(key): self.convert_params(value) if isinstance(value, dict) else value
@@ -25,6 +27,6 @@ class TrainThread(Thread):
         self.trainer.run()
 
 
-# cfg = yaml.full_load(open('example_configs/imsgm.yaml'))
+# cfg = yaml.full_load(open('example_configs/txtclf.yaml'))
 # thread = TrainThread(cfg)
 # thread.start()

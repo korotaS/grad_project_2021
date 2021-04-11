@@ -3,30 +3,39 @@ import os
 import ssl
 from glob import glob
 
-import requests
-
-ssl._create_default_https_context = ssl._create_unverified_context
-
 import nltk
-nltk.download('stopwords')
-nltk.download('punkt')
-from nltk.corpus import stopwords
+import requests
+import torch
 from nltk import sent_tokenize, regexp_tokenize
+from nltk.corpus import stopwords
+from torchtext.vocab import Vocab
 
 from src.python.datasets.base import BaseDataset, DatasetContentError, DatasetStructureError
 
+ssl._create_default_https_context = ssl._create_unverified_context
+
 
 class TextClassificationDataset(BaseDataset):
-    def __init__(self, path, lang, device='cpu', mode='train', split=False):
+    def __init__(self, path, lang, vocab: Vocab, max_len=200, device='cpu', mode='train', split=False):
         super().__init__()
         self.path = path
         self.lang = lang
         assert self.lang in ['ru', 'en']
+        self.vocab = vocab
+        self.unk_token = '<unk>'
+        if self.unk_token not in self.vocab.stoi:
+            self.vocab.itos = [self.unk_token] + self.vocab.itos
+            self.vocab.stoi = {k: v + 1 for k, v in self.vocab.stoi.items()}
+            self.vocab.stoi[self.unk_token] = 0
+            self.vocab.vectors = torch.cat([torch.zeros((1, self.vocab.dim)), self.vocab.vectors], dim=0)
+        self.max_len = max_len
         self.device = device
         self.mode = mode
         self.split = split
 
-        self.stopwords = self.get_stopwords()
+        nltk.download('stopwords')
+        nltk.download('punkt')
+        self.stopwords = self._get_stopwords()
 
         self.labels = None
 
@@ -39,8 +48,6 @@ class TextClassificationDataset(BaseDataset):
             with open(self.json_path, 'r') as r:
                 self.data = json.load(r)
         self.check_content()
-
-        self.stopwords = self.get_stopwords()
 
     def check_structure(self):
         if self.split:
@@ -85,11 +92,13 @@ class TextClassificationDataset(BaseDataset):
             except KeyError:
                 item = self.data[str(idx)]
         label = self.labels[item['label']]
+        label = torch.tensor(label, dtype=torch.float, device=self.device)
         raw_text = item['text']
-        text = self.preprocess_text(raw_text)
-        return text, label
+        tokens = self._tokenize(raw_text)
+        model_input, length = self._encode(tokens)
+        return raw_text, model_input, label
 
-    def preprocess_text(self, raw_text: str):
+    def _tokenize(self, raw_text: str):
         text = raw_text.lower().strip()
         regexp = r'(?u)\b\w{1,}\b'
         tokens = [w for sent in sent_tokenize(text, language='english' if self.lang == 'en' else 'russian')
@@ -97,7 +106,15 @@ class TextClassificationDataset(BaseDataset):
         tokens = [token for token in tokens if token not in self.stopwords]
         return tokens
 
-    def get_stopwords(self):
+    def _encode(self, tokens):
+        encoded_placeholder = torch.full((self.max_len,), fill_value=self.vocab.stoi[self.unk_token], dtype=torch.int)
+        encoded = torch.tensor([self.vocab.stoi[token] if token in self.vocab.stoi else self.vocab.stoi[self.unk_token]
+                                for token in tokens], dtype=torch.int)
+        length = min(self.max_len, len(encoded))
+        encoded_placeholder[:length] = encoded[:length]
+        return encoded_placeholder, length
+
+    def _get_stopwords(self):
         if self.lang == 'en':
             return stopwords.words('english')
         else:

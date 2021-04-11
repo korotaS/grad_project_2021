@@ -40,10 +40,11 @@ def get_vectors(model_name, emb_folder):
         api.BASE_DIR = glove_emb_folder
 
         raw_model_name = model_name.split('_')[1]
-        w2v_model_name = os.path.join(glove_emb_folder, raw_model_name + '.txt')
-        if not os.path.exists(w2v_model_name + '.pt'):
+        w2v_model_name = raw_model_name + '.txt'
+        full_w2v_model_name = os.path.join(glove_emb_folder, w2v_model_name)
+        if not os.path.exists(full_w2v_model_name + '.pt'):
             model_gensim = api.load(raw_model_name)
-            model_gensim.save_word2vec_format(w2v_model_name)
+            model_gensim.save_word2vec_format(full_w2v_model_name)
             shutil.rmtree(os.path.join(glove_emb_folder, raw_model_name))
-            os.remove(w2v_model_name)
+            os.remove(full_w2v_model_name)
         return Vectors(w2v_model_name, cache=glove_emb_folder)
