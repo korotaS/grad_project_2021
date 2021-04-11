@@ -21,15 +21,15 @@ class TextClassificationModel(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
-        _, torch_input, labels = batch
-        outputs = self.model(torch_input)
+        _, torch_input, text_lengths, labels = batch
+        outputs = self.model(torch_input, text_lengths)
         loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
         tb_logs = {
             'train_loss': loss.cpu()
         }
-        for metric_name, metric in self.metrics.items():
-            tb_logs['train_' + metric_name] = metric(preds, labels.data)
+        # for metric_name, metric in self.metrics.items():
+        #     tb_logs['train_' + metric_name] = metric(preds, labels.data)
         for key, value in tb_logs.items():
             self.log(key, value)
         return {
@@ -37,8 +37,8 @@ class TextClassificationModel(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
-        raw_text, torch_input, labels = batch
-        outputs = self.model(torch_input)
+        raw_text, torch_input, text_lengths, labels = batch
+        outputs = self.model(torch_input, text_lengths)
         loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
         logits = nn.functional.softmax(outputs, dim=1)

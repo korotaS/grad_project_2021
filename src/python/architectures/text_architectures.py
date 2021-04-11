@@ -1,25 +1,26 @@
 import torch
 import torch.nn as nn
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class BidirectionalLSTM(nn.Module):
     def __init__(self, n_input, n_hidden, n_out):
         super(BidirectionalLSTM, self).__init__()
         self.hidden_size = n_hidden
-        self.rnn = nn.LSTM(n_input, n_hidden, bidirectional=True)
+        self.rnn = nn.LSTM(n_input, n_hidden, bidirectional=True, batch_first=True)
         self.embedding = nn.Linear(n_hidden * 2, n_out)
         self.init_hidden_state = torch.nn.Parameter(torch.zeros((2, 1, self.hidden_size)), requires_grad=False)
         self.init_cell_state = torch.nn.Parameter(torch.zeros((2, 1, self.hidden_size)), requires_grad=False)
 
-    def forward(self, batch):
-        batch_size = batch.size(1)
-        init_hidden_state = self.init_hidden_state.expand(-1, batch_size, -1).contiguous()
-        init_cell_state = self.init_cell_state.expand(-1, batch_size, -1).contiguous()
+    def forward(self, batch, input_lengths):
+        packed_batch = pack_padded_sequence(batch, input_lengths, batch_first=True, enforce_sorted=False)
+        output, _ = self.rnn(packed_batch)
+        output_unpacked, _ = pad_packed_sequence(output, batch_first=True)
+        out_forward = output_unpacked[range(len(output_unpacked)), input_lengths - 1, :self.hidden_size]
+        out_reverse = output_unpacked[:, 0, self.hidden_size:]
+        out_reduced = torch.cat((out_forward, out_reverse), 1)
 
-        _, (final_hidden_state, _) = self.rnn(batch, (init_hidden_state, init_cell_state))
-        final_hidden_state = final_hidden_state.view(batch_size, self.hidden_size*2)
-
-        output = self.embedding(final_hidden_state)
+        output = self.embedding(out_reduced)
         return output
 
 
@@ -40,13 +41,13 @@ class LSTMClassifier(nn.Module):
         self.word_embeddings.weight = nn.Parameter(weights, requires_grad=False)
 
         self.lstm = BidirectionalLSTM(embedding_length, hidden_size, output_size)
-        pass
 
-    def forward(self, input_sentence):
+    def forward(self, input_sentence, input_lengths):
         """
         Parameters
         ----------
         input_sentence: input_sentence of shape = (batch_size, num_sequences)
+        input_lengths: input lengths
 
         Returns
         -------
@@ -60,10 +61,8 @@ class LSTMClassifier(nn.Module):
         our pre-trained word_embedddins.'''
         # embedded input of shape = (batch_size, num_sequences,  embedding_length)
         batch = self.word_embeddings(input_sentence)
-        # input.size() = (num_sequences, batch_size, embedding_length)
-        batch = batch.permute(1, 0, 2)
 
-        final_output = self.lstm(batch)
+        final_output = self.lstm(batch, input_lengths)
         return final_output
 
 

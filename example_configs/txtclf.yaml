@@ -15,10 +15,11 @@ data:
 model:
   criterion: 'CrossEntropyLoss'
   optimizer: 'Adam'
-  batch_size: 8
-  lr: 0.001
+  batch_size: 32
+  # TODO: change LR to 1e-5 form
+  lr: 0.00005
   max_epochs: 5
-  n_hidden: 256
+  n_hidden: 128
   embeddings:
     model: 'en_glove-wiki-gigaword-50'
     cache_folder: 'embeddings/'

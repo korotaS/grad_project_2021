@@ -31,10 +31,10 @@ class TextClassificationTrainer(BaseTextTrainer):
         self.model = TextClassificationModel(self.model_raw, optimizer, criterion, self.labels)
 
     def init_data(self):
-        self.train_dataset = TextClassificationDataset(self.train_folder, self.lang, self.embeddings)
+        self.train_dataset = TextClassificationDataset(self.train_folder, self.lang, self.embeddings, self.labels)
         self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
 
-        self.val_dataset = TextClassificationDataset(self.val_folder, self.lang, self.embeddings)
+        self.val_dataset = TextClassificationDataset(self.val_folder, self.lang, self.embeddings, self.labels)
         self.val_loader = DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
 
     def train(self):

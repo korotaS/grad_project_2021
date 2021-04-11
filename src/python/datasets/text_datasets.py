@@ -16,7 +16,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class TextClassificationDataset(BaseDataset):
-    def __init__(self, path, lang, vocab: Vocab, max_len=200, device='cpu', mode='train', split=False):
+    def __init__(self, path, lang, vocab: Vocab, labels, max_len=200, device='cpu', mode='train', split=False):
         super().__init__()
         self.path = path
         self.lang = lang
@@ -37,7 +37,7 @@ class TextClassificationDataset(BaseDataset):
         nltk.download('punkt')
         self.stopwords = self._get_stopwords()
 
-        self.labels = None
+        self.labels = {label: i for i, label in enumerate(labels)}
 
         if self.split:
             self.json_filenames = sorted(glob(os.path.join(self.path, '*.json')))
@@ -59,22 +59,17 @@ class TextClassificationDataset(BaseDataset):
 
     def check_content(self):
         if self.split:
-            unique_labels = set()
             for filename in self.json_filenames:
                 with open(filename, 'r') as r:
                     data = json.load(r)
                 if 'text' not in data or 'label' not in data:
                     raise DatasetContentError(f'"text" or "label" key missing in {filename}')
-                unique_labels.add(data['label'])
-            self.labels = {label: i for i, label in enumerate(sorted(unique_labels))}
         else:
             for key, value in self.data.items():
                 if 'text' not in value or 'label' not in value:
                     raise DatasetContentError(f'"text" or "label" key missing in {self.json_path}, key={key}')
             if max([int(key) for key in self.data.keys()]) != len(self.data) - 1:
                 raise DatasetContentError(f'{self.json_path} must contain keys from 0 to len(data)-1. ')
-            unique_labels = set([value['label'] for value in self.data.values()])
-            self.labels = {label: i for i, label in enumerate(sorted(unique_labels))}
 
     def __len__(self):
         if self.split:
@@ -96,7 +91,7 @@ class TextClassificationDataset(BaseDataset):
         raw_text = item['text']
         tokens = self._tokenize(raw_text)
         model_input, length = self._encode(tokens)
-        return raw_text, model_input, label
+        return raw_text, model_input, length, label
 
     def _tokenize(self, raw_text: str):
         text = raw_text.lower().strip()
