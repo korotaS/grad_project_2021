@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from transformers import BertForSequenceClassification
 
 
 class BidirectionalLSTM(nn.Module):
@@ -29,18 +30,17 @@ class LSTMClassifier(nn.Module):
     Credits to: https://github.com/prakashpandey9/Text-Classification-Pytorch/blob/master/models/LSTM.py
     """
 
-    def __init__(self, batch_size, output_size, hidden_size, vocab_size, embedding_length, weights):
+    def __init__(self, output_size, hidden_size, vocab_size, embedding_length, weights):
         super(LSTMClassifier, self).__init__()
-        self.batch_size = batch_size
         self.output_size = output_size
         self.hidden_size = hidden_size
         self.vocab_size = vocab_size
         self.embedding_length = embedding_length
 
-        self.word_embeddings = nn.Embedding(vocab_size, embedding_length)  # Initializing the look-up table.
+        self.word_embeddings = nn.Embedding(self.vocab_size, self.embedding_length)  # Initializing the look-up table.
         self.word_embeddings.weight = nn.Parameter(weights, requires_grad=False)
 
-        self.lstm = BidirectionalLSTM(embedding_length, hidden_size, output_size)
+        self.lstm = BidirectionalLSTM(self.embedding_length, self.hidden_size, self.output_size)
 
     def forward(self, input_sentence, input_lengths):
         """
@@ -66,12 +66,25 @@ class LSTMClassifier(nn.Module):
         return final_output
 
 
+class BertClassifier(nn.Module):
+    def __init__(self, model_name, cache_folder):
+        super().__init__()
+        self.model_name = model_name
+        self.encoder = BertForSequenceClassification.from_pretrained(self.model_name, cache_dir=cache_folder)
+
+    def forward(self, input_ids, input_mask, segment_ids):
+        return self.encoder(input_ids, input_mask, segment_ids)
+
+
 def get_text_clf_architectures():
     return []
 
 
-def get_txt_clf_model(batch_size, num_classes, hidden_size, vocab_size, embedding_length, weights):
-    return LSTMClassifier(batch_size, num_classes, hidden_size, vocab_size, embedding_length, weights)
+def get_txt_clf_model(model_type, *args, **kwargs):
+    if model_type == 'lstm':
+        return LSTMClassifier(*args, **kwargs)
+    elif model_type == 'bert':
+        return BertClassifier(*args, **kwargs)
 
 
 TASK_TO_FUNC = {

@@ -17,6 +17,8 @@ class BaseImageTrainer:
         self.width = self.cfg['data']['width']
         self.height = self.cfg['data']['height']
         self.input_size = (self.height, self.width)
+        self.train_len = self.cfg['data']['train_len']
+        self.val_len = self.cfg['data']['val_len']
 
         self.train_dataset = self.val_dataset = self.train_loader = self.val_loader = None
         self.model_raw = None
@@ -62,11 +64,15 @@ class BaseTextTrainer:
         self.dataset_folder = self.cfg['data']['dataset_folder']
         self.lang = self.cfg['data']['lang']
         self.split = self.cfg['data']['split']
+        self.train_len = self.cfg['data']['train_len']
+        self.val_len = self.cfg['data']['val_len']
+
         self.criterion_name = self.cfg['model']['criterion']
         self.optimizer_name = self.cfg['model']['optimizer']
         self.batch_size = self.cfg['model']['batch_size']
         self.max_epochs = self.cfg['model']['max_epochs']
         self.lr = self.cfg['model']['lr']
+        self.model_type = self.cfg['model']['model_type']
 
         self.train_dataset = self.val_dataset = self.train_loader = self.val_loader = None
         self.model_raw = None

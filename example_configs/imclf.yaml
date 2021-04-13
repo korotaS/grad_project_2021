@@ -11,6 +11,8 @@ data:
   labels:
     - 'cat'
     - 'dog'
+  train_len: -1
+  val_len: -1
   transforms_train: 'default'
   transforms_val: 'default'
 

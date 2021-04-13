@@ -1,2 +1,2 @@
 from .image_models import ImageClassificationModel, ImageSegmentationModel
-from .text_models import TextClassificationModel
+from .text_models import LSTMTextClassificationModel, BertTextClassificationModel

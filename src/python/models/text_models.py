@@ -5,7 +5,7 @@ import torch.nn as nn
 from src.python.utils.draw import draw_confusion_matrix
 
 
-class TextClassificationModel(pl.LightningModule):
+class BaseTextClassificationModel(pl.LightningModule):
     def __init__(self, model, optimizer, criterion, labels):
         super().__init__()
         self.model = model
@@ -13,16 +13,9 @@ class TextClassificationModel(pl.LightningModule):
         self.criterion = criterion
         self.labels = labels
 
-        self.metrics = {
-            'acc': pl.metrics.Accuracy()
-        }
+        self.metrics = {}
 
-    def forward(self, x):
-        return self.model(x)
-
-    def training_step(self, batch, batch_idx):
-        _, torch_input, text_lengths, labels = batch
-        outputs = self.model(torch_input, text_lengths)
+    def _training_step_after_model(self, outputs, labels):
         loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
         tb_logs = {
@@ -36,9 +29,7 @@ class TextClassificationModel(pl.LightningModule):
             'loss': loss.cpu(),
         }
 
-    def validation_step(self, batch, batch_idx):
-        raw_text, torch_input, text_lengths, labels = batch
-        outputs = self.model(torch_input, text_lengths)
+    def _validation_step_after_model(self, outputs, labels, raw_text):
         loss = self.criterion(outputs, labels.long())
         _, preds = torch.max(outputs, 1)
         logits = nn.functional.softmax(outputs, dim=1)
@@ -74,3 +65,53 @@ class TextClassificationModel(pl.LightningModule):
 
     def configure_optimizers(self):
         return self.optimizer
+
+
+class LSTMTextClassificationModel(BaseTextClassificationModel):
+    def __init__(self, model, optimizer, criterion, labels):
+        super().__init__(model, optimizer, criterion, labels)
+        self.model = model
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.labels = labels
+
+        self.metrics.update({
+            'acc': pl.metrics.Accuracy()
+        })
+
+    def training_step(self, batch, batch_idx):
+        self.model.train()
+        _, torch_input, text_lengths, labels = batch
+        outputs = self.model(torch_input, text_lengths)
+        return self._training_step_after_model(outputs, labels)
+
+    def validation_step(self, batch, batch_idx):
+        self.model.eval()
+        raw_text, torch_input, text_lengths, labels = batch
+        outputs = self.model(torch_input, text_lengths)
+        return self._validation_step_after_model(outputs, labels, raw_text)
+
+
+class BertTextClassificationModel(BaseTextClassificationModel):
+    def __init__(self, model, optimizer, criterion, labels):
+        super().__init__(model, optimizer, criterion, labels)
+        self.model = model
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.labels = labels
+
+        self.metrics.update({
+            'acc': pl.metrics.Accuracy()
+        })
+
+    def training_step(self, batch, batch_idx):
+        self.model.train()
+        _, input_ids, mask, token_type_ids, labels = batch
+        outputs = self.model(input_ids, mask, token_type_ids)
+        return self._training_step_after_model(outputs, labels)
+
+    def validation_step(self, batch, batch_idx):
+        self.model.eval()
+        raw_text, input_ids, mask, token_type_ids, labels = batch
+        outputs = self.model(input_ids, mask, token_type_ids)
+        return self._validation_step_after_model(outputs, labels, raw_text)

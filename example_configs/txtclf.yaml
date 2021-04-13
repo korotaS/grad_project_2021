@@ -11,18 +11,34 @@ data:
     - 'negative'
   lang: 'en'
   split: false
+  train_len: 1000
+  val_len: 200
 
+# LSTM
+#model:
+#  model_type: 'lstm'
+#  criterion: 'CrossEntropyLoss'
+#  optimizer: 'Adam'
+#  batch_size: 32
+#  # TODO: change LR to 1e-5 form
+#  lr: 0.0001
+#  max_epochs: 100
+#  n_hidden: 128
+#  embeddings:
+#    model: 'en_glove-wiki-gigaword-50'
+#    cache_folder: 'embeddings/'
+
+# BERT
 model:
+  model_type: 'bert'
+  model_name: 'bert-base-uncased'
   criterion: 'CrossEntropyLoss'
   optimizer: 'Adam'
   batch_size: 32
   # TODO: change LR to 1e-5 form
-  lr: 0.00005
-  max_epochs: 5
-  n_hidden: 128
-  embeddings:
-    model: 'en_glove-wiki-gigaword-50'
-    cache_folder: 'embeddings/'
+  lr: 0.0001
+  max_epochs: 100
+  cache_folder: 'embeddings/bert/'
 
 checkpoint_callback:
     mode: max

@@ -11,12 +11,13 @@ from src.python.datasets.base import BaseDataset, DatasetContentError, DatasetSt
 
 
 class ImageClassificationDataset(BaseDataset):
-    def __init__(self, path, input_size, device='cpu', transform=None):
+    def __init__(self, path, input_size, device='cpu', transform=None, data_len=-1):
         super().__init__()
         self.path = path
         self.device = device
         self.transform = transform
         self.input_size = input_size
+        self.data_len = data_len
 
         self.info_path = os.path.join(self.path, 'info.json')
         self.images_path = os.path.join(self.path, 'images/')
@@ -39,6 +40,8 @@ class ImageClassificationDataset(BaseDataset):
         print(f'{self.path}: Content OK!')
 
     def __len__(self):
+        if self.data_len != -1:
+            return self.data_len
         return len(self.info)
 
     def __getitem__(self, idx):
@@ -58,7 +61,8 @@ class ImageClassificationDataset(BaseDataset):
 
 
 class ImageSegmentationDataset(BaseDataset):
-    def __init__(self, path, input_size, num_classes, device='cpu', transform=None, use_rle=False, preprocessing=None):
+    def __init__(self, path, input_size, num_classes, device='cpu', transform=None, use_rle=False,
+                 preprocessing=None, data_len=-1):
         super().__init__()
         self.path = path
         self.input_size = input_size
@@ -67,6 +71,7 @@ class ImageSegmentationDataset(BaseDataset):
         self.transform = transform
         self.preprocessing = preprocessing
         self.use_rle = use_rle
+        self.data_len = data_len
 
         self.images_path = os.path.join(self.path, 'images/')
         self.info_path = os.path.join(self.path, 'info.json')
@@ -97,6 +102,8 @@ class ImageSegmentationDataset(BaseDataset):
         print(f'{self.path}: Content OK!')
 
     def __len__(self):
+        if self.data_len != -1:
+            return self.data_len
         return len(self.info)
 
     def __getitem__(self, idx):

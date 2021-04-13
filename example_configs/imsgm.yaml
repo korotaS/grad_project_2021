@@ -12,6 +12,8 @@ data:
   transforms_train: 'default'
   transforms_val: 'default'
   in_channels: 3
+  train_len: -1
+  val_len: -1
 
 model:
   architecture: 'FPN'
