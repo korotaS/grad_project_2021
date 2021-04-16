@@ -6,12 +6,13 @@ from glob import glob
 import nltk
 import requests
 import torch
+import numpy as np
 from nltk import sent_tokenize, regexp_tokenize
 from nltk.corpus import stopwords
 from torchtext.vocab import Vocab
-from transformers import BertTokenizer
+from transformers import AutoTokenizer
 
-from src.python.datasets.base import BaseDataset, DatasetContentError, DatasetStructureError
+from src.python.datasets.base_datasets import BaseDataset, DatasetContentError, DatasetStructureError
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
@@ -144,14 +145,14 @@ class BertTextClassificationDataset(BaseTextClassificationDataset):
                  mode='train', split=False, data_len=-1):
         super().__init__(path, lang, labels, max_len, device, mode, split, data_len)
         self.model_name = model_name
-        self.tokenizer = BertTokenizer.from_pretrained(self.model_name)
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
 
     def __getitem__(self, idx):
         raw_text, raw_label = self._get_raw_item(idx)
         label = torch.tensor(raw_label, dtype=torch.float, device=self.device)
         tokens = self._tokenize(raw_text)
         input_ids, mask, token_type_ids = self._encode(tokens)
-        return raw_text, input_ids, mask, token_type_ids, label
+        return raw_text, np.array(input_ids), np.array(mask), np.array(token_type_ids), label
 
     def _tokenize(self, raw_text: str):
         return self.tokenizer(raw_text.lower().strip(), padding='max_length', truncation=True, max_length=self.max_len)

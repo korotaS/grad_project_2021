@@ -1,7 +1,9 @@
+import os
+
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from transformers import BertForSequenceClassification
+from transformers import AutoModelForSequenceClassification
 
 
 class BidirectionalLSTM(nn.Module):
@@ -70,10 +72,12 @@ class BertClassifier(nn.Module):
     def __init__(self, model_name, cache_folder):
         super().__init__()
         self.model_name = model_name
-        self.encoder = BertForSequenceClassification.from_pretrained(self.model_name, cache_dir=cache_folder)
+        bert_cache_folder = os.path.join(cache_folder, 'bert')
+        self.encoder = AutoModelForSequenceClassification.from_pretrained(self.model_name,
+                                                                          cache_dir=bert_cache_folder)
 
     def forward(self, input_ids, input_mask, segment_ids):
-        return self.encoder(input_ids, input_mask, segment_ids)
+        return self.encoder(input_ids, input_mask, segment_ids).logits
 
 
 def get_text_clf_architectures():

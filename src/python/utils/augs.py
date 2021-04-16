@@ -4,7 +4,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 
 
-def get_transforms(config, key='transforms', imagenet=False, norm=True):
+def get_transforms(config, key='transforms', imagenet=False, norm=True, to_tensor=True):
     if config['data'][key] == 'default':
         if norm:
             normalize = A.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) if imagenet else A.Normalize(0, 1)
@@ -13,7 +13,7 @@ def get_transforms(config, key='transforms', imagenet=False, norm=True):
         return A.Compose([
             A.Resize(config['data']['height'], config['data']['width']),
             normalize,
-            ToTensorV2()
+            ToTensorV2() if to_tensor else A.NoOp()
         ])
     else:
         return get_aug_from_config(config['data'][key])

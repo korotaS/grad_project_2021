@@ -7,7 +7,7 @@ import torch
 from PIL import Image
 
 from src.python.utils.utils import rle_decode_mask
-from src.python.datasets.base import BaseDataset, DatasetContentError, DatasetStructureError
+from src.python.datasets.base_datasets import BaseDataset, DatasetContentError, DatasetStructureError
 
 
 class ImageClassificationDataset(BaseDataset):

@@ -4,6 +4,13 @@ general:
   project_name: 'project_3'
   exp_name: 'experiment_1'
 
+model:
+#  model_type: 'lstm'
+#  n_hidden: 128
+  model_type: 'bert'
+  model_name: 'bert-base-uncased'
+
+
 data:
   dataset_folder: 'projects/datasets/imdb_dataset/'
   labels:
@@ -14,35 +21,29 @@ data:
   train_len: 1000
   val_len: 200
 
-# LSTM
-#model:
-#  model_type: 'lstm'
-#  criterion: 'CrossEntropyLoss'
-#  optimizer: 'Adam'
-#  batch_size: 32
-#  # TODO: change LR to 1e-5 form
-#  lr: 0.0001
-#  max_epochs: 100
-#  n_hidden: 128
-#  embeddings:
-#    model: 'en_glove-wiki-gigaword-50'
-#    cache_folder: 'embeddings/'
+cache_folder: 'embeddings/'
+embeddings: 'en_glove-wiki-gigaword-50'
 
-# BERT
-model:
-  model_type: 'bert'
-  model_name: 'bert-base-uncased'
+trainer:
+  gpus: null
+  max_epochs: 5
+
+training:
+  seed: 42
+  batch_size_train: 8
+  shuffle_train: True
+  batch_size_val: 8
+  shuffle_val: False
+  workers: 0
+  optimizer:
+    name: 'Adam'
+    params:
+      lr: 0.0001
   criterion: 'CrossEntropyLoss'
-  optimizer: 'Adam'
-  batch_size: 32
-  # TODO: change LR to 1e-5 form
-  lr: 0.0001
-  max_epochs: 100
-  cache_folder: 'embeddings/bert/'
 
 checkpoint_callback:
-    mode: max
-    monitor: val_acc
-    save_top_k: 1
-    verbose: True
-    filename: '{epoch}_{val_acc:.2f}'
+  mode: max
+  monitor: val_acc
+  save_top_k: 1
+  verbose: True
+  filename: '{epoch}_{val_acc:.2f}'
