@@ -5,11 +5,12 @@ general:
   exp_name: 'experiment_1'
 
 model:
-#  model_type: 'lstm'
-#  n_hidden: 128
-  model_type: 'bert'
-  model_name: 'bert-base-uncased'
+  model_type: 'lstm'
+  n_hidden: 128
+#  model_type: 'bert'
+#  model_name: 'bert-base-uncased'
 
+embeddings: 'en_glove-wiki-gigaword-50'
 
 data:
   dataset_folder: 'projects/datasets/imdb_dataset/'
@@ -18,21 +19,20 @@ data:
     - 'negative'
   lang: 'en'
   split: false
-  train_len: 1000
-  val_len: 200
+  train_len: -1
+  val_len: -1
 
 cache_folder: 'embeddings/'
-embeddings: 'en_glove-wiki-gigaword-50'
 
 trainer:
-  gpus: null
-  max_epochs: 5
+  gpus: '3'
+  max_epochs: 10
 
 training:
   seed: 42
-  batch_size_train: 8
+  batch_size_train: 64
   shuffle_train: True
-  batch_size_val: 8
+  batch_size_val: 64
   shuffle_val: False
   workers: 0
   optimizer:

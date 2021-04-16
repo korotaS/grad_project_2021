@@ -39,6 +39,8 @@ class BaseTrainer:
         set_seed(self.seed)
 
         self.callbacks, self.exp_folder = self.configure_callbacks()
+        if not os.path.exists(self.exp_folder):
+            os.mkdir(self.exp_folder)
         with open(os.path.join(self.exp_folder, 'config.yaml'), 'w') as outfile:
             yaml.dump(cfg, outfile, default_flow_style=False)
 

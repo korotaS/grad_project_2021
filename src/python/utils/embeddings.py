@@ -23,6 +23,9 @@ def get_vectors(model_name, emb_folder):
     if model_name not in available_models:
         raise AttributeError(f'Model name {model_name} is not in model list: {available_models}')
 
+    if not os.path.exists(emb_folder):
+        os.mkdir(emb_folder)
+
     model_type = available_models[model_name]
     if model_type == 'fasttext':
         lang = model_name.split('_')[0]
@@ -46,5 +49,8 @@ def get_vectors(model_name, emb_folder):
             model_gensim = api.load(raw_model_name)
             model_gensim.save_word2vec_format(full_w2v_model_name)
             shutil.rmtree(os.path.join(glove_emb_folder, raw_model_name))
+            vectors = Vectors(w2v_model_name, cache=glove_emb_folder)
             os.remove(full_w2v_model_name)
-        return Vectors(w2v_model_name, cache=glove_emb_folder)
+        else:
+            vectors = Vectors(w2v_model_name, cache=glove_emb_folder)
+        return vectors

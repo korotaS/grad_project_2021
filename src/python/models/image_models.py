@@ -39,7 +39,7 @@ class ImageClassificationModel(pl.LightningModule):
             'train_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['train_' + metric_name] = metric(preds, labels.data)
+            tb_logs['train_' + metric_name] = metric(preds.cpu(), labels.data.cpu())
         for key, value in tb_logs.items():
             self.log(key, value)
         return {
@@ -62,7 +62,7 @@ class ImageClassificationModel(pl.LightningModule):
             'val_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['val_' + metric_name] = metric(preds, labels.data)
+            tb_logs['val_' + metric_name] = metric(preds.cpu(), labels.data.cpu())
         for key, value in tb_logs.items():
             self.log(key, value)
         return {
@@ -114,7 +114,7 @@ class ImageSegmentationModel(pl.LightningModule):
             'train_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['train_'+metric_name] = metric(outputs, masks)
+            tb_logs['train_'+metric_name] = metric(outputs.cpu(), masks.cpu())
         for key, value in tb_logs.items():
             self.log(key, value)
         return {
@@ -130,7 +130,7 @@ class ImageSegmentationModel(pl.LightningModule):
         }
         res_metrics = {}
         for metric_name, metric in self.metrics.items():
-            res_metric = metric(outputs, masks).item()
+            res_metric = metric(outputs.cpu(), masks.cpu()).item()
             tb_logs['val_' + metric_name] = res_metric
             res_metrics[metric_name] = res_metric
         for key, value in tb_logs.items():

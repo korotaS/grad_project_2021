@@ -21,8 +21,8 @@ data:
   val_len: -1
 
 trainer:
-  gpus: null
-  max_epochs: 5
+  gpus: '3'
+  max_epochs: 20
 
 training:
   seed: 42
@@ -34,7 +34,7 @@ training:
   optimizer:
     name: 'Adam'
     params:
-      lr: 0.001
+      lr: 0.0002
   criterion: 'JaccardLoss'
 
 checkpoint_callback:

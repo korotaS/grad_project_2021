@@ -16,7 +16,7 @@ class BidirectionalLSTM(nn.Module):
         self.init_cell_state = torch.nn.Parameter(torch.zeros((2, 1, self.hidden_size)), requires_grad=False)
 
     def forward(self, batch, input_lengths):
-        packed_batch = pack_padded_sequence(batch, input_lengths, batch_first=True, enforce_sorted=False)
+        packed_batch = pack_padded_sequence(batch, input_lengths.cpu(), batch_first=True, enforce_sorted=False)
         output, _ = self.rnn(packed_batch)
         output_unpacked, _ = pad_packed_sequence(output, batch_first=True)
         out_forward = output_unpacked[range(len(output_unpacked)), input_lengths - 1, :self.hidden_size]

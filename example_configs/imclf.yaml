@@ -22,8 +22,8 @@ data:
   transforms_val: 'default'
 
 trainer:
-  gpus: null
-  max_epochs: 5
+  gpus: '3'
+  max_epochs: 10
 
 training:
   seed: 42
@@ -35,7 +35,7 @@ training:
   optimizer:
     name: 'Adam'
     params:
-      lr: 0.001
+      lr: 0.00005
   criterion: 'CrossEntropyLoss'
 
 checkpoint_callback:
