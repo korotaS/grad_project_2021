@@ -26,6 +26,7 @@ class ImageClassificationModel(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
+        self.model.train()
         raw_images, inputs, labels = batch
         if self.architecture == 'inception_v3':
             outputs, aux_outputs = self.model(inputs)
@@ -49,6 +50,7 @@ class ImageClassificationModel(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
+        self.model.eval()
         raw_images, inputs, labels = batch
         if self.architecture == 'inception_v3':
             outputs, aux_outputs = self.model(inputs)
@@ -89,6 +91,12 @@ class ImageClassificationModel(pl.LightningModule):
         conf_matr_figure = draw_confusion_matrix(pred_labels, true_labels, self.labels)
         self.logger.experiment.add_figure('confusion matrix', conf_matr_figure, self.current_epoch)
 
+    def test_step(self, batch, batch_idx):
+        return self.validation_step(batch, batch_idx)
+
+    def test_epoch_end(self, outputs):
+        pass
+
     def configure_optimizers(self):
         return _configure_optimizers(self.optimizer_cfg, self.scheduler_cfg, self.model, self.freeze_backbone)
 
@@ -109,6 +117,7 @@ class ImageSegmentationModel(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
+        self.model.train()
         raw_images, images, masks = batch
         outputs = self.model(images)
         loss = self.criterion(outputs, masks.long())
@@ -117,7 +126,7 @@ class ImageSegmentationModel(pl.LightningModule):
             'train_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['train_'+metric_name] = metric(outputs.cpu(), masks.cpu())
+            tb_logs['train_' + metric_name] = metric(outputs.cpu(), masks.cpu())
         for key, value in tb_logs.items():
             self.log(key, value)
         return {
@@ -125,6 +134,7 @@ class ImageSegmentationModel(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
+        self.model.eval()
         raw_images, images, masks = batch
         outputs = self.model(images)
         loss = self.criterion(outputs, masks.long())
@@ -152,6 +162,12 @@ class ImageSegmentationModel(pl.LightningModule):
         metrics = [self.metrics['iou'](pr, tr) for pr, tr in zip(pred_masks, true_masks)]
         fig = draw_prediction_masks_on_image(raw_images, pred_masks, true_masks, metrics, 4, 2)
         self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
+
+    def test_step(self, batch, batch_idx):
+        return self.validation_step(batch, batch_idx)
+
+    def test_epoch_end(self, outputs):
+        pass
 
     def configure_optimizers(self):
         return _configure_optimizers(self.optimizer_cfg, self.scheduler_cfg, self.model)

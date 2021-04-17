@@ -6,15 +6,16 @@ from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTra
 from src.python.utils.utils import camel_to_snake
 
 
-class TrainThread(Thread):
-    def __init__(self, cfg):
+class MainThread(Thread):
+    def __init__(self, cfg, test_cfg=None):
         super().__init__()
         self.cfg = self.convert_params(cfg)
+        self.test_cfg = test_cfg
         subtask = self.cfg['general']['subtask']
         if subtask == 'imclf':
-            self.trainer = ImageClassificationTrainer(self.cfg)
+            self.trainer = ImageClassificationTrainer(self.cfg, self.test_cfg)
         elif subtask == 'imsgm':
-            self.trainer = ImageSegmentationTrainer(self.cfg)
+            self.trainer = ImageSegmentationTrainer(self.cfg, self.test_cfg)
         elif subtask == 'txtclf':
             self.trainer = TextClassificationTrainer(self.cfg)
 
@@ -27,6 +28,11 @@ class TrainThread(Thread):
         self.trainer.run()
 
 
-# cfg = yaml.full_load(open('example_configs/txtclf.yaml'))
-# thread = TrainThread(cfg)
+# cfg = yaml.full_load(open('projects/project_1/experiment_1_20210417T135820/config.yaml'))
+# test_cfg = yaml.full_load(open('example_configs/imclf_test.yaml'))
+
+# cfg = yaml.full_load(open('projects/project_2/experiment_1_20210417T140139/config.yaml'))
+# test_cfg = yaml.full_load(open('example_configs/imsgm_test.yaml'))
+
+# thread = MainThread(cfg, test_cfg)
 # thread.start()

@@ -8,7 +8,8 @@ from src.python.utils.seed import set_seed
 
 
 class BaseTrainer:
-    def __init__(self, cfg):
+    def __init__(self, cfg, test_cfg=None):
+        self.test_mode = False
         self.cfg = cfg
         # general
         self.project_name = self.cfg['general']['project_name']
@@ -49,13 +50,31 @@ class BaseTrainer:
         with open(os.path.join(self.exp_folder, 'config.yaml'), 'w') as outfile:
             yaml.dump(cfg, outfile, default_flow_style=False)
 
+        self.test_cfg = test_cfg
+        if self.test_cfg is not None:
+            self.test_dataset = self.test_loader = None
+            self.test_folder = self.test_cfg['dataset_folder']
+            self.test_len = self.test_cfg['data_len']
+            self.shuffle_test = self.test_cfg['shuffle']
+            self.num_workers_test = self.test_cfg['num_workers_test']
+            self.batch_size_test = self.test_cfg['batch_size']
+            self.gpus_test = self.test_cfg['gpus']
+            self.test_ckpt_path = self.test_cfg['ckpt_path']
+            self.test_mode = True
+
     def init_model(self):
         pass
 
     def init_data(self):
         pass
 
+    def init_test_data(self):
+        pass
+
     def train(self):
+        pass
+
+    def test(self):
         pass
 
     def configure_callbacks(self):
@@ -77,13 +96,17 @@ class BaseTrainer:
 
     def run(self):
         self.init_model()
-        self.init_data()
-        self.train()
+        if self.test_cfg is not None:
+            self.init_test_data()
+            self.test()
+        else:
+            self.init_data()
+            self.train()
 
 
 class BaseImageTrainer(BaseTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, cfg, test_cfg=None):
+        super().__init__(cfg, test_cfg)
         # model
         self.architecture = self.cfg['model']['architecture']
         self.pretrained = self.cfg['model']['pretrained']
@@ -96,8 +119,8 @@ class BaseImageTrainer(BaseTrainer):
 
 
 class BaseTextTrainer(BaseTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, cfg, test_cfg=None):
+        super().__init__(cfg, test_cfg)
         # model
         self.model_type = self.cfg['model']['model_type']
         # data

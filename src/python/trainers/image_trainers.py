@@ -4,6 +4,7 @@ from pytorch_lightning import Trainer as PLTrainer
 from pytorch_lightning.loggers import TensorBoardLogger
 from segmentation_models_pytorch.utils import losses as smp_losses
 from torch import nn
+import torch
 from torch.utils.data import DataLoader
 
 from src.python.architectures import get_im_clf_model, get_im_sgm_model
@@ -17,8 +18,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class ImageClassificationTrainer(BaseImageTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, cfg, test_cfg=None):
+        super().__init__(cfg, test_cfg)
         self.freeze = self.cfg['model']['freeze_backbone']
         self.labels = self.cfg['data']['labels']
         self.num_classes = len(self.labels)
@@ -38,6 +39,8 @@ class ImageClassificationTrainer(BaseImageTrainer):
                                               criterion=criterion,
                                               labels=self.labels,
                                               freeze_backbone=self.freeze)
+        if self.test_mode:
+            self.model.load_state_dict(torch.load(self.test_ckpt_path)['state_dict'])
 
     def init_data(self):
         # train
@@ -55,11 +58,23 @@ class ImageClassificationTrainer(BaseImageTrainer):
         self.val_dataset = ImageClassificationDataset(path=self.val_folder,
                                                       preprocessor=preprocessor_val,
                                                       data_len=self.val_len)
-        self.val_loader = DataLoader(self.val_dataset,
+        self.val_loader = DataLoader(dataset=self.val_dataset,
                                      batch_size=self.batch_size_val,
                                      shuffle=self.shuffle_val,
                                      num_workers=self.num_workers,
                                      worker_init_fn=worker_init_fn)
+
+    def init_test_data(self):
+        # test
+        preprocessor_test = ImageClassificationPreprocessor(cfg=self.cfg, mode='val')
+        self.test_dataset = ImageClassificationDataset(path=self.test_folder,
+                                                       preprocessor=preprocessor_test,
+                                                       data_len=self.test_len)
+        self.test_loader = DataLoader(dataset=self.test_dataset,
+                                      batch_size=self.batch_size_test,
+                                      shuffle=self.shuffle_test,
+                                      num_workers=self.num_workers_test,
+                                      worker_init_fn=worker_init_fn)
 
     def train(self):
         logger = TensorBoardLogger(save_dir='tb_logs',
@@ -74,10 +89,16 @@ class ImageClassificationTrainer(BaseImageTrainer):
                        train_dataloader=self.train_loader,
                        val_dataloaders=self.val_loader)
 
+    def test(self):
+        pl_trainer = PLTrainer(gpus=self.gpus_test)
+        pl_trainer.test(model=self.model,
+                        test_dataloaders=self.test_loader,
+                        ckpt_path=self.test_ckpt_path)
+
 
 class ImageSegmentationTrainer(BaseImageTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, cfg, test_cfg=None):
+        super().__init__(cfg, test_cfg)
         self.backbone = self.cfg['model']['backbone']
         self.in_channels = self.cfg['data']['in_channels']
         self.num_classes = self.cfg['data']['num_classes']
@@ -94,6 +115,8 @@ class ImageSegmentationTrainer(BaseImageTrainer):
                                             optimizer_cfg=self.optimizer_cfg,
                                             scheduler_cfg=self.scheduler_cfg,
                                             criterion=criterion)
+        if self.test_mode:
+            self.model.load_state_dict(torch.load(self.test_ckpt_path)['state_dict'])
 
     def init_data(self):
         preprocessor_train = ImageSegmentationPreprocessor(cfg=self.cfg, mode='train')
@@ -120,6 +143,20 @@ class ImageSegmentationTrainer(BaseImageTrainer):
                                      num_workers=self.num_workers,
                                      worker_init_fn=worker_init_fn)
 
+    def init_test_data(self):
+        # test
+        preprocessor_test = ImageSegmentationPreprocessor(cfg=self.cfg, mode='val')
+        self.test_dataset = ImageSegmentationDataset(path=self.test_folder,
+                                                     num_classes=self.num_classes,
+                                                     preprocessor=preprocessor_test,
+                                                     use_rle=self.use_rle,
+                                                     data_len=self.test_len)
+        self.test_loader = DataLoader(dataset=self.test_dataset,
+                                      batch_size=self.batch_size_test,
+                                      shuffle=self.shuffle_test,
+                                      num_workers=self.num_workers_test,
+                                      worker_init_fn=worker_init_fn)
+
     def train(self):
         logger = TensorBoardLogger(save_dir='tb_logs',
                                    name='imsgm',
@@ -132,3 +169,9 @@ class ImageSegmentationTrainer(BaseImageTrainer):
         pl_trainer.fit(model=self.model,
                        train_dataloader=self.train_loader,
                        val_dataloaders=self.val_loader)
+
+    def test(self):
+        pl_trainer = PLTrainer(gpus=self.gpus_test)
+        pl_trainer.test(model=self.model,
+                        test_dataloaders=self.test_loader,
+                        ckpt_path=self.test_ckpt_path)
