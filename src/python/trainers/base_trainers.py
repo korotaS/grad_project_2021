@@ -44,12 +44,6 @@ class BaseTrainer:
         self.optimizer_cfg = self.cfg['optimizer']
         self.scheduler_cfg = self.cfg['scheduler']
 
-        self.callbacks, self.exp_folder = self.configure_callbacks()
-        if not os.path.exists(self.exp_folder):
-            os.mkdir(self.exp_folder)
-        with open(os.path.join(self.exp_folder, 'config.yaml'), 'w') as outfile:
-            yaml.dump(cfg, outfile, default_flow_style=False)
-
         self.test_cfg = test_cfg
         if self.test_cfg is not None:
             self.test_dataset = self.test_loader = None
@@ -61,6 +55,13 @@ class BaseTrainer:
             self.gpus_test = self.test_cfg['gpus']
             self.test_ckpt_path = self.test_cfg['ckpt_path']
             self.test_mode = True
+
+        self.callbacks, self.exp_folder = self.configure_callbacks()
+        # if not self.test_mode:
+        #     if not os.path.exists(self.exp_folder):
+        #         os.mkdir(self.exp_folder)
+        #     with open(os.path.join(self.exp_folder, 'config.yaml'), 'w') as outfile:
+        #         yaml.dump(cfg, outfile, default_flow_style=False)
 
     def init_model(self):
         pass

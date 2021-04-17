@@ -34,7 +34,6 @@ class LSTMClassifier(nn.Module):
     """
     Credits to: https://github.com/prakashpandey9/Text-Classification-Pytorch/blob/master/models/LSTM.py
     """
-
     def __init__(self, output_size, hidden_size, vocab_size, embedding_length, weights):
         super(LSTMClassifier, self).__init__()
         self.output_size = output_size
@@ -42,29 +41,12 @@ class LSTMClassifier(nn.Module):
         self.vocab_size = vocab_size
         self.embedding_length = embedding_length
 
-        self.word_embeddings = nn.Embedding(self.vocab_size, self.embedding_length)  # Initializing the look-up table.
+        self.word_embeddings = nn.Embedding(self.vocab_size, self.embedding_length)
         self.word_embeddings.weight = nn.Parameter(weights, requires_grad=False)
 
         self.lstm = BidirectionalLSTM(self.embedding_length, self.hidden_size, self.output_size)
 
     def forward(self, input_sentence, input_lengths):
-        """
-        Parameters
-        ----------
-        input_sentence: input_sentence of shape = (batch_size, num_sequences)
-        input_lengths: input lengths
-
-        Returns
-        -------
-        Output of the linear layer containing logits for positive & negative class which receives its input as the
-        final_hidden_state of the LSTM
-        final_output.shape = (batch_size, output_size)
-
-        """
-
-        ''' Here we will map all the indexes present in the input sequence to the corresponding word vector using 
-        our pre-trained word_embedddins.'''
-        # embedded input of shape = (batch_size, num_sequences,  embedding_length)
         batch = self.word_embeddings(input_sentence)
 
         final_output = self.lstm(batch, input_lengths)
