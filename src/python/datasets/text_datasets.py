@@ -3,14 +3,8 @@ import os
 import ssl
 from glob import glob
 
-import nltk
 import numpy as np
-import requests
 import torch
-from nltk import sent_tokenize, regexp_tokenize
-from nltk.corpus import stopwords
-from torchtext.vocab import Vocab
-from transformers import AutoTokenizer
 
 from src.python.datasets.base_datasets import BaseDataset, DatasetContentError, DatasetStructureError
 
@@ -18,27 +12,12 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class BaseTextClassificationDataset(BaseDataset):
-    def __init__(self, path, lang, labels, max_len=200, device='cpu',
-                 mode='train', split=False, data_len=-1):
+    def __init__(self, path, labels, mode='train', split=False, data_len=-1):
         super().__init__()
         self.path = path
-        self.lang = lang
-        assert self.lang in ['ru', 'en']
-        self.max_len = max_len
-        self.device = device
         self.mode = mode
         self.split = split
         self.data_len = data_len
-
-        try:
-            nltk.data.find('tokenizers/punkt')
-        except LookupError:
-            nltk.download('punkt')
-        try:
-            nltk.data.find('corpora/stopwords')
-        except LookupError:
-            nltk.download('stopwords')
-        self.stopwords = self._get_stopwords()
 
         self.labels = {label: i for i, label in enumerate(labels)}
 
@@ -95,78 +74,26 @@ class BaseTextClassificationDataset(BaseDataset):
         raw_text = item['text']
         return raw_text, raw_label
 
-    def _get_stopwords(self):
-        if self.lang == 'en':
-            return stopwords.words('english')
-        else:
-            url_stopwords_ru = "https://raw.githubusercontent.com/stopwords-iso/stopwords-ru/master/stopwords-ru.txt"
-            r = requests.get(url_stopwords_ru)
-            return r.text.lower().splitlines()
-
-    def _tokenize(self, raw_text):
-        pass
-
-    def _encode(self, tokens):
-        pass
-
 
 class LSTMTextClassificationDataset(BaseTextClassificationDataset):
-    def __init__(self, path, lang, vocab: Vocab, labels, max_len=200, device='cpu',
-                 mode='train', split=False, data_len=-1):
-        super().__init__(path, lang, labels, max_len, device, mode, split, data_len)
-        self.vocab = vocab
-        self.unk_token = '<unk>'
-        if self.unk_token not in self.vocab.stoi:
-            self.vocab.itos = [self.unk_token] + self.vocab.itos
-            self.vocab.stoi = {k: v + 1 for k, v in self.vocab.stoi.items()}
-            self.vocab.stoi[self.unk_token] = 0
-            self.vocab.vectors = torch.cat([torch.zeros((1, self.vocab.dim)), self.vocab.vectors], dim=0)
+    def __init__(self, path, preprocessor, labels, mode='train', split=False, data_len=-1):
+        super().__init__(path, labels, mode, split, data_len)
+        self.preprocessor = preprocessor
 
     def __getitem__(self, idx):
         raw_text, raw_label = self._get_raw_item(idx)
-        label = torch.tensor(raw_label, dtype=torch.float, device=self.device)
-        tokens = self._tokenize(raw_text)
-        model_input, length = self._encode(tokens)
+        label = torch.tensor(raw_label, dtype=torch.float)
+        model_input, length = self.preprocessor.process(raw_text)
         return raw_text, model_input, length, label
-
-    def _tokenize(self, raw_text: str):
-        text = raw_text.lower().strip()
-        regexp = r'(?u)\b\w{1,}\b'
-        tokens = [w for sent in sent_tokenize(text, language='english' if self.lang == 'en' else 'russian')
-                  for w in regexp_tokenize(sent, regexp)]
-        tokens = [token for token in tokens if token not in self.stopwords]
-        return tokens
-
-    def _encode(self, tokens):
-        encoded_placeholder = torch.full((self.max_len,), fill_value=self.vocab.stoi[self.unk_token], dtype=torch.int)
-        encoded = torch.tensor([self.vocab.stoi[token] if token in self.vocab.stoi else self.vocab.stoi[self.unk_token]
-                                for token in tokens], dtype=torch.int)
-        length = min(self.max_len, len(encoded))
-        encoded_placeholder[:length] = encoded[:length]
-        return encoded_placeholder, length
 
 
 class BertTextClassificationDataset(BaseTextClassificationDataset):
-    def __init__(self, path, lang, labels, model_name, max_len=200, device='cpu',
-                 mode='train', split=False, data_len=-1):
-        super().__init__(path, lang, labels, max_len, device, mode, split, data_len)
-        self.model_name = model_name
-        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+    def __init__(self, path, preprocessor, labels, mode='train', split=False, data_len=-1):
+        super().__init__(path, labels, mode, split, data_len)
+        self.preprocessor = preprocessor
 
     def __getitem__(self, idx):
         raw_text, raw_label = self._get_raw_item(idx)
-        label = torch.tensor(raw_label, dtype=torch.float, device=self.device)
-        tokens = self._tokenize(raw_text)
-        input_ids, mask, token_type_ids = self._encode(tokens)
+        label = torch.tensor(raw_label, dtype=torch.float)
+        input_ids, mask, token_type_ids = self.preprocessor.process(raw_text)
         return raw_text, np.array(input_ids), np.array(mask), np.array(token_type_ids), label
-
-    def _tokenize(self, raw_text: str):
-        return self.tokenizer(raw_text.lower().strip(), padding='max_length', truncation=True, max_length=self.max_len)
-
-    def _encode(self, tokens):
-        input_ids = tokens['input_ids']
-        mask = tokens['attention_mask']
-        token_type_ids = np.empty(0)
-        if 'distil' not in self.model_name:
-            token_type_ids = tokens['token_type_ids']
-        return input_ids, mask, token_type_ids

@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from src.python.architectures import get_txt_clf_model
 from src.python.datasets import LSTMTextClassificationDataset, BertTextClassificationDataset
 from src.python.models import LSTMTextClassificationModel, BertTextClassificationModel
+from src.python.preprocessors import LSTMTextClassificationPreprocessor, BertTextClassificationPreprocessor
 from src.python.trainers.base_trainers import BaseTextTrainer
 from src.python.utils.embeddings import get_vectors
 from src.python.utils.seed import worker_init_fn
@@ -52,30 +53,38 @@ class TextClassificationTrainer(BaseTextTrainer):
 
     def init_data(self):
         if self.model_type == 'lstm':
+            preprocessor_train = LSTMTextClassificationPreprocessor(cfg=self.cfg, mode='train')
             self.train_dataset = LSTMTextClassificationDataset(path=self.train_folder,
-                                                               lang=self.lang,
-                                                               vocab=self.embeddings,
+                                                               preprocessor=preprocessor_train,
                                                                labels=self.labels,
                                                                mode='train',
+                                                               split=self.split,
                                                                data_len=self.train_len)
+            preprocessor_val = LSTMTextClassificationPreprocessor(cfg=self.cfg,
+                                                                  mode='val',
+                                                                  vocab=preprocessor_train.vocab)
             self.val_dataset = LSTMTextClassificationDataset(path=self.val_folder,
-                                                             lang=self.lang,
-                                                             vocab=self.embeddings,
+                                                             preprocessor=preprocessor_val,
                                                              labels=self.labels,
                                                              mode='val',
+                                                             split=self.split,
                                                              data_len=self.val_len)
         elif self.model_type == 'bert':
+            preprocessor_train = BertTextClassificationPreprocessor(cfg=self.cfg, mode='train')
             self.train_dataset = BertTextClassificationDataset(path=self.train_folder,
-                                                               lang=self.lang,
-                                                               model_name=self.model_name,
+                                                               preprocessor=preprocessor_train,
                                                                labels=self.labels,
                                                                mode='train',
+                                                               split=self.split,
                                                                data_len=self.train_len)
+            preprocessor_val = BertTextClassificationPreprocessor(cfg=self.cfg,
+                                                                  mode='train',
+                                                                  tokenizer=preprocessor_train.tokenizer)
             self.val_dataset = BertTextClassificationDataset(path=self.val_folder,
-                                                             lang=self.lang,
-                                                             model_name=self.model_name,
+                                                             preprocessor=preprocessor_val,
                                                              labels=self.labels,
                                                              mode='val',
+                                                             split=self.split,
                                                              data_len=self.val_len)
 
         self.train_loader = DataLoader(dataset=self.train_dataset,

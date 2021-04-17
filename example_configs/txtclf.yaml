@@ -14,6 +14,7 @@ model:
 
 data:
   dataset_folder: 'projects/datasets/imdb_dataset/'
+  max_item_len: 200
   labels:
     - 'positive'
     - 'negative'
