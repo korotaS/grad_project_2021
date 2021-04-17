@@ -89,6 +89,12 @@ class LSTMTextClassificationModel(BaseTextClassificationModel):
         outputs = self.model(torch_input, text_lengths)
         return self._validation_step_after_model(outputs, labels, raw_text)
 
+    def test_step(self, batch, batch_idx):
+        return self.validation_step(batch, batch_idx)
+
+    def test_epoch_end(self, outputs):
+        pass
+
 
 class BertTextClassificationModel(BaseTextClassificationModel):
     def __init__(self, model, optimizer_cfg, scheduler_cfg, criterion, labels):
@@ -109,3 +115,9 @@ class BertTextClassificationModel(BaseTextClassificationModel):
         raw_text, input_ids, mask, token_type_ids, labels = batch
         outputs = self.model(input_ids, mask, token_type_ids)
         return self._validation_step_after_model(outputs, labels, raw_text)
+
+    def test_step(self, batch, batch_idx):
+        return self.validation_step(batch, batch_idx)
+
+    def test_epoch_end(self, outputs):
+        pass

@@ -1,3 +1,4 @@
+import torch
 from pytorch_lightning import Trainer as PLTrainer
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import nn
@@ -13,8 +14,8 @@ from src.python.utils.seed import worker_init_fn
 
 
 class TextClassificationTrainer(BaseTextTrainer):
-    def __init__(self, cfg):
-        super().__init__(cfg)
+    def __init__(self, cfg, test_cfg=None):
+        super().__init__(cfg, test_cfg)
         self.labels = self.cfg['data']['labels']
         self.num_classes = len(self.labels)
 
@@ -50,6 +51,8 @@ class TextClassificationTrainer(BaseTextTrainer):
                                                      scheduler_cfg=self.scheduler_cfg,
                                                      criterion=criterion,
                                                      labels=self.labels)
+        if self.test_mode:
+            self.model.load_state_dict(torch.load(self.test_ckpt_path)['state_dict'])
 
     def init_data(self):
         if self.model_type == 'lstm':
@@ -98,6 +101,30 @@ class TextClassificationTrainer(BaseTextTrainer):
                                      num_workers=self.num_workers,
                                      worker_init_fn=worker_init_fn)
 
+    def init_test_data(self):
+        if self.model_type == 'lstm':
+            preprocessor_test = LSTMTextClassificationPreprocessor(cfg=self.cfg, mode='val')
+            self.test_dataset = LSTMTextClassificationDataset(path=self.test_folder,
+                                                              preprocessor=preprocessor_test,
+                                                              labels=self.labels,
+                                                              mode='test',
+                                                              split=self.split,
+                                                              data_len=self.test_len)
+        elif self.model_type == 'bert':
+            preprocessor_test = BertTextClassificationPreprocessor(cfg=self.cfg, mode='val')
+            self.test_dataset = BertTextClassificationDataset(path=self.test_folder,
+                                                              preprocessor=preprocessor_test,
+                                                              labels=self.labels,
+                                                              mode='test',
+                                                              split=self.split,
+                                                              data_len=self.test_len)
+
+        self.test_loader = DataLoader(dataset=self.test_dataset,
+                                      batch_size=self.batch_size_test,
+                                      shuffle=self.shuffle_test,
+                                      num_workers=self.num_workers_test,
+                                      worker_init_fn=worker_init_fn)
+
     def train(self):
         logger = TensorBoardLogger(save_dir='tb_logs',
                                    name='txtclf',
@@ -110,3 +137,8 @@ class TextClassificationTrainer(BaseTextTrainer):
         pl_trainer.fit(model=self.model,
                        train_dataloader=self.train_loader,
                        val_dataloaders=self.val_loader)
+
+    def test(self):
+        pl_trainer = PLTrainer(gpus=self.gpus_test)
+        pl_trainer.test(model=self.model,
+                        test_dataloaders=self.test_loader)

@@ -96,7 +96,7 @@ class BaseTrainer:
 
     def run(self):
         self.init_model()
-        if self.test_cfg is not None:
+        if self.test_mode:
             self.init_test_data()
             self.test()
         else:

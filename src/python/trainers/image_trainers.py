@@ -1,10 +1,10 @@
 import ssl
 
+import torch
 from pytorch_lightning import Trainer as PLTrainer
 from pytorch_lightning.loggers import TensorBoardLogger
 from segmentation_models_pytorch.utils import losses as smp_losses
 from torch import nn
-import torch
 from torch.utils.data import DataLoader
 
 from src.python.architectures import get_im_clf_model, get_im_sgm_model
@@ -92,8 +92,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
     def test(self):
         pl_trainer = PLTrainer(gpus=self.gpus_test)
         pl_trainer.test(model=self.model,
-                        test_dataloaders=self.test_loader,
-                        ckpt_path=self.test_ckpt_path)
+                        test_dataloaders=self.test_loader)
 
 
 class ImageSegmentationTrainer(BaseImageTrainer):
@@ -173,5 +172,4 @@ class ImageSegmentationTrainer(BaseImageTrainer):
     def test(self):
         pl_trainer = PLTrainer(gpus=self.gpus_test)
         pl_trainer.test(model=self.model,
-                        test_dataloaders=self.test_loader,
-                        ckpt_path=self.test_ckpt_path)
+                        test_dataloaders=self.test_loader)
