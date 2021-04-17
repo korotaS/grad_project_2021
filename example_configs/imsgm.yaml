@@ -11,6 +11,7 @@ model:
 
 data:
   dataset_folder: 'projects/datasets/shapes/'
+  use_rle: false
   width: 256
   height: 256
   num_classes: 1
@@ -51,4 +52,4 @@ checkpoint_callback:
   monitor: val_iou
   save_top_k: 1
   verbose: True
-  filename: '{epoch}_{val_iou:.2f}'
+  filename: '{epoch}_{val_iou:.3f}'

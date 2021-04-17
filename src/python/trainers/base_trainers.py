@@ -13,7 +13,8 @@ class BaseTrainer:
         # general
         self.project_name = self.cfg['general']['project_name']
         self.exp_name = self.cfg['general']['exp_name']
-        self.tb_version = self.exp_name + '_' + datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.version = datetime.now().strftime("%Y%m%dT%H%M%S")
+        self.tb_version = self.exp_name + '_' + self.version
         if not os.path.exists('./projects/'):
             os.mkdir('./projects/')
         self.project_folder = os.path.join('./projects/', self.project_name)
@@ -59,9 +60,16 @@ class BaseTrainer:
 
     def configure_callbacks(self):
         callbacks = []
-        exp_path = f"projects/{self.cfg['general']['project_name']}/{self.cfg['general']['exp_name']}"
+        exp_path = f"projects/{self.cfg['general']['project_name']}/{self.cfg['general']['exp_name']}_{self.version}"
         ckpt_path = os.path.join(exp_path, 'weights')
-        checkpoint_callback = ModelCheckpoint(dirpath=ckpt_path, **self.cfg['checkpoint_callback'])
+        ckpt_callback_cfg = self.cfg['checkpoint_callback']
+        ckpt_filename = f'{ckpt_callback_cfg["filename"]}_{self.version}'
+        checkpoint_callback = ModelCheckpoint(dirpath=ckpt_path,
+                                              mode=ckpt_callback_cfg['mode'],
+                                              monitor=ckpt_callback_cfg['monitor'],
+                                              save_top_k=ckpt_callback_cfg['save_top_k'],
+                                              verbose=ckpt_callback_cfg['verbose'],
+                                              filename=ckpt_filename)
         callbacks.append(checkpoint_callback)
         lr_logger = LearningRateMonitor(logging_interval='epoch')
         callbacks.append(lr_logger)

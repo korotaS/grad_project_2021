@@ -52,4 +52,4 @@ checkpoint_callback:
   monitor: val_acc
   save_top_k: 1
   verbose: True
-  filename: '{epoch}_{val_acc:.2f}'
+  filename: '{epoch}_{val_acc:.3f}'
