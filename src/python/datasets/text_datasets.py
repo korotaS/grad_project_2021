@@ -30,8 +30,14 @@ class BaseTextClassificationDataset(BaseDataset):
         self.split = split
         self.data_len = data_len
 
-        nltk.download('stopwords')
-        nltk.download('punkt')
+        try:
+            nltk.data.find('tokenizers/punkt')
+        except LookupError:
+            nltk.download('punkt')
+        try:
+            nltk.data.find('corpora/stopwords')
+        except LookupError:
+            nltk.download('stopwords')
         self.stopwords = self._get_stopwords()
 
         self.labels = {label: i for i, label in enumerate(labels)}
