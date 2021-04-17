@@ -5,7 +5,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from segmentation_models_pytorch.encoders import get_preprocessing_fn
 from segmentation_models_pytorch.utils import losses as smp_losses
 from torch import nn
-from torch import optim
 from torch.utils.data import DataLoader
 
 from src.python.architectures import get_im_clf_model, get_im_sgm_model
@@ -32,19 +31,14 @@ class ImageClassificationTrainer(BaseImageTrainer):
                                                                 num_classes=self.num_classes,
                                                                 pretrained=self.pretrained,
                                                                 freeze=self.freeze)
-        params_to_update = self.model_raw.parameters()
-        if self.freeze:
-            params_to_update = []
-            for name, param in self.model_raw.named_parameters():
-                if param.requires_grad:
-                    params_to_update.append(param)
-        optimizer = getattr(optim, self.optimizer_name)(params=params_to_update, **self.optimizer_params)
         criterion = getattr(nn, self.criterion_name)()
         self.model = ImageClassificationModel(model=self.model_raw,
                                               architecture=self.architecture,
-                                              optimizer=optimizer,
+                                              optimizer_cfg=self.optimizer_cfg,
+                                              scheduler_cfg=self.scheduler_cfg,
                                               criterion=criterion,
-                                              labels=self.labels)
+                                              labels=self.labels,
+                                              freeze_backbone=self.freeze)
 
     def init_data(self):
         # train
@@ -73,7 +67,9 @@ class ImageClassificationTrainer(BaseImageTrainer):
                                      worker_init_fn=worker_init_fn)
 
     def train(self):
-        logger = TensorBoardLogger('tb_logs', name='imclf')
+        logger = TensorBoardLogger(save_dir='tb_logs',
+                                   name='imclf',
+                                   version=self.tb_version)
         pl_trainer = PLTrainer(logger=logger,
                                log_every_n_steps=25,
                                num_sanity_val_steps=5,
@@ -97,10 +93,10 @@ class ImageSegmentationTrainer(BaseImageTrainer):
                                           num_classes=self.num_classes,
                                           in_channels=self.in_channels,
                                           pretrained=self.pretrained)
-        optimizer = getattr(optim, self.optimizer_name)(params=self.model_raw.parameters(), **self.optimizer_params)
         criterion = getattr(smp_losses, self.criterion_name)()
         self.model = ImageSegmentationModel(model=self.model_raw,
-                                            optimizer=optimizer,
+                                            optimizer_cfg=self.optimizer_cfg,
+                                            scheduler_cfg=self.scheduler_cfg,
                                             criterion=criterion)
 
     def init_data(self):
@@ -140,7 +136,9 @@ class ImageSegmentationTrainer(BaseImageTrainer):
                                      worker_init_fn=worker_init_fn)
 
     def train(self):
-        logger = TensorBoardLogger('tb_logs', name='imsgm')
+        logger = TensorBoardLogger(save_dir='tb_logs',
+                                   name='imsgm',
+                                   version=self.tb_version)
         pl_trainer = PLTrainer(logger=logger,
                                log_every_n_steps=25,
                                num_sanity_val_steps=5,

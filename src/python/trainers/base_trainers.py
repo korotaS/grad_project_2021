@@ -1,7 +1,8 @@
 import os
+from datetime import datetime
 
 import yaml
-from pytorch_lightning.callbacks import ModelCheckpoint
+from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 from src.python.utils.seed import set_seed
 
@@ -11,6 +12,8 @@ class BaseTrainer:
         self.cfg = cfg
         # general
         self.project_name = self.cfg['general']['project_name']
+        self.exp_name = self.cfg['general']['exp_name']
+        self.tb_version = self.exp_name + '_' + datetime.now().strftime("%Y%m%dT%H%M%S")
         if not os.path.exists('./projects/'):
             os.mkdir('./projects/')
         self.project_folder = os.path.join('./projects/', self.project_name)
@@ -32,11 +35,12 @@ class BaseTrainer:
         self.shuffle_train = self.cfg['training']['shuffle_train']
         self.shuffle_val = self.cfg['training']['batch_size_val']
         self.num_workers = self.cfg['training']['workers']
-        self.optimizer_name = self.cfg['training']['optimizer']['name']
-        self.optimizer_params = self.cfg['training']['optimizer']['params']
         self.criterion_name = self.cfg['training']['criterion']
         self.seed = self.cfg['training']['seed']
         set_seed(self.seed)
+        # optimizer, scheduler
+        self.optimizer_cfg = self.cfg['optimizer']
+        self.scheduler_cfg = self.cfg['scheduler']
 
         self.callbacks, self.exp_folder = self.configure_callbacks()
         if not os.path.exists(self.exp_folder):
@@ -59,6 +63,8 @@ class BaseTrainer:
         ckpt_path = os.path.join(exp_path, 'weights')
         checkpoint_callback = ModelCheckpoint(dirpath=ckpt_path, **self.cfg['checkpoint_callback'])
         callbacks.append(checkpoint_callback)
+        lr_logger = LearningRateMonitor(logging_interval='epoch')
+        callbacks.append(lr_logger)
         return callbacks, exp_path
 
     def run(self):

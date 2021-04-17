@@ -3,13 +3,15 @@ import torch
 import torch.nn as nn
 
 from src.python.utils.draw import draw_confusion_matrix
+from src.python.utils.utils import _configure_optimizers
 
 
 class BaseTextClassificationModel(pl.LightningModule):
-    def __init__(self, model, optimizer, criterion, labels):
+    def __init__(self, model, optimizer_cfg, scheduler_cfg, criterion, labels):
         super().__init__()
         self.model = model
-        self.optimizer = optimizer
+        self.optimizer_cfg = optimizer_cfg
+        self.scheduler_cfg = scheduler_cfg
         self.criterion = criterion
         self.labels = labels
 
@@ -64,16 +66,12 @@ class BaseTextClassificationModel(pl.LightningModule):
         self.logger.experiment.add_figure('confusion matrix', conf_matr_figure, self.current_epoch)
 
     def configure_optimizers(self):
-        return self.optimizer
+        return _configure_optimizers(self.optimizer_cfg, self.scheduler_cfg, self.model)
 
 
 class LSTMTextClassificationModel(BaseTextClassificationModel):
-    def __init__(self, model, optimizer, criterion, labels):
-        super().__init__(model, optimizer, criterion, labels)
-        self.model = model
-        self.optimizer = optimizer
-        self.criterion = criterion
-        self.labels = labels
+    def __init__(self, model, optimizer_cfg, scheduler_cfg, criterion, labels):
+        super().__init__(model, optimizer_cfg, scheduler_cfg, criterion, labels)
 
         self.metrics.update({
             'acc': pl.metrics.Accuracy()
@@ -93,12 +91,8 @@ class LSTMTextClassificationModel(BaseTextClassificationModel):
 
 
 class BertTextClassificationModel(BaseTextClassificationModel):
-    def __init__(self, model, optimizer, criterion, labels):
-        super().__init__(model, optimizer, criterion, labels)
-        self.model = model
-        self.optimizer = optimizer
-        self.criterion = criterion
-        self.labels = labels
+    def __init__(self, model, optimizer_cfg, scheduler_cfg, criterion, labels):
+        super().__init__(model, optimizer_cfg, scheduler_cfg, criterion, labels)
 
         self.metrics.update({
             'acc': pl.metrics.Accuracy()

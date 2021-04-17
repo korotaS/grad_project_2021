@@ -1,9 +1,12 @@
 import os
+import ssl
 
 import torch
 import torch.nn as nn
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 from transformers import AutoModelForSequenceClassification
+
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class BidirectionalLSTM(nn.Module):
@@ -77,6 +80,8 @@ class BertClassifier(nn.Module):
                                                                           cache_dir=bert_cache_folder)
 
     def forward(self, input_ids, input_mask, segment_ids):
+        if 'distil' in self.model_name:
+            return self.encoder(input_ids, input_mask).logits
         return self.encoder(input_ids, input_mask, segment_ids).logits
 
 

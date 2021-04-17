@@ -4,9 +4,9 @@ import ssl
 from glob import glob
 
 import nltk
+import numpy as np
 import requests
 import torch
-import numpy as np
 from nltk import sent_tokenize, regexp_tokenize
 from nltk.corpus import stopwords
 from torchtext.vocab import Vocab
@@ -160,5 +160,7 @@ class BertTextClassificationDataset(BaseTextClassificationDataset):
     def _encode(self, tokens):
         input_ids = tokens['input_ids']
         mask = tokens['attention_mask']
-        token_type_ids = tokens['token_type_ids']
+        token_type_ids = np.empty(0)
+        if 'distil' not in self.model_name:
+            token_type_ids = tokens['token_type_ids']
         return input_ids, mask, token_type_ids

@@ -32,11 +32,20 @@ training:
   batch_size_val: 8
   shuffle_val: False
   workers: 0
-  optimizer:
-    name: 'Adam'
-    params:
-      lr: 0.00005
   criterion: 'CrossEntropyLoss'
+
+optimizer:
+  name: 'Adam'
+  params:
+    lr: 0.00005
+
+scheduler:
+  name: ReduceLROnPlateau
+  params:
+    factor: 0.6
+    patience: 25
+    min_lr: 1.0e-5
+    verbose: true
 
 checkpoint_callback:
   mode: max

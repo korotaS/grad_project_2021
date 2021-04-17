@@ -3,18 +3,20 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 
-from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix, \
-    draw_prediction_masks_on_image
+from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix, draw_prediction_masks_on_image
+from src.python.utils.utils import _configure_optimizers
 
 
 class ImageClassificationModel(pl.LightningModule):
-    def __init__(self, model, architecture, optimizer, criterion, labels):
+    def __init__(self, model, architecture, optimizer_cfg, scheduler_cfg, criterion, labels, freeze_backbone):
         super().__init__()
         self.model = model
         self.architecture = architecture
-        self.optimizer = optimizer
+        self.optimizer_cfg = optimizer_cfg
+        self.scheduler_cfg = scheduler_cfg
         self.criterion = criterion
         self.labels = labels
+        self.freeze_backbone = freeze_backbone
 
         self.metrics = {
             'acc': pl.metrics.Accuracy()
@@ -88,15 +90,16 @@ class ImageClassificationModel(pl.LightningModule):
         self.logger.experiment.add_figure('confusion matrix', conf_matr_figure, self.current_epoch)
 
     def configure_optimizers(self):
-        return self.optimizer
+        return _configure_optimizers(self.optimizer_cfg, self.scheduler_cfg, self.model, self.freeze_backbone)
 
 
 # Only semantic segmentation (instance segmentation TBD)
 class ImageSegmentationModel(pl.LightningModule):
-    def __init__(self, model, optimizer, criterion):
+    def __init__(self, model, optimizer_cfg, scheduler_cfg, criterion):
         super().__init__()
         self.model = model
-        self.optimizer = optimizer
+        self.optimizer_cfg = optimizer_cfg
+        self.scheduler_cfg = scheduler_cfg
         self.criterion = criterion
         self.metrics = {
             'iou': smp.utils.metrics.IoU()
@@ -151,4 +154,4 @@ class ImageSegmentationModel(pl.LightningModule):
         self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
 
     def configure_optimizers(self):
-        return self.optimizer
+        return _configure_optimizers(self.optimizer_cfg, self.scheduler_cfg, self.model)

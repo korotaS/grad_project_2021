@@ -1,7 +1,6 @@
 from pytorch_lightning import Trainer as PLTrainer
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch import nn
-from torch import optim
 from torch.utils.data import DataLoader
 
 from src.python.architectures import get_txt_clf_model
@@ -36,18 +35,18 @@ class TextClassificationTrainer(BaseTextTrainer):
                                                vocab_size=len(self.embeddings.stoi),
                                                embedding_length=self.embeddings.dim,
                                                weights=self.embeddings.vectors)
-            optimizer = getattr(optim, self.optimizer_name)(params=self.model_raw.parameters(), **self.optimizer_params)
             self.model = LSTMTextClassificationModel(model=self.model_raw,
-                                                     optimizer=optimizer,
+                                                     optimizer_cfg=self.optimizer_cfg,
+                                                     scheduler_cfg=self.scheduler_cfg,
                                                      criterion=criterion,
                                                      labels=self.labels)
         elif self.model_type == 'bert':
             self.model_raw = get_txt_clf_model(model_type=self.model_type,
                                                model_name=self.model_name,
                                                cache_folder=self.cache_folder)
-            optimizer = getattr(optim, self.optimizer_name)(params=self.model_raw.parameters(), **self.optimizer_params)
             self.model = BertTextClassificationModel(model=self.model_raw,
-                                                     optimizer=optimizer,
+                                                     optimizer_cfg=self.optimizer_cfg,
+                                                     scheduler_cfg=self.scheduler_cfg,
                                                      criterion=criterion,
                                                      labels=self.labels)
 
@@ -91,7 +90,9 @@ class TextClassificationTrainer(BaseTextTrainer):
                                      worker_init_fn=worker_init_fn)
 
     def train(self):
-        logger = TensorBoardLogger('tb_logs', name='txtclf')
+        logger = TensorBoardLogger(save_dir='tb_logs',
+                                   name='txtclf',
+                                   version=self.tb_version)
         pl_trainer = PLTrainer(logger=logger,
                                log_every_n_steps=25,
                                num_sanity_val_steps=5,
