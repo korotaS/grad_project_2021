@@ -10,10 +10,11 @@ from src.python.utils.utils import rle_decode_mask
 
 
 class ImageClassificationDataset(BaseDataset):
-    def __init__(self, path, preprocessor, data_len=-1):
+    def __init__(self, path, preprocessor, labels, data_len=-1):
         super().__init__()
         self.path = path
         self.preprocessor = preprocessor
+        self.labels = {label: i for i, label in enumerate(labels)}
         self.data_len = data_len
 
         self.info_path = os.path.join(self.path, 'info.json')
@@ -47,8 +48,7 @@ class ImageClassificationDataset(BaseDataset):
         image = np.array(Image.open(os.path.join(self.images_path, filename)))
         raw_image, image = self.preprocessor.process(image)
 
-        # TODO: change labeling
-        label = data['label']
+        label = self.labels[data['label']]
         label = torch.tensor(label, dtype=torch.float)
         return raw_image, image, label
 

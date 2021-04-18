@@ -60,7 +60,7 @@ class ImageSegmentationPreprocessor(BaseImagePreprocessor):
             return image
         else:
             assert mask is not None
-            sample = self.transforms(image=image, mask=mask)  # TODO: check multiple masks
+            sample = self.transforms(image=image, mask=mask)
             image = sample['image']
             mask = sample['mask']
             raw_image = image.copy()
