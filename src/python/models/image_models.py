@@ -2,6 +2,8 @@ import pytorch_lightning as pl
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
+import numpy as np
+from sklearn.metrics import classification_report, accuracy_score
 
 from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix, draw_prediction_masks_on_image
 from src.python.utils.utils import _configure_optimizers
@@ -25,9 +27,7 @@ class ImageClassificationModel(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
 
-    def training_step(self, batch, batch_idx):
-        self.model.train()
-        raw_images, inputs, labels = batch
+    def _step(self, inputs, labels):
         if self.architecture == 'inception_v3':
             outputs, aux_outputs = self.model(inputs)
             loss1 = self.criterion(outputs, labels)
@@ -36,6 +36,12 @@ class ImageClassificationModel(pl.LightningModule):
         else:
             outputs = self.model(inputs)
             loss = self.criterion(outputs, labels.long())
+        return outputs, loss
+
+    def training_step(self, batch, batch_idx):
+        self.model.train()
+        raw_images, inputs, labels = batch
+        outputs, loss = self._step(inputs, labels)
         _, preds = torch.max(outputs, 1)
         # socketio.emit('batch', {'batch': str(batch_idx)})
         tb_logs = {
@@ -52,14 +58,7 @@ class ImageClassificationModel(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         self.model.eval()
         raw_images, inputs, labels = batch
-        if self.architecture == 'inception_v3':
-            outputs, aux_outputs = self.model(inputs)
-            loss1 = self.criterion(outputs, labels)
-            loss2 = self.criterion(aux_outputs, labels)
-            loss = loss1 + 0.4 * loss2
-        else:
-            outputs = self.model(inputs)
-            loss = self.criterion(outputs, labels.long())
+        outputs, loss = self._step(inputs, labels)
         _, preds = torch.max(outputs, 1)
         logits = nn.functional.softmax(outputs, dim=1)
         tb_logs = {
@@ -95,7 +94,13 @@ class ImageClassificationModel(pl.LightningModule):
         return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):
-        pass
+        true_labels = [int(one_lab.item()) for x in outputs for one_lab in x["true_labels"]]
+        pred_labels = [int(one_lab.item()) for x in outputs for one_lab in x["pred_labels"]]
+        print('\n', classification_report(true_labels, pred_labels, target_names=self.labels, digits=3))
+
+        avg_loss = torch.stack([x["loss"] for x in outputs]).mean().item()
+        self.log('val_loss', avg_loss)
+        self.log('val_acc', accuracy_score(true_labels, pred_labels))
 
     def configure_optimizers(self):
         return _configure_optimizers(self.optimizer_cfg, self.scheduler_cfg, self.model, self.freeze_backbone)
@@ -167,7 +172,20 @@ class ImageSegmentationModel(pl.LightningModule):
         return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):
-        pass
+        true_masks = [mask for o in outputs for mask in o['true_masks']]
+        pred_masks = [mask for o in outputs for mask in o['pred_masks']]
+
+        for class_id in range(true_masks[0].shape[0]):
+            class_ious = [self.metrics['iou'](pr[class_id], tr[class_id]).cpu().numpy()
+                          for pr, tr in zip(pred_masks, true_masks)]
+            mean_class_iou = np.mean(class_ious)
+            self.log(f'val_iou_class_{class_id}', mean_class_iou)
+            # print(f'\nMean IOU for class {class_id}: {mean_class_iou:.3f}')
+
+        mean_iou = np.mean([self.metrics['iou'](pr, tr).cpu().numpy() for pr, tr in zip(pred_masks, true_masks)])
+        avg_loss = torch.stack([x["loss"] for x in outputs]).mean().item()
+        self.log('val_loss', avg_loss)
+        self.log('val_iou', mean_iou)
 
     def configure_optimizers(self):
         return _configure_optimizers(self.optimizer_cfg, self.scheduler_cfg, self.model)

@@ -129,3 +129,5 @@ class BaseTextTrainer(BaseTrainer):
         self.split = self.cfg['data']['split']
         self.train_folder = os.path.join(self.dataset_folder, 'train/') if self.split else self.dataset_folder
         self.val_folder = os.path.join(self.dataset_folder, 'val/') if self.split else self.dataset_folder
+        if self.test_cfg is not None:
+            self.split_test = self.cfg['split']

@@ -1,6 +1,7 @@
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
+from sklearn.metrics import classification_report, accuracy_score
 
 from src.python.utils.draw import draw_confusion_matrix
 from src.python.utils.utils import _configure_optimizers
@@ -93,7 +94,13 @@ class LSTMTextClassificationModel(BaseTextClassificationModel):
         return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):
-        pass
+        true_labels = [int(one_lab.item()) for x in outputs for one_lab in x["true_labels"]]
+        pred_labels = [int(one_lab.item()) for x in outputs for one_lab in x["pred_labels"]]
+        print('\n', classification_report(true_labels, pred_labels, target_names=self.labels, digits=3))
+
+        avg_loss = torch.stack([x["loss"] for x in outputs]).mean().item()
+        self.log('val_loss', avg_loss)
+        self.log('val_acc', accuracy_score(true_labels, pred_labels))
 
 
 class BertTextClassificationModel(BaseTextClassificationModel):
@@ -120,4 +127,10 @@ class BertTextClassificationModel(BaseTextClassificationModel):
         return self.validation_step(batch, batch_idx)
 
     def test_epoch_end(self, outputs):
-        pass
+        true_labels = [int(one_lab.item()) for x in outputs for one_lab in x["true_labels"]]
+        pred_labels = [int(one_lab.item()) for x in outputs for one_lab in x["pred_labels"]]
+        print('\n', classification_report(true_labels, pred_labels, target_names=self.labels, digits=3))
+
+        avg_loss = torch.stack([x["loss"] for x in outputs]).mean().item()
+        self.log('val_loss', avg_loss)
+        self.log('val_acc', accuracy_score(true_labels, pred_labels))

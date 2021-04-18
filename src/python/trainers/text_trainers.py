@@ -108,7 +108,7 @@ class TextClassificationTrainer(BaseTextTrainer):
                                                               preprocessor=preprocessor_test,
                                                               labels=self.labels,
                                                               mode='test',
-                                                              split=self.split,
+                                                              split=self.split_test,
                                                               data_len=self.test_len)
         elif self.model_type == 'bert':
             preprocessor_test = BertTextClassificationPreprocessor(cfg=self.cfg, mode='val')
@@ -116,7 +116,7 @@ class TextClassificationTrainer(BaseTextTrainer):
                                                               preprocessor=preprocessor_test,
                                                               labels=self.labels,
                                                               mode='test',
-                                                              split=self.split,
+                                                              split=self.split_test,
                                                               data_len=self.test_len)
 
         self.test_loader = DataLoader(dataset=self.test_dataset,
