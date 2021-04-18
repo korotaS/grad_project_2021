@@ -47,6 +47,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
         preprocessor_train = ImageClassificationPreprocessor(cfg=self.cfg, mode='train')
         self.train_dataset = ImageClassificationDataset(path=self.train_folder,
                                                         preprocessor=preprocessor_train,
+                                                        labels=self.labels,
                                                         data_len=self.train_len)
         self.train_loader = DataLoader(dataset=self.train_dataset,
                                        batch_size=self.batch_size_train,
@@ -57,6 +58,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
         preprocessor_val = ImageClassificationPreprocessor(cfg=self.cfg, mode='val')
         self.val_dataset = ImageClassificationDataset(path=self.val_folder,
                                                       preprocessor=preprocessor_val,
+                                                      labels=self.labels,
                                                       data_len=self.val_len)
         self.val_loader = DataLoader(dataset=self.val_dataset,
                                      batch_size=self.batch_size_val,
@@ -69,6 +71,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
         preprocessor_test = ImageClassificationPreprocessor(cfg=self.cfg, mode='val')
         self.test_dataset = ImageClassificationDataset(path=self.test_folder,
                                                        preprocessor=preprocessor_test,
+                                                       labels=self.labels,
                                                        data_len=self.test_len)
         self.test_loader = DataLoader(dataset=self.test_dataset,
                                       batch_size=self.batch_size_test,
