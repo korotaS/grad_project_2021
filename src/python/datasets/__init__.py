@@ -1,1 +1,2 @@
 from .image_datasets import ImageClassificationDataset, ImageSegmentationDataset
+from .text_datasets import LSTMTextClassificationDataset, BertTextClassificationDataset

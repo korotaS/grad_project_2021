@@ -1,0 +1,59 @@
+general:
+  task: 'nlp'
+  subtask: 'txtclf'
+  project_name: 'project_3'
+  exp_name: 'experiment_1'
+
+model:
+  #  model_type: 'lstm'
+  #  n_hidden: 128
+  model_type: 'bert'
+  model_name: 'distilbert-base-uncased'
+
+#embeddings: 'en_glove-wiki-gigaword-50'
+
+data:
+  dataset_folder: 'projects/datasets/imdb_dataset/'
+  max_item_len: 200
+  labels:
+    - 'positive'
+    - 'negative'
+  lang: 'en'
+  split: false
+  train_len: 10000
+  val_len: 2000
+
+cache_folder: 'embeddings/'
+
+trainer:
+  gpus: '0'
+  max_epochs: 10
+
+training:
+  seed: 42
+  batch_size_train: 64
+  shuffle_train: True
+  batch_size_val: 64
+  shuffle_val: False
+  workers: 0
+  criterion: 'CrossEntropyLoss'
+
+optimizer:
+  name: 'Adam'
+  params:
+    lr: 0.00001
+
+scheduler:
+  name: ReduceLROnPlateau
+  params:
+    factor: 0.6
+    patience: 25
+    min_lr: 1.0e-5
+    verbose: true
+
+checkpoint_callback:
+  mode: max
+  monitor: val_acc
+  save_top_k: 1
+  verbose: True
+  filename: '{epoch}_{val_acc:.2f}'
