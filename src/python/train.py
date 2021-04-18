@@ -34,7 +34,11 @@ class MainThread(Thread):
 # cfg = yaml.full_load(open('projects/project_2/experiment_1_20210417T140139/config.yaml'))
 # test_cfg = yaml.full_load(open('example_configs/imsgm_test.yaml'))
 
+# lstm
 # cfg = yaml.full_load(open('projects/project_3/experiment_1_20210417T152656/config.yaml'))
+# test_cfg = yaml.full_load(open('example_configs/txtclf_test.yaml'))
+# bert
+# cfg = yaml.full_load(open('projects/project_3/experiment_1_20210417T154503/config.yaml'))
 # test_cfg = yaml.full_load(open('example_configs/txtclf_test.yaml'))
 #
 # thread = MainThread(cfg, test_cfg)

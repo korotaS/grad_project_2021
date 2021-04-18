@@ -18,7 +18,7 @@ class ImageExporter(BaseExporter):
             self._example_input,
             self.onnx_path,
             export_params=True,
-            opset_version=10,
+            opset_version=11,
             do_constant_folding=True,
             input_names=['input'],
             output_names=['output'],
@@ -34,9 +34,10 @@ class ImageExporter(BaseExporter):
         torch.jit.save(module, self.jit_path)
 
 
-# cfg = yaml.full_load(open('projects/project_1/experiment_1_20210417T135820/config.yaml'))
-# checkpoint = 'projects/project_1/experiment_1_20210417T135820/weights/epoch=1_val_acc=0.937_20210417T135820.ckpt'
-# export_folder = 'projects/project_1/experiment_1_20210417T135820/weights/'
-# exp = ImageExporter(cfg, checkpoint, export_folder, prefix='im_clf_mobilenet_0.94')
+# exp = 'projects/project_2/experiment_1_20210417T140139'
+# cfg = yaml.full_load(open(f'{exp}/config.yaml'))
+# checkpoint = f'{exp}/weights/epoch=4_val_iou=0.969_20210417T140139.ckpt'
+# export_folder = f'{exp}/weights/'
+# exp = ImageExporter(cfg, checkpoint, export_folder, prefix='im_sgm_0.969')
 # exp.export_jit()
 # exp.export_onnx()

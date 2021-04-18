@@ -10,10 +10,11 @@ from src.python.utils.embeddings import get_vectors
 
 
 class BaseTextClassificationPreprocessor:
-    def __init__(self, cfg, mode='train'):
+    def __init__(self, cfg, mode='train', device='cpu'):
         self.max_len = cfg['data']['max_item_len']
         self.lang = cfg['data']['lang']
         self.mode = mode
+        self.device = device
 
         try:
             nltk.data.find('tokenizers/punkt')
@@ -47,8 +48,8 @@ class BaseTextClassificationPreprocessor:
 
 
 class LSTMTextClassificationPreprocessor(BaseTextClassificationPreprocessor):
-    def __init__(self, cfg, mode='train', vocab=None):
-        super().__init__(cfg, mode)
+    def __init__(self, cfg, mode='train', vocab=None, device='cpu'):
+        super().__init__(cfg, mode, device)
         self.embeddings_name = cfg['embeddings']
         self.embeddings_folder = cfg['cache_folder']
         if vocab is None:
@@ -82,13 +83,14 @@ class LSTMTextClassificationPreprocessor(BaseTextClassificationPreprocessor):
         tokens = self._tokenize(text)
         model_input, length = self._encode(tokens)
         if self.mode == 'inference':
-            return torch.tensor(model_input, dtype=torch.float), torch.tensor(length, dtype=torch.float)
+            return torch.tensor(model_input, dtype=torch.int64, device=self.device).unsqueeze(0), \
+                   torch.tensor(length, dtype=torch.int64, device=self.device).unsqueeze(0)
         return model_input, length
 
 
 class BertTextClassificationPreprocessor(BaseTextClassificationPreprocessor):
-    def __init__(self, cfg, mode='train', tokenizer=None):
-        super().__init__(cfg, mode)
+    def __init__(self, cfg, mode='train', tokenizer=None, device='cpu'):
+        super().__init__(cfg, mode, device)
         self.model_name = cfg['model']['model_name']
         if tokenizer is None:
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
@@ -112,4 +114,9 @@ class BertTextClassificationPreprocessor(BaseTextClassificationPreprocessor):
     def process(self, text):
         tokens = self._tokenize(text)
         input_ids, mask, token_type_ids = self._encode(tokens)
-        return np.array(input_ids), np.array(mask), np.array(token_type_ids)
+        input_ids, mask, token_type_ids = np.array(input_ids), np.array(mask), np.array(token_type_ids)
+        if self.mode == 'inference':
+            return torch.tensor([input_ids], dtype=torch.int64, device=self.device), \
+                   torch.tensor([mask], dtype=torch.int64, device=self.device), \
+                   torch.tensor([token_type_ids], dtype=torch.int64, device=self.device),
+        return input_ids, mask, token_type_ids
