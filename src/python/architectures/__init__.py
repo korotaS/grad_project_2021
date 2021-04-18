@@ -1,1 +1,2 @@
-from .image_architectures import get_im_clf_model, get_im_sgm_model, get_architectures_by_type
+from .image_architectures import get_im_clf_model, get_im_sgm_model, get_image_architectures_by_type
+from .text_architectures import get_text_architectures_by_type, get_txt_clf_model

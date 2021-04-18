@@ -1,0 +1,7 @@
+dataset_folder: 'projects/datasets/dogscats/test/'
+data_len: -1
+shuffle: false
+num_workers_test: 0
+batch_size: 64
+gpus: '0'
+ckpt_path: 'projects/project_1/experiment_1_20210417T135820/weights/epoch=1_val_acc=0.937_20210417T135820.ckpt'

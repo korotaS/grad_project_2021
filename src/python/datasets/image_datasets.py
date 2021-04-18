@@ -1,22 +1,20 @@
 import json
 import os
 
-import cv2
 import numpy as np
 import torch
 from PIL import Image
 
+from src.python.datasets.base_datasets import BaseDataset, DatasetContentError, DatasetStructureError
 from src.python.utils.utils import rle_decode_mask
-from src.python.datasets.base import BaseDataset, DatasetContentError, DatasetStructureError
 
 
 class ImageClassificationDataset(BaseDataset):
-    def __init__(self, path, input_size, device='cpu', transform=None):
+    def __init__(self, path, preprocessor, data_len=-1):
         super().__init__()
         self.path = path
-        self.device = device
-        self.transform = transform
-        self.input_size = input_size
+        self.preprocessor = preprocessor
+        self.data_len = data_len
 
         self.info_path = os.path.join(self.path, 'info.json')
         self.images_path = os.path.join(self.path, 'images/')
@@ -39,34 +37,30 @@ class ImageClassificationDataset(BaseDataset):
         print(f'{self.path}: Content OK!')
 
     def __len__(self):
+        if self.data_len != -1:
+            return self.data_len
         return len(self.info)
 
     def __getitem__(self, idx):
         data = self.info[str(idx)]
         filename = data['filename']
         image = np.array(Image.open(os.path.join(self.images_path, filename)))
-        raw_image = image.copy()
-        raw_image = cv2.resize(raw_image, self.input_size)
-        if self.transform:
-            image = self.transform(image=image)['image']
-        image = image.to(self.device)
+        raw_image, image = self.preprocessor.process(image)
 
         # TODO: change labeling
         label = data['label']
-        label = torch.tensor(label, dtype=torch.float, device=self.device)
+        label = torch.tensor(label, dtype=torch.float)
         return raw_image, image, label
 
 
 class ImageSegmentationDataset(BaseDataset):
-    def __init__(self, path, input_size, num_classes, device='cpu', transform=None, use_rle=False, preprocessing=None):
+    def __init__(self, path, num_classes, preprocessor, use_rle=False, data_len=-1):
         super().__init__()
         self.path = path
-        self.input_size = input_size
         self.num_classes = num_classes
-        self.device = device
-        self.transform = transform
-        self.preprocessing = preprocessing
+        self.preprocessor = preprocessor
         self.use_rle = use_rle
+        self.data_len = data_len
 
         self.images_path = os.path.join(self.path, 'images/')
         self.info_path = os.path.join(self.path, 'info.json')
@@ -97,6 +91,8 @@ class ImageSegmentationDataset(BaseDataset):
         print(f'{self.path}: Content OK!')
 
     def __len__(self):
+        if self.data_len != -1:
+            return self.data_len
         return len(self.info)
 
     def __getitem__(self, idx):
@@ -115,20 +111,5 @@ class ImageSegmentationDataset(BaseDataset):
                 assert len(mask.shape) == 3 and mask.shape[2] == self.num_classes, \
                     f'Num_classes is {self.num_classes}, so mask must be a {self.num_classes}-channel image'
 
-        if self.transform:
-            sample = self.transform(image=image, mask=mask)  # TODO: check multiple masks
-            image = sample['image']
-            mask = sample['mask']
-        raw_image = image.copy()
-
-        if self.preprocessing:
-            image = self.preprocessing(image)
-            image = image.transpose((2, 0, 1)).astype('float32')
-
-        mask = mask / 255.0
-        mask = mask.astype('float32')
-        if self.num_classes == 1:
-            mask = mask[np.newaxis, :, :]
-        else:
-            mask = mask.transpose((2, 0, 1))
+        raw_image, image, mask = self.preprocessor.process(image=image, mask=mask)
         return raw_image, image, mask

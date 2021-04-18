@@ -4,6 +4,11 @@ general:
   project_name: 'project_1'
   exp_name: 'experiment_1'
 
+model:
+  architecture: 'mobilenet_v2'
+  freeze_backbone: true
+  pretrained: true
+
 data:
   dataset_folder: 'projects/datasets/dogscats/'
   width: 224
@@ -11,22 +16,40 @@ data:
   labels:
     - 'cat'
     - 'dog'
+  train_len: -1
+  val_len: -1
   transforms_train: 'default'
   transforms_val: 'default'
 
-model:
-  architecture: 'mobilenet_v2'
+trainer:
+  gpus: '3'
+  max_epochs: 10
+
+training:
+  seed: 42
+  batch_size_train: 8
+  shuffle_train: True
+  batch_size_val: 8
+  shuffle_val: False
+  workers: 0
   criterion: 'CrossEntropyLoss'
-  optimizer: 'Adam'
-  pretrained: true
-  freeze_backbone: true
-  batch_size: 8
-  lr: 0.001
-  max_epochs: 5
+
+optimizer:
+  name: 'Adam'
+  params:
+    lr: 0.00005
+
+scheduler:
+  name: ReduceLROnPlateau
+  params:
+    factor: 0.6
+    patience: 25
+    min_lr: 1.0e-5
+    verbose: true
 
 checkpoint_callback:
-    mode: max
-    monitor: val_acc
-    save_top_k: 1
-    verbose: True
-    filename: '{epoch}_{val_acc:.2f}'
+  mode: max
+  monitor: val_acc
+  save_top_k: 1
+  verbose: True
+  filename: '{epoch}_{val_acc:.3f}'

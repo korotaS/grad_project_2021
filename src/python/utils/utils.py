@@ -1,6 +1,9 @@
-from functools import reduce as _reduce
-import numpy as np
 import re
+from functools import reduce as _reduce
+
+import numpy as np
+from torch import optim
+from torch.optim import lr_scheduler
 
 
 def rle_encode(seq):
@@ -48,3 +51,23 @@ def rle_decode_mask(values, counts, image_shape):
 def camel_to_snake(name):
     name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
+
+def _configure_optimizers(optimizer_cfg, scheduler_cfg, model, freeze=False):
+    params_to_update = model.parameters()
+    if freeze:
+        params_to_update = []
+        for name, param in model.named_parameters():
+            if param.requires_grad:
+                params_to_update.append(param)
+    optimizer = getattr(optim, optimizer_cfg['name'])(params=params_to_update,
+                                                      **optimizer_cfg['params'])
+    scheduler = getattr(lr_scheduler, scheduler_cfg['name'])(optimizer=optimizer,
+                                                             **scheduler_cfg['params'])
+    scheduler_config = {
+        "scheduler": scheduler,
+        "interval": "epoch",
+        "frequency": 1,
+        "monitor": "val_loss",
+    }
+    return [[optimizer], [scheduler_config]]
