@@ -57,13 +57,13 @@ class BaseTrainer:
             self.test_mode = True
 
         self.callbacks, self.exp_folder = self.configure_callbacks()
-        # if not self.test_mode:
-        #     if not os.path.exists(self.exp_folder):
-        #         os.mkdir(self.exp_folder)
-        #     with open(os.path.join(self.exp_folder, 'config.yaml'), 'w') as outfile:
-        #         yaml.dump(cfg, outfile, default_flow_style=False)
+        if not self.test_mode:
+            if not os.path.exists(self.exp_folder):
+                os.mkdir(self.exp_folder)
+            with open(os.path.join(self.exp_folder, f'cfg_{self.version}.yaml'), 'w') as outfile:
+                yaml.dump(cfg, outfile, default_flow_style=False)
 
-    def init_model(self):
+    def init_model(self, test_mode_external=False):
         pass
 
     def init_data(self):

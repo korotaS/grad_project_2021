@@ -28,7 +28,7 @@ class TextClassificationTrainer(BaseTextTrainer):
             self.model_name = self.cfg['model']['model_name']
             self.cache_folder = self.cfg['cache_folder']
 
-    def init_model(self):
+    def init_model(self, test_mode_external=False):
         criterion = getattr(nn, self.criterion_name)()
         if self.model_type == 'lstm':
             self.model_raw = get_txt_clf_model(model_type=self.model_type,
@@ -51,7 +51,7 @@ class TextClassificationTrainer(BaseTextTrainer):
                                                      scheduler_cfg=self.scheduler_cfg,
                                                      criterion=criterion,
                                                      labels=self.labels)
-        if self.test_mode:
+        if self.test_mode or test_mode_external:
             self.model.load_state_dict(torch.load(self.test_ckpt_path)['state_dict'])
 
     def init_data(self):
@@ -126,8 +126,8 @@ class TextClassificationTrainer(BaseTextTrainer):
                                       worker_init_fn=worker_init_fn)
 
     def train(self):
-        logger = TensorBoardLogger(save_dir='tb_logs',
-                                   name='txtclf',
+        logger = TensorBoardLogger(save_dir=f'tb_logs/txtclf/',
+                                   name=self.project_name,
                                    version=self.tb_version)
         pl_trainer = PLTrainer(logger=logger,
                                log_every_n_steps=25,

@@ -17,9 +17,8 @@ class BaseExporter:
         elif subtask == 'txtclf':
             self.trainer = TextClassificationTrainer(self.cfg)
 
-        self.trainer.test_mode = True
         self.trainer.test_ckpt_path = self.checkpoint
-        self.trainer.init_model()
+        self.trainer.init_model(test_mode_external=True)
         self.model = self.trainer.model.model
         self.model.eval()
 

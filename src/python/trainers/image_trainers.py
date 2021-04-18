@@ -26,7 +26,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
 
         self.pref_input_size = None
 
-    def init_model(self):
+    def init_model(self, test_mode_external=False):
         self.model_raw, self.pref_input_size = get_im_clf_model(model_name=self.architecture,
                                                                 num_classes=self.num_classes,
                                                                 pretrained=self.pretrained,
@@ -39,7 +39,7 @@ class ImageClassificationTrainer(BaseImageTrainer):
                                               criterion=criterion,
                                               labels=self.labels,
                                               freeze_backbone=self.freeze)
-        if self.test_mode:
+        if self.test_mode or test_mode_external:
             self.model.load_state_dict(torch.load(self.test_ckpt_path)['state_dict'])
 
     def init_data(self):
@@ -77,8 +77,8 @@ class ImageClassificationTrainer(BaseImageTrainer):
                                       worker_init_fn=worker_init_fn)
 
     def train(self):
-        logger = TensorBoardLogger(save_dir='tb_logs',
-                                   name='imclf',
+        logger = TensorBoardLogger(save_dir=f'tb_logs/imclf/',
+                                   name=self.project_name,
                                    version=self.tb_version)
         pl_trainer = PLTrainer(logger=logger,
                                log_every_n_steps=25,
@@ -103,7 +103,7 @@ class ImageSegmentationTrainer(BaseImageTrainer):
         self.num_classes = self.cfg['data']['num_classes']
         self.use_rle = self.cfg['data']['use_rle']
 
-    def init_model(self):
+    def init_model(self, test_mode_external=False):
         self.model_raw = get_im_sgm_model(model_name=self.architecture,
                                           encoder_name=self.backbone,
                                           num_classes=self.num_classes,
@@ -114,7 +114,7 @@ class ImageSegmentationTrainer(BaseImageTrainer):
                                             optimizer_cfg=self.optimizer_cfg,
                                             scheduler_cfg=self.scheduler_cfg,
                                             criterion=criterion)
-        if self.test_mode:
+        if self.test_mode or test_mode_external:
             self.model.load_state_dict(torch.load(self.test_ckpt_path)['state_dict'])
 
     def init_data(self):
@@ -157,8 +157,8 @@ class ImageSegmentationTrainer(BaseImageTrainer):
                                       worker_init_fn=worker_init_fn)
 
     def train(self):
-        logger = TensorBoardLogger(save_dir='tb_logs',
-                                   name='imsgm',
+        logger = TensorBoardLogger(save_dir=f'tb_logs/imsgm/',
+                                   name=self.project_name,
                                    version=self.tb_version)
         pl_trainer = PLTrainer(logger=logger,
                                log_every_n_steps=25,
