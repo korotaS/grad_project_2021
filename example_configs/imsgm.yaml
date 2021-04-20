@@ -10,11 +10,11 @@ model:
   pretrained: true
 
 data:
-  dataset_folder: 'projects/datasets/shapes/'
-  use_rle: false
+  dataset_folder: 'projects/datasets/shapes_2ch/'
+  use_rle: true
   width: 256
   height: 256
-  num_classes: 1
+  num_classes: 2
   transforms_train: 'default'
   transforms_val: 'default'
   in_channels: 3
@@ -23,7 +23,7 @@ data:
 
 trainer:
   gpus: '3'
-  max_epochs: 20
+  max_epochs: 5
 
 training:
   seed: 42

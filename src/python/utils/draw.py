@@ -198,10 +198,10 @@ def draw_prediction_masks_on_image(images, masks_pr, masks_gt, jaccard_metrics, 
 
         mask_left = draw_masks(mask_pr=mask_pr, colors=colors, draw_compare=False,
                                seg_type=seg_type, num=len(colors))
-        mask_left = overlay_mask_on_image(mask=mask_left, image=image)
+        mask_left = overlay_mask_on_image(mask=mask_left, image=image, alpha=0.6)
         mask_right = draw_masks(mask_pr=mask_gt, colors=colors, draw_compare=False,
                                 seg_type=seg_type, num=len(colors))
-        mask_right = overlay_mask_on_image(mask=mask_right, image=image)
+        mask_right = overlay_mask_on_image(mask=mask_right, image=image, alpha=0.8)
 
         mask_result = cv2.hconcat([mask_left, mask_right])
         plt.imshow(mask_result)

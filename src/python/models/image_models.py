@@ -165,7 +165,8 @@ class ImageSegmentationModel(pl.LightningModule):
         pred_masks = outputs[0]['pred_masks']
         raw_images = outputs[0]['raw_images']
         metrics = [self.metrics['iou'](pr, tr) for pr, tr in zip(pred_masks, true_masks)]
-        fig = draw_prediction_masks_on_image(raw_images, pred_masks, true_masks, metrics, 4, 2)
+        seg_type = 'single' if true_masks[0].shape[0] == 1 else 'multi'
+        fig = draw_prediction_masks_on_image(raw_images, pred_masks, true_masks, metrics, 4, 2, seg_type=seg_type)
         self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
 
     def test_step(self, batch, batch_idx):
@@ -175,14 +176,16 @@ class ImageSegmentationModel(pl.LightningModule):
         true_masks = [mask for o in outputs for mask in o['true_masks']]
         pred_masks = [mask for o in outputs for mask in o['pred_masks']]
 
+        mean_class_ious = []
         for class_id in range(true_masks[0].shape[0]):
             class_ious = [self.metrics['iou'](pr[class_id], tr[class_id]).cpu().numpy()
                           for pr, tr in zip(pred_masks, true_masks)]
             mean_class_iou = np.mean(class_ious)
+            mean_class_ious.append(mean_class_iou)
             self.log(f'val_iou_class_{class_id}', mean_class_iou)
             # print(f'\nMean IOU for class {class_id}: {mean_class_iou:.3f}')
 
-        mean_iou = np.mean([self.metrics['iou'](pr, tr).cpu().numpy() for pr, tr in zip(pred_masks, true_masks)])
+        mean_iou = np.mean(mean_class_ious)
         avg_loss = torch.stack([x["loss"] for x in outputs]).mean().item()
         self.log('val_loss', avg_loss)
         self.log('val_iou', mean_iou)

@@ -10,10 +10,11 @@ from src.python.utils.utils import rle_decode_mask
 
 
 class ImageClassificationDataset(BaseDataset):
-    def __init__(self, path, preprocessor, data_len=-1):
+    def __init__(self, path, preprocessor, labels, data_len=-1):
         super().__init__()
         self.path = path
         self.preprocessor = preprocessor
+        self.labels = {label: i for i, label in enumerate(labels)}
         self.data_len = data_len
 
         self.info_path = os.path.join(self.path, 'info.json')
@@ -47,8 +48,7 @@ class ImageClassificationDataset(BaseDataset):
         image = np.array(Image.open(os.path.join(self.images_path, filename)))
         raw_image, image = self.preprocessor.process(image)
 
-        # TODO: change labeling
-        label = data['label']
+        label = self.labels[data['label']]
         label = torch.tensor(label, dtype=torch.float)
         return raw_image, image, label
 
@@ -60,12 +60,13 @@ class ImageSegmentationDataset(BaseDataset):
         self.num_classes = num_classes
         self.preprocessor = preprocessor
         self.use_rle = use_rle
+        if self.num_classes > 1 and not self.use_rle:
+            raise AttributeError('Num classes > 1 works only with RLE.')
         self.data_len = data_len
 
         self.images_path = os.path.join(self.path, 'images/')
         self.info_path = os.path.join(self.path, 'info.json')
-        if not self.use_rle:
-            self.masks_path = os.path.join(self.path, 'masks/')
+        self.masks_path = os.path.join(self.path, 'masks/')
         self.check_structure()
         with open(self.info_path, 'r') as r:
             self.info = json.load(r)
@@ -76,18 +77,16 @@ class ImageSegmentationDataset(BaseDataset):
             raise DatasetStructureError(f'info.json not found in dataset folder: {self.path}')
         if not os.path.exists(self.images_path):
             raise DatasetStructureError(f'"images/" folder not found in dataset folder: {self.path}')
-        if not self.use_rle:
-            if not os.path.exists(self.masks_path):
-                raise DatasetStructureError(f'"masks/" folder not found in dataset folder: {self.path}')
+        if not os.path.exists(self.masks_path):
+            raise DatasetStructureError(f'"masks/" folder not found in dataset folder: {self.path}')
         print(f'{self.path}: Structure OK!')
 
     def check_content(self):
         for image in self.info.values():
             if not os.path.exists(os.path.join(self.images_path, image['image_filename'])):
                 raise DatasetContentError(f'File with name {image["image_filename"]} not found in {self.images_path}')
-            if not self.use_rle:
-                if not os.path.exists(os.path.join(self.masks_path, image['mask_filename'])):
-                    raise DatasetContentError(f'File with name {image["mask_filename"]} not found in {self.masks_path}')
+            if not os.path.exists(os.path.join(self.masks_path, image['mask_filename'])):
+                raise DatasetContentError(f'File with name {image["mask_filename"]} not found in {self.masks_path}')
         print(f'{self.path}: Content OK!')
 
     def __len__(self):
@@ -100,16 +99,16 @@ class ImageSegmentationDataset(BaseDataset):
         image = np.array(Image.open(os.path.join(self.images_path, data['image_filename'])))
 
         if self.use_rle:
-            values, counts = image['rle']['values'], image['rle']['counts']
-            shape = image.shape
-            mask = rle_decode_mask(values, counts, shape)
+            mask_filename = data['mask_filename']
+            with open(os.path.join(self.masks_path, mask_filename), 'r') as r:
+                rle_dict = json.load(r)
+            mask = rle_decode_mask(rle_dict)
+            if mask.shape[2] == 1:
+                mask = mask[:, :, 0]
         else:
             mask = np.array(Image.open(os.path.join(self.masks_path, data['mask_filename'])))
             if self.num_classes == 1:
                 assert len(mask.shape) == 2, 'Num_classes is 1, so mask must be a 1-channel image with shape (x, y)'
-            else:
-                assert len(mask.shape) == 3 and mask.shape[2] == self.num_classes, \
-                    f'Num_classes is {self.num_classes}, so mask must be a {self.num_classes}-channel image'
 
         raw_image, image, mask = self.preprocessor.process(image=image, mask=mask)
         return raw_image, image, mask
