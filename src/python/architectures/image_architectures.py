@@ -108,7 +108,7 @@ def get_im_sgm_model(model_name, encoder_name, num_classes, in_channels, pretrai
         encoder_weights='imagenet' if pretrained else None,  # Only ImageNet for now
         in_channels=in_channels,
         classes=num_classes,
-        activation='sigmoid' if num_classes == 1 else 'softmax'
+        activation='sigmoid'
     )
     return model
 

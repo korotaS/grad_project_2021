@@ -1,7 +1,7 @@
-dataset_folder: 'projects/datasets/shapes/test/'
+dataset_folder: 'projects/datasets/shapes_2ch/val/'
 data_len: -1
 shuffle: false
 num_workers_test: 0
 batch_size: 64
 gpus: '0'
-ckpt_path: 'projects/project_2/experiment_1_20210417T140139/weights/epoch=4_val_iou=0.969_20210417T140139.ckpt'
+ckpt_path: 'projects/project_2/experiment_1_20210418T204400/weights/epoch=4_val_iou=0.969_20210418T204400.ckpt'
