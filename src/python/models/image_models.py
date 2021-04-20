@@ -48,7 +48,7 @@ class ImageClassificationModel(pl.LightningModule):
             'train_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['train_' + metric_name] = metric(preds.cpu(), labels.data.cpu())
+            tb_logs['train_' + metric_name] = metric(preds.cpu(), labels.data.cpu().int())
         for key, value in tb_logs.items():
             self.log(key, value)
         return {
@@ -65,7 +65,7 @@ class ImageClassificationModel(pl.LightningModule):
             'val_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['val_' + metric_name] = metric(preds.cpu(), labels.data.cpu())
+            tb_logs['val_' + metric_name] = metric(preds.cpu(), labels.data.cpu().int())
         for key, value in tb_logs.items():
             self.log(key, value)
         return {

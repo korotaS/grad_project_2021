@@ -1,15 +1,58 @@
+import logging
+import sys
 from threading import Thread
 
-import yaml
-
 from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer, TextClassificationTrainer
+from src.python.utils.seed import set_seed
 from src.python.utils.utils import camel_to_snake
+
+# import yaml
+
+
+class SocketStdOut(object):
+    def __init__(self, skt):
+        self.skt = skt
+
+    def write(self, string):
+        if '\\x1b' not in repr(string):
+            self.skt.emit('log', string.rstrip('\n'))
+
+    def flush(self):
+        pass
+
+
+class RedirectStdStreams(object):
+    def __init__(self, skt):
+        custom_stdout = SocketStdOut(skt)
+
+        logger = logging.getLogger("lightning")
+        logger.setLevel(logging.INFO)
+        handler = logging.StreamHandler(custom_stdout)
+        handler.setLevel(logging.INFO)
+        logger.addHandler(handler)
+
+        self._stdout = custom_stdout
+        self._stderr = custom_stdout
+
+    def __enter__(self):
+        self.old_stdout, self.old_stderr = sys.stdout, sys.stderr
+        self.old_stdout.flush()
+        self.old_stderr.flush()
+        sys.stdout, sys.stderr = self._stdout, self._stderr
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # self._stdout.flush()
+        # self._stderr.flush()
+        sys.stdout = self.old_stdout
+        sys.stderr = self.old_stderr
 
 
 class MainThread(Thread):
-    def __init__(self, cfg, test_cfg=None):
+    def __init__(self, cfg, test_cfg=None, skt=None):
         super().__init__()
+        self.skt = skt
         self.cfg = self.convert_params(cfg)
+        set_seed(self.cfg['training']['seed'])
         self.test_cfg = test_cfg
         subtask = self.cfg['general']['subtask']
         if subtask == 'imclf':
@@ -25,7 +68,8 @@ class MainThread(Thread):
         return new_d
 
     def run(self):
-        self.trainer.run()
+        with RedirectStdStreams(self.skt):
+            self.trainer.run()
 
 
 # cfg = yaml.full_load(open('projects/project_1/experiment_1_20210417T135820/config.yaml'))

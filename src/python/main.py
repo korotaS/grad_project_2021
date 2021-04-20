@@ -35,9 +35,9 @@ def run_train():
     data = request.get_json(force=True)
     global STATUS
     global THREAD
-    THREAD = MainThread(data)
+    THREAD = MainThread(data, skt=socketio)
     THREAD.start()
-    return jsonify({'status': THREAD.status})
+    return jsonify({'status': 'ok'})
 
 
 @app.route("/getArchs/<task>")
@@ -48,7 +48,7 @@ def get_archs(task):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--port', type=int, default=5000)
+    parser.add_argument('--port', type=int, default=5000, required=False)
     args = parser.parse_args()
     port = args.port
-    socketio.run(app, host='127.0.0.1', port=port, debug=True)
+    socketio.run(app, host='127.0.0.1', port=port)

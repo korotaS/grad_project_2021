@@ -40,7 +40,7 @@ class BaseTextClassificationModel(pl.LightningModule):
             'val_loss': loss.cpu()
         }
         for metric_name, metric in self.metrics.items():
-            tb_logs['val_' + metric_name] = metric(preds.cpu(), labels.data.cpu())
+            tb_logs['val_' + metric_name] = metric(preds.cpu(), labels.data.cpu().int())
         for key, value in tb_logs.items():
             self.log(key, value)
         return {
