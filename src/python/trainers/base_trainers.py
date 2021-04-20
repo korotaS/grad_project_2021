@@ -4,8 +4,6 @@ from datetime import datetime
 import yaml
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.python.utils.seed import set_seed
-
 
 class BaseTrainer:
     def __init__(self, cfg, test_cfg=None):
@@ -38,8 +36,6 @@ class BaseTrainer:
         self.shuffle_val = self.cfg['training']['batch_size_val']
         self.num_workers = self.cfg['training']['workers']
         self.criterion_name = self.cfg['training']['criterion']
-        self.seed = self.cfg['training']['seed']
-        set_seed(self.seed)
         # optimizer, scheduler
         self.optimizer_cfg = self.cfg['optimizer']
         self.scheduler_cfg = self.cfg['scheduler']
