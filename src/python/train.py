@@ -2,11 +2,11 @@ import logging
 import sys
 from threading import Thread
 
+import yaml
+
 from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer, TextClassificationTrainer
 from src.python.utils.seed import set_seed
 from src.python.utils.utils import camel_to_snake
-
-# import yaml
 
 
 class SocketStdOut(object):
@@ -23,8 +23,12 @@ class SocketStdOut(object):
 
 class RedirectStdStreams(object):
     def __init__(self, skt):
-        custom_stdout = SocketStdOut(skt)
-
+        if skt is None:
+            custom_stdout = sys.stdout
+            custom_stderr = sys.stderr
+        else:
+            custom_stdout = SocketStdOut(skt)
+            custom_stderr = custom_stdout
         logger = logging.getLogger("lightning")
         logger.setLevel(logging.INFO)
         handler = logging.StreamHandler(custom_stdout)
@@ -32,7 +36,7 @@ class RedirectStdStreams(object):
         logger.addHandler(handler)
 
         self._stdout = custom_stdout
-        self._stderr = custom_stdout
+        self._stderr = custom_stderr
 
     def __enter__(self):
         self.old_stdout, self.old_stderr = sys.stdout, sys.stderr

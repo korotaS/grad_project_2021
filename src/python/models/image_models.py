@@ -5,7 +5,8 @@ import torch.nn as nn
 import numpy as np
 from sklearn.metrics import classification_report, accuracy_score
 
-from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix, draw_prediction_masks_on_image
+from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix, draw_prediction_masks_on_image, \
+    draw_prediction_masks
 from src.python.utils.utils import _configure_optimizers
 
 
@@ -168,6 +169,8 @@ class ImageSegmentationModel(pl.LightningModule):
         seg_type = 'single' if true_masks[0].shape[0] == 1 else 'multi'
         fig = draw_prediction_masks_on_image(raw_images, pred_masks, true_masks, metrics, 4, 2, seg_type=seg_type)
         self.logger.experiment.add_figure('predictions', fig, self.current_epoch)
+        fig = draw_prediction_masks(raw_images, pred_masks, 4, 2, seg_type=seg_type)
+        self.logger.experiment.add_figure('predictions_raw', fig, self.current_epoch)
 
     def test_step(self, batch, batch_idx):
         return self.validation_step(batch, batch_idx)
