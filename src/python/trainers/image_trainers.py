@@ -129,7 +129,7 @@ class ImageSegmentationTrainer(BaseImageTrainer):
                                                       data_len=self.train_len)
         self.train_loader = DataLoader(dataset=self.train_dataset,
                                        batch_size=self.batch_size_train,
-                                       shuffle=self.shuffle_train,
+                                       shuffle=self.shuffle_val,
                                        num_workers=self.num_workers,
                                        worker_init_fn=worker_init_fn)
         # val

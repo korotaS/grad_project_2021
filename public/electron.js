@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain, net} = require("electron");
+const {app, BrowserWindow, ipcMain, net, shell, dialog} = require("electron");
 const path = require("path");
 const getPort = require('get-port');
 const yaml = require('js-yaml');
@@ -15,7 +15,7 @@ let mainWindow = null;
 let subpy = null;
 let PROJECT_NAME = '';
 let LAST_EPOCH = 0;
-let port = 5001;
+let port = 5000;
 
 // -----INITIALIZATION-----
 
@@ -57,6 +57,11 @@ const createMainWindow = (x_custom, y_custom) => {
     mainWindow.on("closed", function () {
         // Dereference the mainWindow object
         mainWindow = null;
+    });
+
+    mainWindow.webContents.on('new-window', function (e, url) {
+        e.preventDefault();
+        shell.openExternal(url);
     });
 };
 
@@ -126,13 +131,69 @@ ipcMain.on('configChosen', function (e, item) {
     const request = net.request({
         method: 'POST',
         hostname: 'localhost',
-        port: 5000,
-        path: '/init'
+        port: port,
+        path: '/validateConfig'
     })
+
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString());
+            // dialog.showMessageBox({message: data.toString()});
+            if (json.status === 'ok') {
+                const requestInit = net.request({
+                    method: 'POST',
+                    hostname: 'localhost',
+                    port: port,
+                    path: '/init'
+                });
+                requestInit.write(post_data);
+                requestInit.end();
+            } else {
+                alert(json.error);
+            }
+        })
+    });
 
     let post_data = JSON.stringify(config);
     request.write(post_data);
     request.end();
+});
+
+ipcMain.on('launchTB', function (e, item) {
+    const taskTypeForTB = item.taskTypeForTB;
+    console.log(taskTypeForTB);
+
+    (async () => {
+        const tb_port = await getPort({port: getPort.makeRange(6006, 6100)});
+        const path = `http://localhost:${port}/launchTB/${taskTypeForTB}/${tb_port}`
+        const request = net.request(path);
+        request.on('response', (response) => {
+            response.on('data', (data) => {
+                let json = JSON.parse(data.toString());
+                if (json.status === 'ok') {
+                    shell.openExternal(json.url);
+                    mainWindow.webContents.send('tbLaunched',
+                        {
+                            status: 'ok',
+                            taskTypeForTB: taskTypeForTB,
+                            tbLink: json.url,
+                            port: tb_port
+                        }
+                    );
+                }
+            })
+        });
+        request.on('error', (error) => {
+            console.log(path);
+            console.log(error)
+            mainWindow.webContents.send('tbLaunched',
+                {
+                    status: 'error'
+                }
+            );
+        })
+        request.end()
+    })();
 });
 
 // ipcMain.on('submitChoice1', function (e, item) {

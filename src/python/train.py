@@ -89,5 +89,6 @@ class MainThread(Thread):
 # cfg = yaml.full_load(open('projects/project_3/experiment_1_20210417T154503/config.yaml'))
 # test_cfg = yaml.full_load(open('example_configs/txtclf_test.yaml'))
 
-# thread = MainThread(cfg, test_cfg)
+# cfg = yaml.full_load(open('example_configs/imclf.yaml'))
+# thread = MainThread(cfg)
 # thread.start()

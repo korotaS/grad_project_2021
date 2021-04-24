@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button, Form, Col, FormLabel} from 'react-bootstrap';
+import {Button, Form, Col, FormLabel, DropdownButton, Dropdown} from 'react-bootstrap';
 
 const {dialog} = window.require('electron').remote;
 
@@ -11,11 +11,14 @@ class ChooseConfig extends Component {
         this.state = {
             configPath: '',
             pushed: false,
+            tbLaunched: false,
+            tbLink: ''
         };
 
         this.submitChoice = this.submitChoice.bind(this);
         this.chooseDir = this.chooseDir.bind(this);
         this.getCurrentConfigPath = this.getCurrentConfigPath.bind(this);
+        this.launchTB = this.launchTB.bind(this)
     }
 
     submitChoice(event) {
@@ -31,6 +34,13 @@ class ChooseConfig extends Component {
                 configPath: this.state.configPath,
             });
         }
+    }
+
+    launchTB(key) {
+        console.log(key);
+        ipcRenderer.send('launchTB', {
+            taskTypeForTB: key
+        });
     }
 
     chooseDir(event) {
@@ -55,20 +65,44 @@ class ChooseConfig extends Component {
     }
 
     componentDidMount() {
+        ipcRenderer.on('tbLaunched', function (e, args) {
+            if (args.status === 'ok') {
+                let tbLink = args.tbLink;
+                this.setState(state => {
+                    state.tbLink = tbLink;
+                    state.tbLaunched = true;
+                    return state
+                })
+            } else if (args.status === 'error') {
 
+            }
+
+        }.bind(this));
+
+        ipcRenderer.on('tbStopped', function (e) {
+            this.setState(state => {
+                state.tbLaunched = false;
+                state.tbLink = '';
+                return state
+            })
+        }.bind(this));
     }
 
     render() {
+        let tbSection;
+        if (!this.state.tbLaunched) {
+            tbSection = <LaunchTB onSelect={this.launchTB}/>
+        } else {
+            tbSection = <TBLaunched onClick={this.openTb} tbLink={this.state.tbLink}/>
+        }
         return (
-            <div className="ChooseDataset" style={{
-                // display: 'flex',
-                // justifyContent: 'center',
-                // alignItems: 'center',
-                // height: '100vh'
-            }}>
-                <header className="chooseDataset">
+            <div className="ChooseConfig">
+                <header className="chooseConfig">
                     <Form>
-                        <Form.Row className="align-items-center">
+                        <Form.Row className="align-items-center" style={{
+                            marginTop: '10px',
+                            marginLeft: '5px'
+                        }}>
                             <Col xs="auto">
                                 <Button
                                     variant="success" type="submit"
@@ -77,16 +111,56 @@ class ChooseConfig extends Component {
                             </Col>
                             <Col xs="auto">
                                 <Button
-                                    variant="success" type="submit" onClick={this.submitChoice}
+                                    variant="success"
+                                    type="submit"
+                                    onClick={this.submitChoice}
                                 >Submit</Button>
                             </Col>
                             <FormLabel>{this.getCurrentConfigPath()}</FormLabel>
                         </Form.Row>
+                        {tbSection}
                     </Form>
                 </header>
             </div>
         );
     }
+}
+
+function LaunchTB(props) {
+    return (
+        <Form.Row className="align-items-center" style={{
+            marginTop: '10px',
+            marginLeft: '5px'
+        }}>
+            <Col xs="auto">
+                <DropdownButton title={'Launch TensorBoard'}
+                                variant="success"
+                                type="submit"
+                                onSelect={props.onSelect}
+                >
+                    <Dropdown.Item eventKey={'imclf'}>Image classification</Dropdown.Item>
+                    <Dropdown.Item eventKey={'imsgm'}>Image segmentation</Dropdown.Item>
+                    <Dropdown.Item eventKey={'txtclf'}>Text classification</Dropdown.Item>
+                </DropdownButton>
+            </Col>
+        </Form.Row>
+
+    )
+}
+
+function TBLaunched(props) {
+    let link = <a href={props.tbLink} target={'_blank'}>{props.tbLink}</a>;
+    return (
+        <Form.Row className="align-items-center" style={{
+            marginTop: '10px',
+            marginLeft: '5px'
+        }}>
+            <Col xs="auto">
+                <h5>TensorBoard is running on {link}. It will be terminated when the app closes.</h5>
+            </Col>
+        </Form.Row>
+
+    )
 }
 
 export default ChooseConfig;
