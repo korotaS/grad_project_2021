@@ -11,7 +11,7 @@ class ChooseTask extends Component {
             taskClass: 'cv',
             projectName: 'project_1',
             pushed: false,
-            text: 'aaaa',
+            text: '',
         };
 
         this.submitChoice = this.submitChoice.bind(this);

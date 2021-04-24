@@ -100,6 +100,9 @@ class BaseTrainer:
             self.init_data()
             self.train()
 
+    def stop_training(self):
+        self.model.running = False
+
 
 class BaseImageTrainer(BaseTrainer):
     def __init__(self, cfg, test_cfg=None):

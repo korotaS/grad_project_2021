@@ -20,10 +20,11 @@ class ImageClassificationModel(pl.LightningModule):
         self.criterion = criterion
         self.labels = labels
         self.freeze_backbone = freeze_backbone
-
         self.metrics = {
             'acc': pl.metrics.Accuracy()
         }
+
+        self.running = True
 
     def forward(self, x):
         return self.model(x)
@@ -40,6 +41,10 @@ class ImageClassificationModel(pl.LightningModule):
         return outputs, loss
 
     def training_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.train()
         raw_images, inputs, labels = batch
         outputs, loss = self._step(inputs, labels)
@@ -57,6 +62,10 @@ class ImageClassificationModel(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.eval()
         raw_images, inputs, labels = batch
         outputs, loss = self._step(inputs, labels)
@@ -119,10 +128,16 @@ class ImageSegmentationModel(pl.LightningModule):
             'iou': smp.utils.metrics.IoU()
         }
 
+        self.running = True
+
     def forward(self, x):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.train()
         raw_images, images, masks = batch
         outputs = self.model(images)
@@ -140,6 +155,10 @@ class ImageSegmentationModel(pl.LightningModule):
         }
 
     def validation_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.eval()
         raw_images, images, masks = batch
         outputs = self.model(images)

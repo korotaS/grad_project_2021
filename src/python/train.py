@@ -72,8 +72,17 @@ class MainThread(Thread):
         return new_d
 
     def run(self):
-        with RedirectStdStreams(self.skt):
-            self.trainer.run()
+        try:
+            with RedirectStdStreams(self.skt):
+                self.trainer.run()
+        except Exception:
+            pass
+
+    def stop_training(self):
+        try:
+            self.trainer.stop_training()
+        except Exception:
+            pass
 
 
 # cfg = yaml.full_load(open('projects/project_1/experiment_1_20210417T135820/config.yaml'))

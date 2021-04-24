@@ -44,6 +44,15 @@ def run_train():
     return jsonify({'status': 'ok'})
 
 
+@app.route("/stopTraining")
+def stop_training():
+    global THREAD
+    if THREAD is not None:
+        THREAD.stop_training()
+        THREAD = None
+    return jsonify({'status': 'ok'})
+
+
 @app.route("/validateConfig", methods=['POST'])
 def validate_config_handler():
     cfg = request.get_json(force=True)

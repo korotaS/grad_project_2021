@@ -196,6 +196,24 @@ ipcMain.on('launchTB', function (e, item) {
     })();
 });
 
+ipcMain.on('stopTraining', function (e) {
+    const path = `http://localhost:${port}/stopTraining`
+    const request = net.request(path);
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString());
+            if (json.status === 'ok') {
+                mainWindow.webContents.send('trainingStopped');
+            }
+        })
+    });
+    request.on('error', (error) => {
+        console.log(path);
+        console.log(error)
+    })
+    request.end()
+});
+
 // ipcMain.on('submitChoice1', function (e, item) {
 //     mainWindow.webContents.send('afterChoice1', item);
 // });

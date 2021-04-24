@@ -15,8 +15,9 @@ class BaseTextClassificationModel(pl.LightningModule):
         self.scheduler_cfg = scheduler_cfg
         self.criterion = criterion
         self.labels = labels
-
         self.metrics = {}
+
+        self.running = True
 
     def _training_step_after_model(self, outputs, labels):
         loss = self.criterion(outputs, labels.long())
@@ -79,12 +80,20 @@ class LSTMTextClassificationModel(BaseTextClassificationModel):
         })
 
     def training_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.train()
         _, torch_input, text_lengths, labels = batch
         outputs = self.model(torch_input, text_lengths)
         return self._training_step_after_model(outputs, labels)
 
     def validation_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.eval()
         raw_text, torch_input, text_lengths, labels = batch
         outputs = self.model(torch_input, text_lengths)
@@ -112,12 +121,20 @@ class BertTextClassificationModel(BaseTextClassificationModel):
         })
 
     def training_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.train()
         _, input_ids, mask, token_type_ids, labels = batch
         outputs = self.model(input_ids, mask, token_type_ids)
         return self._training_step_after_model(outputs, labels)
 
     def validation_step(self, batch, batch_idx):
+        if not self.running:
+            print('\nSTOPPING TRAINING\n')
+            raise Exception
+
         self.model.eval()
         raw_text, input_ids, mask, token_type_ids, labels = batch
         outputs = self.model(input_ids, mask, token_type_ids)

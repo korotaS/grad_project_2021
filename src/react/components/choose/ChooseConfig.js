@@ -11,6 +11,7 @@ class ChooseConfig extends Component {
         this.state = {
             configPath: '',
             pushed: false,
+            training: false,
             tbLaunched: false,
             tbLink: ''
         };
@@ -28,6 +29,7 @@ class ChooseConfig extends Component {
         } else {
             this.setState(state => {
                 state.pushed = true;
+                state.training = true;
                 return state
             });
             ipcRenderer.send('configChosen', {
@@ -60,6 +62,11 @@ class ChooseConfig extends Component {
         }
     }
 
+    stopTraining(event) {
+        event.preventDefault();
+        ipcRenderer.send('stopTraining');
+    }
+
     getCurrentConfigPath() {
         return this.state.configPath === "" ? "No selected config path" : this.state.configPath;
     }
@@ -86,9 +93,25 @@ class ChooseConfig extends Component {
                 return state
             })
         }.bind(this));
+
+        ipcRenderer.on('trainingStopped', function (e) {
+            this.setState(state => {
+                state.training = false;
+                return state
+            })
+        }.bind(this));
     }
 
     render() {
+        let trainingSection;
+        if (!this.state.training) {
+            trainingSection = <InitialState chooseDir={this.chooseDir}
+                                            submitChoice={this.submitChoice}
+                                            getCurrentConfigPath={this.getCurrentConfigPath}/>
+        } else {
+            trainingSection = <StopTraining stopTraining={this.stopTraining}/>
+        }
+
         let tbSection;
         if (!this.state.tbLaunched) {
             tbSection = <LaunchTB onSelect={this.launchTB}/>
@@ -99,31 +122,54 @@ class ChooseConfig extends Component {
             <div className="ChooseConfig">
                 <header className="chooseConfig">
                     <Form>
-                        <Form.Row className="align-items-center" style={{
-                            marginTop: '10px',
-                            marginLeft: '5px'
-                        }}>
-                            <Col xs="auto">
-                                <Button
-                                    variant="success" type="submit"
-                                    onClick={this.chooseDir}
-                                >Choose config</Button>
-                            </Col>
-                            <Col xs="auto">
-                                <Button
-                                    variant="success"
-                                    type="submit"
-                                    onClick={this.submitChoice}
-                                >Submit</Button>
-                            </Col>
-                            <FormLabel>{this.getCurrentConfigPath()}</FormLabel>
-                        </Form.Row>
+                        {trainingSection}
                         {tbSection}
                     </Form>
                 </header>
             </div>
         );
     }
+}
+
+function InitialState(props) {
+    return (
+        <Form.Row className="align-items-center" style={{
+            marginTop: '10px',
+            marginLeft: '5px'
+        }}>
+            <Col xs="auto">
+                <Button
+                    variant="success" type="submit"
+                    onClick={props.chooseDir}
+                >Choose config</Button>
+            </Col>
+            <Col xs="auto">
+                <Button
+                    variant="success"
+                    type="submit"
+                    onClick={props.submitChoice}
+                >Submit</Button>
+            </Col>
+            <FormLabel>{props.getCurrentConfigPath()}</FormLabel>
+        </Form.Row>
+    )
+}
+
+function StopTraining(props) {
+    return (
+        <Form.Row className="align-items-center" style={{
+            marginTop: '10px',
+            marginLeft: '5px'
+        }}>
+            <Col xs="auto">
+                <Button
+                    variant="danger"
+                    type="submit"
+                    onClick={props.stopTraining}
+                >Stop training</Button>
+            </Col>
+        </Form.Row>
+    )
 }
 
 function LaunchTB(props) {
@@ -144,7 +190,6 @@ function LaunchTB(props) {
                 </DropdownButton>
             </Col>
         </Form.Row>
-
     )
 }
 
