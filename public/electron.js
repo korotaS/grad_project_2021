@@ -159,6 +159,37 @@ ipcMain.on('configChosen', function (e, item) {
     request.end();
 });
 
+ipcMain.on('export', function (e, item) {
+    let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
+    const request = net.request({
+        method: 'POST',
+        hostname: 'localhost',
+        port: port,
+        path: '/export'
+    })
+
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString());
+            if (json.status === 'ok') {
+                // dialog.showMessageBox({message: json.outPath});
+            } else {
+
+            }
+        })
+    });
+
+    let post_data = {
+        cfg: config,
+        cfgPath: item.configPath,
+        folder: item.exportFolder,
+        prefix: item.exportPrefix,
+        exportType: item.exportType
+    };
+    request.write(JSON.stringify(post_data));
+    request.end();
+});
+
 ipcMain.on('launchTB', function (e, item) {
     const taskTypeForTB = item.taskTypeForTB;
     console.log(taskTypeForTB);

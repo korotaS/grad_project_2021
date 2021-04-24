@@ -6,6 +6,7 @@ from flask import jsonify, request
 from src.python.app import socketio, app
 from src.python.train import MainThread
 from src.python.tb import TBThread
+from src.python.export import ExportThread
 from src.python.utils.utils import validate_config
 from src.python.architectures import get_image_architectures_by_type
 
@@ -13,6 +14,7 @@ STATUS = 'ready'
 THREAD = None
 TB_THREAD = TBThread()
 TB_THREAD.start()
+EXP_THREAD = None
 
 
 @app.route("/")
@@ -57,6 +59,26 @@ def stop_training():
 def validate_config_handler():
     cfg = request.get_json(force=True)
     return jsonify(validate_config(cfg))
+
+
+@app.route("/export", methods=['POST'])
+def export():
+    data = request.get_json(force=True)
+    folder = data['folder']
+    cfg_path = data['cfgPath']
+    prefix = data['prefix']
+    cfg = data['cfg']
+    export_type = data['exportType']
+
+    global EXP_THREAD
+    EXP_THREAD = ExportThread(cfg=cfg,
+                              cfg_name=cfg_path,
+                              export_folder=folder,
+                              prefix=prefix,
+                              export_type=export_type,
+                              skt=socketio)
+    path = EXP_THREAD.run()
+    return jsonify({'status': 'ok', 'outPath': path})
 
 
 @app.route("/launchTB/<task_key>/<tb_port>")

@@ -7,6 +7,7 @@ import ChooseDataset from "./react/components/choose/ChooseDataset";
 import ChooseArchitecture from "./react/components/choose/ChooseArchitecture";
 import Status from "./react/components/utils/Utils"
 import ChooseConfig from "./react/components/choose/ChooseConfig";
+import ChooseExport from "./react/components/choose/ChooseExport";
 import * as serviceWorker from './react/serviceWorker';
 const {ipcRenderer} = window.require("electron");
 
@@ -18,6 +19,10 @@ ReactDOM.render(
 ReactDOM.render(
     <ChooseTask />,
   document.getElementById('chooseTask')
+);
+ReactDOM.render(
+    <ChooseExport />,
+  document.getElementById('chooseExport')
 );
 // ipcRenderer.on('afterChoice1', function (e, item) {
 //     ReactDOM.render(
