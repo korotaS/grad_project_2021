@@ -1,15 +1,21 @@
+import logging
+import sys
 from threading import Thread
 
 import yaml
 
 from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer, TextClassificationTrainer
+from src.python.utils.seed import set_seed
+from src.python.utils.streams import RedirectStdStreams
 from src.python.utils.utils import camel_to_snake
 
 
 class MainThread(Thread):
-    def __init__(self, cfg, test_cfg=None):
+    def __init__(self, cfg, test_cfg=None, skt=None):
         super().__init__()
+        self.skt = skt
         self.cfg = self.convert_params(cfg)
+        set_seed(self.cfg['training']['seed'])
         self.test_cfg = test_cfg
         subtask = self.cfg['general']['subtask']
         if subtask == 'imclf':
@@ -25,7 +31,17 @@ class MainThread(Thread):
         return new_d
 
     def run(self):
-        self.trainer.run()
+        try:
+            with RedirectStdStreams(self.skt):
+                self.trainer.run()
+        except Exception:
+            pass
+
+    def stop_training(self):
+        try:
+            self.trainer.stop_training()
+        except Exception:
+            pass
 
 
 # cfg = yaml.full_load(open('projects/project_1/experiment_1_20210417T135820/config.yaml'))
@@ -41,5 +57,6 @@ class MainThread(Thread):
 # cfg = yaml.full_load(open('projects/project_3/experiment_1_20210417T154503/config.yaml'))
 # test_cfg = yaml.full_load(open('example_configs/txtclf_test.yaml'))
 
-# thread = MainThread(cfg, test_cfg)
+# cfg = yaml.full_load(open('example_configs/imclf.yaml'))
+# thread = MainThread(cfg)
 # thread.start()

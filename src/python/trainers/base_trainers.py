@@ -4,11 +4,9 @@ from datetime import datetime
 import yaml
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
-from src.python.utils.seed import set_seed
-
 
 class BaseTrainer:
-    def __init__(self, cfg, test_cfg=None):
+    def __init__(self, cfg, test_cfg=None, test_mode=False):
         self.test_mode = False
         self.cfg = cfg
         # general
@@ -38,8 +36,6 @@ class BaseTrainer:
         self.shuffle_val = self.cfg['training']['batch_size_val']
         self.num_workers = self.cfg['training']['workers']
         self.criterion_name = self.cfg['training']['criterion']
-        self.seed = self.cfg['training']['seed']
-        set_seed(self.seed)
         # optimizer, scheduler
         self.optimizer_cfg = self.cfg['optimizer']
         self.scheduler_cfg = self.cfg['scheduler']
@@ -54,7 +50,7 @@ class BaseTrainer:
             self.batch_size_test = self.test_cfg['batch_size']
             self.gpus_test = self.test_cfg['gpus']
             self.test_ckpt_path = self.test_cfg['ckpt_path']
-            self.test_mode = True
+        self.test_mode = self.test_cfg is not None or test_mode
 
         self.callbacks, self.exp_folder = self.configure_callbacks()
         if not self.test_mode:
@@ -104,10 +100,13 @@ class BaseTrainer:
             self.init_data()
             self.train()
 
+    def stop_training(self):
+        self.model.running = False
+
 
 class BaseImageTrainer(BaseTrainer):
-    def __init__(self, cfg, test_cfg=None):
-        super().__init__(cfg, test_cfg)
+    def __init__(self, cfg, test_cfg=None, test_mode=False):
+        super().__init__(cfg, test_cfg, test_mode)
         # model
         self.architecture = self.cfg['model']['architecture']
         self.pretrained = self.cfg['model']['pretrained']
@@ -120,8 +119,8 @@ class BaseImageTrainer(BaseTrainer):
 
 
 class BaseTextTrainer(BaseTrainer):
-    def __init__(self, cfg, test_cfg=None):
-        super().__init__(cfg, test_cfg)
+    def __init__(self, cfg, test_cfg=None, test_mode=False):
+        super().__init__(cfg, test_cfg, test_mode)
         # model
         self.model_type = self.cfg['model']['model_type']
         # data
