@@ -11,7 +11,7 @@ ssl._create_default_https_context = ssl._create_unverified_context
 # IMAGE CLASSIFICATION
 
 def get_im_clf_architectures():
-    """Returns the list of atchitectures which are available"""
+    """Returns the list of architectures which are available"""
     return [
         'resnet18', 'resnet50', 'resnet152', 'alexnet', 'vgg16', 'inception_v3',
         'mobilenet_v2', 'resnext50_32x4d', 'resnext101_32x8d'
@@ -92,10 +92,11 @@ def get_im_clf_model(model_name, num_classes, pretrained=True, freeze=True):
 
     return model, input_size
 
+
 # IMAGE SEGMENTATION
 
 def get_im_sgm_architectures():
-    """Returns the list of atchitectures which are available"""
+    """Returns the list of architectures which are available"""
     encoders = ['resnet18', 'resnet50', 'resnet152', 'vgg16', 'inceptionv4',
                 'mobilenet_v2', 'resnext50_32x4d', 'resnext101_32x8d']
     architectures = ['Unet', 'Unet++', 'FPN', 'PAN', 'DeepLabV3']

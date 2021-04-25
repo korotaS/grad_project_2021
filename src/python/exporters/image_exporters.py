@@ -5,8 +5,8 @@ from src.python.exporters.base_exporter import BaseExporter
 
 
 class ImageExporter(BaseExporter):
-    def __init__(self, cfg, checkpoint_path, export_folder, prefix=''):
-        super().__init__(cfg, checkpoint_path, export_folder, prefix)
+    def __init__(self, cfg, export_folder, prefix='', checkpoint_path=None, find_by_time=False, cfg_name=None):
+        super().__init__(cfg, export_folder, prefix, checkpoint_path, find_by_time, cfg_name)
         self.height = self.cfg['data']['height']
         self.width = self.cfg['data']['width']
         self._example_input = torch.rand(1, 3, self.height, self.width)

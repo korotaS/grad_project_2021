@@ -167,18 +167,20 @@ def draw_masks(mask_pr, mask_gt=None, colors=None, draw_compare=False, seg_type=
     return mask_result
 
 
-def draw_prediction_masks(masks_pr, rows, columns,
+def draw_prediction_masks(images, masks_pr, rows, columns,
                           figsize=(15, 15), seg_type='single', colors_custom=None):
     fig = plt.figure(figsize=figsize)
     if colors_custom:
         colors = colors_custom
     else:
         colors = COLORS
-    for i, mask_pr in enumerate(masks_pr):
+    for i, (mask_pr, image) in enumerate(zip(masks_pr, images)):
         ax = fig.add_subplot(rows, columns, i + 1)
         ax.grid(False)
-        mask_result = draw_masks(mask_pr=mask_pr, colors=colors, draw_compare=False, seg_type=seg_type,
-                                 num=len(colors))
+        mask_right = draw_masks(mask_pr=mask_pr, colors=colors, draw_compare=False, seg_type=seg_type,
+                                num=len(colors))
+        image = image.detach().cpu().numpy().copy()
+        mask_result = cv2.hconcat([image, mask_right])
         plt.imshow(mask_result)
 
     return fig
