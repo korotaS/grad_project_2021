@@ -1,7 +1,11 @@
-import json
 import argparse
+import json
+import os
+import sys
 
 from flask import jsonify, request
+
+sys.path.append(os.getcwd())
 
 from src.python.app import socketio, app
 from src.python.train import MainThread

@@ -5,7 +5,7 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = true;
+const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
 const DEV = true;
 
@@ -24,6 +24,7 @@ const startPythonSubprocess = () => {
         (async () => {
             port = await getPort({port: 5000});
             subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
+            // subpy = require("child_process").spawn("python", [PY_MODULE]);
             console.log(`started process at ${subpy.pid} on port ${port}`);
         })();
     }
@@ -33,7 +34,9 @@ const createMainWindow = (x_custom, y_custom) => {
     // Create the browser mainWindow
     mainWindow = new BrowserWindow({
         width: 1200,
+        minWidth: 800,
         height: 600,
+        minHeight: 600,
         x: x_custom,
         y: y_custom,
         resizeable: true,
