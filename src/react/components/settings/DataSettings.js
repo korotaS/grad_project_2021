@@ -14,16 +14,13 @@ class DataSettings extends Component {
                 trainLen: -1,
                 valLen: -1,
             },
-            taskSpecificSettings: {},
-
+            taskSpecificSettings: {}
         }
 
         this.chooseDatasetFolder = this.chooseDatasetFolder.bind(this);
         this.handleLengthCheckbox = this.handleLengthCheckbox.bind(this);
         this.handleLengthNumber = this.handleLengthNumber.bind(this);
-
-        this.trainLenRef = React.createRef();
-        this.valLenRef = React.createRef();
+        this.handleTaskSpecificState = this.handleTaskSpecificState.bind(this);
     }
 
     getCurrentDatasetFolder() {
@@ -48,12 +45,12 @@ class DataSettings extends Component {
     handleLengthCheckbox(event, type) {
         if (type === 'train') {
             this.setState(state => {
-                state.commonSettings.trainLen = event.target.checked ? -1 : this.trainLenRef.current.value
+                state.commonSettings.trainLen = event.target.checked ? -1 : this.state.trainLenNumeric
                 return state
             })
         } else {
             this.setState(state => {
-                state.commonSettings.valLen = event.target.checked ? -1 : this.valLenRef.current.value
+                state.commonSettings.valLen = event.target.checked ? -1 : this.state.valLenNumeric
                 return state
             })
         }
@@ -77,17 +74,37 @@ class DataSettings extends Component {
         }
     }
 
+    // setStateFromChild(taskSpecificSettings) {
+    //     this.setState(state => {
+    //         state.taskSpecificSettings = taskSpecificSettings;
+    //         return state
+    //     })
+    // }
+
+    handleTaskSpecificState(key, value) {
+        this.setState(state => {
+            state.taskSpecificSettings[key] = value;
+            return state
+        })
+    }
+
     render() {
         if (!this.props.show) {
             return null
         }
         let dataSpecificSettings;
         if (this.props.taskSubClass === 'imclf') {
-            dataSpecificSettings = <DataSettingsForImclf/>
+            dataSpecificSettings = <DataSettingsForImclf
+                handleTaskSpecificState={this.handleTaskSpecificState}
+                defaultState={this.state.taskSpecificSettings}/>
         } else if (this.props.taskSubClass === 'imsgm') {
-            dataSpecificSettings = <DataSettingsForImsgm/>
+            dataSpecificSettings = <DataSettingsForImsgm
+                handleTaskSpecificState={this.handleTaskSpecificState}
+                defaultState={this.state.taskSpecificSettings}/>
         } else {
-            dataSpecificSettings = <DataSettingsForTxtclf/>
+            dataSpecificSettings = <DataSettingsForTxtclf
+                handleTaskSpecificState={this.handleTaskSpecificState}
+                defaultState={this.state.taskSpecificSettings}/>
         }
         return (
             <div align={'center'}>
@@ -105,7 +122,6 @@ class DataSettings extends Component {
                 <DatasetLength
                     len={this.state.commonSettings.trainLen}
                     type={'train'}
-                    lenRef={this.trainLenRef}
                     lenNumeric={this.state.trainLenNumeric}
                     handleLengthCheckbox={this.handleLengthCheckbox}
                     handleLengthNumber={this.handleLengthNumber}
@@ -114,15 +130,16 @@ class DataSettings extends Component {
                 <DatasetLength
                     len={this.state.commonSettings.valLen}
                     type={'val'}
-                    lenRef={this.valLenRef}
                     lenNumeric={this.state.valLenNumeric}
                     handleLengthCheckbox={this.handleLengthCheckbox}
                     handleLengthNumber={this.handleLengthNumber}
                 />
                 {dataSpecificSettings}
-                {/*<Button*/}
-                {/*    variant="success" type="submit" onClick={() => {console.log(this.state)}}*/}
-                {/*>Submit</Button>*/}
+                <Button
+                    variant="success" type="submit" onClick={() => {
+                    console.log(this.state)
+                }}
+                >Submit</Button>
             </div>
         )
     }
@@ -143,7 +160,7 @@ function DatasetLength(props) {
             </Col>
             <Col md="auto">
                 <input
-                    type="number" min={1} ref={props.lenRef}
+                    type="number" min={1}
                     value={props.lenNumeric}
                     onChange={(event) => {
                         event.persist();
@@ -157,9 +174,119 @@ function DatasetLength(props) {
 }
 
 class DataSettingsForImclf extends DataSettings {
+    constructor(props) {
+        super(props)
+
+        this.state = {
+            width: props.defaultState.width || 256,
+            height: props.defaultState.height || 256,
+            labels: props.defaultState.labels || ['label1', 'label2']
+        }
+
+        this.props.handleTaskSpecificState('width', this.state.width)
+        this.props.handleTaskSpecificState('height', this.state.height)
+        this.props.handleTaskSpecificState('labels', this.state.labels)
+
+        this.handleWidth = this.handleWidth.bind(this);
+        this.handleHeight = this.handleHeight.bind(this);
+    }
+
+    handleWidth(event) {
+        let {value, min, max} = event.target;
+        value = Math.max(Number(min), Math.min(max, Number(value)));
+        this.props.handleTaskSpecificState('width', value)
+        this.setState(state => {
+            state.width = value;
+            return state
+        })
+    }
+
+    handleHeight(event) {
+        let {value, min, max} = event.target;
+        value = Math.max(Number(min), Math.min(max, Number(value)));
+        this.props.handleTaskSpecificState('height', value)
+        this.setState(state => {
+            state.height = value;
+            return state
+        })
+    }
+
+    handleArrayChange = (event, index) => {
+        let labels = [...this.state.labels];
+        labels[index] = event.target.value;
+        this.props.handleTaskSpecificState('labels', labels)
+        this.setState(state => {
+            state.labels = labels;
+            return state
+        })
+    }
+
+    addLabel = (e) => {
+        let labels = [...this.state.labels, 'label']
+        this.props.handleTaskSpecificState('labels', labels)
+        this.setState(state => {
+            state.labels = labels;
+            return state
+        })
+    }
+
+    removeElement = (e, index) => {
+        if (this.state.labels.length > 2) {
+            let labels = [...this.state.labels]
+            labels.splice(index, 1)
+            this.props.handleTaskSpecificState('labels', labels)
+            this.setState(state => {
+                state.labels = labels;
+                return state
+            })
+        }
+    }
+
     render() {
         return (
-            <div>DATA IMCLF</div>
+            <div>
+                <h5>Width/Height</h5>
+                <Row className="justify-content-md-center">
+                    <Col md="auto">
+                        <input
+                            type="number" min={1} max={10000}
+                            value={this.state.width || 256}
+                            onChange={(event) => {
+                                event.persist();
+                                this.handleWidth(event)
+                            }}
+                        />
+                    </Col>
+                    <Col md="auto">
+                        <input
+                            type="number" min={1} max={10000}
+                            value={this.state.height || 256}
+                            onChange={(event) => {
+                                event.persist();
+                                this.handleHeight(event)
+                            }}
+                        />
+                    </Col>
+                </Row>
+                <h5>Labels</h5>
+                <ul>
+                    {this.state.labels.map((obj, index) => {
+                        return (
+                            <li key={index}>
+                                name:<input
+                                type="text"
+                                value={obj}
+                                onChange={(e) => this.handleArrayChange(e, index)}/>
+                                <Button size={'sm'}
+                                        onClick={(e) => this.removeElement(e, index)}
+                                >Delete
+                                </Button>
+                            </li>
+                        )
+                    })}
+                </ul>
+                <Button size={'sm'} onClick={this.addLabel}>Add label</Button>
+            </div>
         )
     }
 }
