@@ -117,8 +117,8 @@ class Main extends Component {
             marginTop: '10px',
         }
         return (
-            <div className="ChooseTask">
-                <header className="chooseTask">
+            <div className="Main">
+                <header className="main">
 
                     {/* THIS IS LOGGING!!! */}
                     {/*<Form style={{marginLeft: '10px', marginRight: '10px'}}>*/}

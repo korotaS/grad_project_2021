@@ -5,7 +5,7 @@ const yaml = require('js-yaml');
 const fs = require('fs');
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = false;
+const SERVER_RUNNING = true;
 const QUIT_ON_CLOSING = true;
 const DEV = true;
 
