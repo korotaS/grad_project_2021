@@ -35,19 +35,19 @@ class ModelSettings extends Component {
         if (!this.props.show) {
             return null
         }
-        let dataSpecificSettings;
+        let taskSpecificSettings;
         if (this.props.taskSubClass === 'imclf') {
-            dataSpecificSettings = <ModelSettingsForImclf
+            taskSpecificSettings = <ModelSettingsForImclf
                 handleTaskSpecificState={this.handleTaskSpecificState}
                 clearTaskSpecificState={this.clearTaskSpecificState}
                 defaultState={this.state.taskSpecificCache}/>
         } else if (this.props.taskSubClass === 'imsgm') {
-            dataSpecificSettings = <ModelSettingsForImsgm
+            taskSpecificSettings = <ModelSettingsForImsgm
                 handleTaskSpecificState={this.handleTaskSpecificState}
                 clearTaskSpecificState={this.clearTaskSpecificState}
                 defaultState={this.state.taskSpecificCache}/>
         } else {
-            dataSpecificSettings = <ModelSettingsForTxtclf
+            taskSpecificSettings = <ModelSettingsForTxtclf
                 handleTaskSpecificState={this.handleTaskSpecificState}
                 clearTaskSpecificState={this.clearTaskSpecificState}
                 defaultState={this.state.taskSpecificCache}/>
@@ -55,12 +55,12 @@ class ModelSettings extends Component {
         return (
             <div align={'center'}>
                 <h3>Model</h3>
-                {dataSpecificSettings}
-                <Button
-                    variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {
-                    console.log(this.state)
-                }}
-                >Submit</Button>
+                {taskSpecificSettings}
+                {/*<Button*/}
+                {/*    variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {*/}
+                {/*    console.log(this.state)*/}
+                {/*}}*/}
+                {/*>Submit</Button>*/}
             </div>
         )
     }
@@ -124,7 +124,7 @@ class ModelSettingsForImclf extends Component {
         return (
             <div>
                 <h5>Architecture</h5>
-                <Form.Control as="select" custom style={{width: '75%'}}
+                <Form.Control as="select" custom style={{width: '50%'}}
                               onChange={this.handleSelectChange.bind(this)}>
                     {Object.entries(this.state.architectures).map(([archKey, archName]) => {
                         return (
@@ -132,6 +132,7 @@ class ModelSettingsForImclf extends Component {
                         )
                     })}
                 </Form.Control>
+
                 <h5>Freeze backbone</h5>
                 <Form.Check
                     type={'checkbox'} label={'Freeze'} checked={this.state.freezeBackbone}
@@ -140,6 +141,7 @@ class ModelSettingsForImclf extends Component {
                         this.handleFreezeCheckbox(event)
                     }}
                 />
+
                 <h5>Pretrained</h5>
                 <Form.Check
                     type={'checkbox'} label={'Pretrained'} checked={this.state.pretrained}
@@ -213,7 +215,7 @@ class ModelSettingsForImsgm extends Component {
         return (
             <div>
                 <h5>Architecture</h5>
-                <Form.Control as="select" custom style={{width: '75%'}}
+                <Form.Control as="select" custom style={{width: '50%'}}
                               onChange={this.handleArchChange.bind(this)}>
                     {this.state.architectures.map((obj, index) => {
                         return (
@@ -221,8 +223,9 @@ class ModelSettingsForImsgm extends Component {
                         )
                     })}
                 </Form.Control>
+
                 <h5>Backbone</h5>
-                <Form.Control as="select" custom style={{width: '75%'}}
+                <Form.Control as="select" custom style={{width: '50%'}}
                               onChange={this.handleBackboneChange.bind(this)}>
                     {Object.entries(this.state.backbones).map(([backboneKey, backboneName]) => {
                         return (
@@ -230,6 +233,7 @@ class ModelSettingsForImsgm extends Component {
                         )
                     })}
                 </Form.Control>
+
                 <h5>Pretrained</h5>
                 <Form.Check
                     type={'checkbox'} label={'Pretrained'} checked={this.state.pretrained}
@@ -325,8 +329,9 @@ class ModelSettingsForTxtclf extends Component {
                     <h5>Number of hidden units</h5>
                     <Numeric value={this.state.nHidden} nameKey={'nHidden'}
                              passData={this.props.handleTaskSpecificState} max={2048}/>
+
                     <h5>Embeddings</h5>
-                    <Form.Control as="select" custom style={{width: '75%'}}
+                    <Form.Control as="select" custom style={{width: '50%'}}
                                   onChange={this.handleEmbeddingsChange.bind(this)}>
                         {this.state.embeddingNames.map((obj, index) => {
                             if ((this.state.lang === 'en' && obj.includes('en')) ||
@@ -344,7 +349,7 @@ class ModelSettingsForTxtclf extends Component {
             variableModelSettings = (
                 <div>
                     <h5>Model name</h5>
-                    <Form.Control as="select" custom style={{width: '75%'}}
+                    <Form.Control as="select" custom style={{width: '50%'}}
                                   onChange={this.handleModelNameChange.bind(this)}>
                         {this.state.modelNames.map((obj, index) => {
                             return (
@@ -380,6 +385,7 @@ class ModelSettingsForTxtclf extends Component {
                         />
                     </Col>
                 </Row>
+
                 <h5>Language</h5>
                 <Row className="justify-content-md-center">
                     <Col md="auto">

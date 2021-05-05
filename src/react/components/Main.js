@@ -19,6 +19,7 @@ class Main extends Component {
             projectName: '',
             expName: '',
             text: '',
+            numGpus: -1
         };
 
         this.submitChoice = this.submitChoice.bind(this);
@@ -98,7 +99,17 @@ class Main extends Component {
     }
 
     componentDidMount() {
+        if (this.state.numGpus === -1) {
+            ipcRenderer.send('getNumGpus');
+        }
 
+        ipcRenderer.on('gotNumGpus', function (e, data) {
+            let jsonData = JSON.parse(data)
+            this.setState(state => {
+                state.numGpus = jsonData.numGpus
+                return state;
+            })
+        }.bind(this));
     }
 
     componentDidUpdate() {
@@ -149,13 +160,17 @@ class Main extends Component {
                     })}
                     <Row style={{marginTop: "10px"}}>
                         <Col>
-                            <DataSettings show={this.state.pushedSubTask} taskSubClass={this.state.subTask}/>
+                            <DataSettings show={this.state.pushedSubTask}
+                                          taskSubClass={this.state.subTask}/>
                         </Col>
                         <Col>
-                            <ModelSettings show={this.state.pushedSubTask} taskSubClass={this.state.subTask}/>
+                            <ModelSettings show={this.state.pushedSubTask}
+                                           taskSubClass={this.state.subTask}/>
                         </Col>
                         <Col>
-                            <TrainingSettings show={this.state.pushedSubTask} taskSubClass={this.state.subTask}/>
+                            <TrainingSettings show={this.state.pushedSubTask}
+                                              taskSubClass={this.state.subTask}
+                                              numGpus={this.state.numGpus}/>
                         </Col>
                     </Row>
                 </header>

@@ -4,6 +4,7 @@ import os
 import sys
 
 from flask import jsonify, request
+import torch
 
 sys.path.append(os.getcwd())
 
@@ -96,6 +97,11 @@ def launch_tb(task_key, tb_port):
 def get_archs(task):
     archs = get_image_architectures_by_type(task)
     return jsonify({'architectures': archs})
+
+
+@app.route("/getNumGpus")
+def get_num_gpu():
+    return jsonify({'numGpus': torch.cuda.device_count()})
 
 
 if __name__ == "__main__":

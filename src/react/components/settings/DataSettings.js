@@ -97,19 +97,19 @@ class DataSettings extends Component {
         if (!this.props.show) {
             return null
         }
-        let dataSpecificSettings;
+        let taskSpecificSettings;
         if (this.props.taskSubClass === 'imclf') {
-            dataSpecificSettings = <DataSettingsForImclf
+            taskSpecificSettings = <DataSettingsForImclf
                 handleTaskSpecificState={this.handleTaskSpecificState}
                 clearTaskSpecificState={this.clearTaskSpecificState}
                 defaultState={this.state.taskSpecificCache}/>
         } else if (this.props.taskSubClass === 'imsgm') {
-            dataSpecificSettings = <DataSettingsForImsgm
+            taskSpecificSettings = <DataSettingsForImsgm
                 handleTaskSpecificState={this.handleTaskSpecificState}
                 clearTaskSpecificState={this.clearTaskSpecificState}
                 defaultState={this.state.taskSpecificCache}/>
         } else {
-            dataSpecificSettings = <DataSettingsForTxtclf
+            taskSpecificSettings = <DataSettingsForTxtclf
                 handleTaskSpecificState={this.handleTaskSpecificState}
                 clearTaskSpecificState={this.clearTaskSpecificState}
                 defaultState={this.state.taskSpecificCache}/>
@@ -117,6 +117,7 @@ class DataSettings extends Component {
         return (
             <div align={'center'}>
                 <h3>Data</h3>
+
                 <h5>Dataset folder</h5>
                 <div>
                     <Button
@@ -127,6 +128,7 @@ class DataSettings extends Component {
                     >choose path</Button>
                 </div>
                 <div style={{fontSize: 10}}>{this.getCurrentDatasetFolder()}</div>
+
                 <h5>Train dataset length</h5>
                 <DatasetLength
                     len={this.state.commonSettings.trainLen}
@@ -135,6 +137,7 @@ class DataSettings extends Component {
                     handleLengthCheckbox={this.handleLengthCheckbox}
                     handleLengthNumber={this.handleLengthNumber}
                 />
+
                 <h5>Val dataset length</h5>
                 <DatasetLength
                     len={this.state.commonSettings.valLen}
@@ -143,7 +146,7 @@ class DataSettings extends Component {
                     handleLengthCheckbox={this.handleLengthCheckbox}
                     handleLengthNumber={this.handleLengthNumber}
                 />
-                {dataSpecificSettings}
+                {taskSpecificSettings}
                 {/*<Button*/}
                 {/*    variant="success" type="submit" onClick={() => {*/}
                 {/*    console.log(this.state)*/}
@@ -176,14 +179,17 @@ class DataSettingsForImclf extends Component {
                 <h5>Width/Height</h5>
                 <Row className="justify-content-md-center">
                     <Col md="auto">
+                        <div>Width</div>
                         <Numeric value={this.state.width} nameKey={'width'}
                                  passData={this.props.handleTaskSpecificState} max={10000}/>
                     </Col>
                     <Col md="auto">
+                        <div>Height</div>
                         <Numeric value={this.state.height} nameKey={'height'}
                                  passData={this.props.handleTaskSpecificState} max={10000}/>
                     </Col>
                 </Row>
+
                 <h5>Labels</h5>
                 <LabelArray labels={this.state.labels} passData={this.props.handleTaskSpecificState}/>
             </div>
@@ -222,14 +228,17 @@ class DataSettingsForImsgm extends Component {
                 <h5>Width/Height</h5>
                 <Row className="justify-content-md-center">
                     <Col md="auto">
+                        <div>Width</div>
                         <Numeric value={this.state.width} nameKey={'width'}
                                  passData={this.props.handleTaskSpecificState} max={10000}/>
                     </Col>
                     <Col md="auto">
+                        <div>Height</div>
                         <Numeric value={this.state.height} nameKey={'height'}
                                  passData={this.props.handleTaskSpecificState} max={10000}/>
                     </Col>
                 </Row>
+
                 <h5>Use RLE</h5>
                 <Form.Check
                     type={'checkbox'} label={'Use RLE'} checked={this.state.useRle}
@@ -238,6 +247,7 @@ class DataSettingsForImsgm extends Component {
                         this.handleRleCheckbox(event)
                     }}
                 />
+
                 <h5>Number of classes</h5>
                 <Numeric value={this.state.numClasses} nameKey={'numClasses'}
                          passData={this.props.handleTaskSpecificState} max={1000}/>
@@ -267,6 +277,7 @@ class DataSettingsForTxtclf extends Component {
                 <h5>Max item len</h5>
                 <Numeric value={this.state.maxItemLen} nameKey={'maxItemLen'}
                          passData={this.props.handleTaskSpecificState} max={512}/>
+
                 <h5>Labels</h5>
                 <LabelArray labels={this.state.labels} passData={this.props.handleTaskSpecificState}/>
             </div>

@@ -16,6 +16,7 @@ let subpy = null;
 let PROJECT_NAME = '';
 let LAST_EPOCH = 0;
 let port = 5000;
+let numGpus = -1
 
 // -----INITIALIZATION-----
 
@@ -35,8 +36,8 @@ const createMainWindow = (x_custom, y_custom) => {
     mainWindow = new BrowserWindow({
         width: 1200,
         minWidth: 800,
-        height: 600,
-        minHeight: 600,
+        height: 800,
+        minHeight: 800,
         x: x_custom,
         y: y_custom,
         resizeable: true,
@@ -246,6 +247,31 @@ ipcMain.on('stopTraining', function (e) {
         console.log(error)
     })
     request.end()
+});
+
+ipcMain.on('getNumGpus', function (e) {
+    if (numGpus === -1) {
+        if (SERVER_RUNNING) {
+            const path = `http://localhost:${port}/getNumGpus`
+            const request = net.request(path);
+            request.on('response', (response) => {
+                response.on('data', (data) => {
+                    let json = JSON.parse(data.toString());
+                    numGpus = json.numGpus
+                    mainWindow.webContents.send('gotNumGpus', JSON.stringify(json));
+                })
+            });
+            request.on('error', (error) => {
+                console.log(error)
+            })
+            request.end()
+        } else {
+            numGpus = 0
+            mainWindow.webContents.send('gotNumGpus', JSON.stringify({numGpus: numGpus}));
+        }
+    } else {
+        mainWindow.webContents.send('gotNumGpus', JSON.stringify({numGpus: numGpus}));
+    }
 });
 
 // ipcMain.on('submitChoice1', function (e, item) {

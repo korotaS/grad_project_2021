@@ -34,7 +34,7 @@ export class Numeric extends Component {
         super(props)
 
         this.state = {
-            value: props.value || 1
+            value: props.value === null ? 1 : props.value
         }
 
         this.handleChange = this.handleChange.bind(this);
@@ -43,7 +43,9 @@ export class Numeric extends Component {
     handleChange(event) {
         let {value, min, max} = event.target;
         value = Math.max(Number(min), Math.min(max, Number(value)));
-        this.props.passData(this.props.nameKey, value)
+        if (this.props.passData) {
+            this.props.passData(this.props.nameKey, value)
+        }
         this.setState(state => {
             state.value = value;
             return state
@@ -53,12 +55,13 @@ export class Numeric extends Component {
     render() {
         return (
             <input
-                type="number" min={this.props.min || 1} max={this.props.max || Infinity}
+                type="number" min={this.props.min === null ? 1 : this.props.min} max={this.props.max || Infinity}
                 value={this.state.value}
                 onChange={(event) => {
                     event.persist();
                     this.handleChange(event)
                 }}
+                style={{width: '50%'}}
             />
         )
     }
