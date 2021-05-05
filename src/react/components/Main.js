@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
-import {Col, Row} from "react-bootstrap";
-
+import {Button, Col, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
 import DataSettings from "./settings/DataSettings"
 import ModelSettings from "./settings/ModelSettings";
 import TrainingSettings from "./settings/TrainingSettings";
 
+const {set, get} = require('lodash');
 const {ipcRenderer} = window.require("electron");
 
 class Main extends Component {
@@ -19,7 +19,39 @@ class Main extends Component {
             projectName: '',
             expName: '',
             text: '',
-            numGpus: -1
+            numGpus: -1,
+
+            data: {
+                common: {
+                    datasetFolder: "",
+                    trainLen: -1,
+                    valLen: -1,
+                },
+                taskSpecific: {},
+                taskSpecificCache: {}
+            },
+            model: {
+                common: {},
+                taskSpecific: {},
+                taskSpecificCache: {}
+            },
+            training: {
+                common: {
+                    gpus: null,
+                    maxEpochs: 100,
+                    batchSizeTrain: 8,
+                    batchSizeVal: 8,
+                    workers: 0,
+                    optimizer: {
+                        name: 'Adam',
+                        params: {
+                            lr: 0.001
+                        }
+                    }
+                },
+                taskSpecific: {},
+                taskSpecificCache: {}
+            }
         };
 
         this.submitChoice = this.submitChoice.bind(this);
@@ -98,6 +130,28 @@ class Main extends Component {
         })
     }
 
+    setCommonState(type, key, data) {
+        this.setState(state => {
+            set(state[type].common, key, data)
+            return state
+        })
+    }
+
+    setTaskSpecificState(type, key, data) {
+        this.setState(state => {
+            state[type].taskSpecific[key] = data;
+            state[type].taskSpecificCache[key] = data;
+            return state
+        })
+    }
+
+    clearTaskSpecificState(type) {
+        this.setState(state => {
+            state[type].taskSpecific = {};
+            return state
+        })
+    }
+
     componentDidMount() {
         if (this.state.numGpus === -1) {
             ipcRenderer.send('getNumGpus');
@@ -161,18 +215,38 @@ class Main extends Component {
                     <Row style={{marginTop: "10px"}}>
                         <Col>
                             <DataSettings show={this.state.pushedSubTask}
-                                          taskSubClass={this.state.subTask}/>
+                                          taskSubClass={this.state.subTask}
+                                          data={this.state.data}
+                                          type={'data'}
+                                          setCommonState={this.setCommonState.bind(this)}
+                                          setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                          clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                         <Col>
                             <ModelSettings show={this.state.pushedSubTask}
-                                           taskSubClass={this.state.subTask}/>
+                                           taskSubClass={this.state.subTask}
+                                           data={this.state.model}
+                                           type={'model'}
+                                           setCommonState={this.setCommonState.bind(this)}
+                                           setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                           clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                         <Col>
                             <TrainingSettings show={this.state.pushedSubTask}
                                               taskSubClass={this.state.subTask}
-                                              numGpus={this.state.numGpus}/>
+                                              numGpus={this.state.numGpus}
+                                              data={this.state.training}
+                                              type={'training'}
+                                              setCommonState={this.setCommonState.bind(this)}
+                                              setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                              clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                     </Row>
+                    {/*<Button*/}
+                    {/*    variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {*/}
+                    {/*    console.log(this.state)*/}
+                    {/*}}*/}
+                    {/*>Submit</Button>*/}
                 </header>
             </div>
         );

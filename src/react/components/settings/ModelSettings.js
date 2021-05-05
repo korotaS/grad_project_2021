@@ -5,30 +5,6 @@ import {Numeric} from "./Common";
 class ModelSettings extends Component {
     constructor(props) {
         super(props);
-        this.state = {
-            commonSettings: {},
-            taskSpecificSettings: {},
-            // additional stuff
-            taskSpecificCache: {}
-        }
-
-        this.handleTaskSpecificState = this.handleTaskSpecificState.bind(this);
-        this.clearTaskSpecificState = this.clearTaskSpecificState.bind(this);
-    }
-
-    clearTaskSpecificState() {
-        this.setState(state => {
-            state.taskSpecificSettings = {};
-            return state
-        })
-    }
-
-    handleTaskSpecificState(key, value) {
-        this.setState(state => {
-            state.taskSpecificSettings[key] = value;
-            state.taskSpecificCache[key] = value;
-            return state
-        })
     }
 
     render() {
@@ -38,29 +14,27 @@ class ModelSettings extends Component {
         let taskSpecificSettings;
         if (this.props.taskSubClass === 'imclf') {
             taskSpecificSettings = <ModelSettingsForImclf
-                handleTaskSpecificState={this.handleTaskSpecificState}
-                clearTaskSpecificState={this.clearTaskSpecificState}
-                defaultState={this.state.taskSpecificCache}/>
+                handleTaskSpecificState={this.props.setTaskSpecificState}
+                clearTaskSpecificState={this.props.clearTaskSpecificState}
+                defaultState={this.props.data.taskSpecificCache}
+                type={this.props.type}/>
         } else if (this.props.taskSubClass === 'imsgm') {
             taskSpecificSettings = <ModelSettingsForImsgm
-                handleTaskSpecificState={this.handleTaskSpecificState}
-                clearTaskSpecificState={this.clearTaskSpecificState}
-                defaultState={this.state.taskSpecificCache}/>
+                handleTaskSpecificState={this.props.setTaskSpecificState}
+                clearTaskSpecificState={this.props.clearTaskSpecificState}
+                defaultState={this.props.data.taskSpecificCache}
+                type={this.props.type}/>
         } else {
             taskSpecificSettings = <ModelSettingsForTxtclf
-                handleTaskSpecificState={this.handleTaskSpecificState}
-                clearTaskSpecificState={this.clearTaskSpecificState}
-                defaultState={this.state.taskSpecificCache}/>
+                handleTaskSpecificState={this.props.setTaskSpecificState}
+                clearTaskSpecificState={this.props.clearTaskSpecificState}
+                defaultState={this.props.data.taskSpecificCache}
+                type={this.props.type}/>
         }
         return (
             <div align={'center'}>
                 <h3>Model</h3>
                 {taskSpecificSettings}
-                {/*<Button*/}
-                {/*    variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {*/}
-                {/*    console.log(this.state)*/}
-                {/*}}*/}
-                {/*>Submit</Button>*/}
             </div>
         )
     }
@@ -87,17 +61,17 @@ class ModelSettingsForImclf extends Component {
             pretrained: props.defaultState.pretrained || true
         }
 
-        this.props.clearTaskSpecificState();
+        this.props.clearTaskSpecificState(this.props.type);
         for (const [key, value] of Object.entries(this.state)) {
             if (key !== 'architectures') {
-                this.props.handleTaskSpecificState(key, value)
+                this.props.handleTaskSpecificState(this.props.type, key, value)
             }
         }
     }
 
     handleSelectChange(event) {
         let value = event.target.value;
-        this.props.handleTaskSpecificState('architecture', value)
+        this.props.handleTaskSpecificState(this.props.type, 'architecture', value)
         this.setState(state => {
             state.architecture = value
             return state
@@ -105,7 +79,7 @@ class ModelSettingsForImclf extends Component {
     }
 
     handleFreezeCheckbox(event) {
-        this.props.handleTaskSpecificState('freezeBackbone', event.target.checked)
+        this.props.handleTaskSpecificState(this.props.type, 'freezeBackbone', event.target.checked)
         this.setState(state => {
             state.freezeBackbone = event.target.checked
             return state
@@ -113,7 +87,7 @@ class ModelSettingsForImclf extends Component {
     }
 
     handlePretrainedCheckbox(event) {
-        this.props.handleTaskSpecificState('pretrained', event.target.checked)
+        this.props.handleTaskSpecificState(this.props.type, 'pretrained', event.target.checked)
         this.setState(state => {
             state.pretrained = event.target.checked
             return state
@@ -177,17 +151,17 @@ class ModelSettingsForImsgm extends Component {
             pretrained: props.defaultState.pretrained || true
         }
 
-        this.props.clearTaskSpecificState();
+        this.props.clearTaskSpecificState(this.props.type);
         for (const [key, value] of Object.entries(this.state)) {
             if (key !== 'architectures' && key !== 'backbones') {
-                this.props.handleTaskSpecificState(key, value)
+                this.props.handleTaskSpecificState(this.props.type, key, value)
             }
         }
     }
 
     handleArchChange(event) {
         let value = event.target.value;
-        this.props.handleTaskSpecificState('architecture', value)
+        this.props.handleTaskSpecificState(this.props.type, 'architecture', value)
         this.setState(state => {
             state.architecture = value
             return state
@@ -196,7 +170,7 @@ class ModelSettingsForImsgm extends Component {
 
     handleBackboneChange(event) {
         let value = event.target.value;
-        this.props.handleTaskSpecificState('backbone', value)
+        this.props.handleTaskSpecificState(this.props.type, 'backbone', value)
         this.setState(state => {
             state.backbone = value
             return state
@@ -204,7 +178,7 @@ class ModelSettingsForImsgm extends Component {
     }
 
     handlePretrainedCheckbox(event) {
-        this.props.handleTaskSpecificState('pretrained', event.target.checked)
+        this.props.handleTaskSpecificState(this.props.type, 'pretrained', event.target.checked)
         this.setState(state => {
             state.pretrained = event.target.checked
             return state
@@ -268,17 +242,17 @@ class ModelSettingsForTxtclf extends Component {
             embeddings: curr_embeddings
         }
 
-        this.props.clearTaskSpecificState();
+        this.props.clearTaskSpecificState(this.props.type);
         for (const [key, value] of Object.entries(this.state)) {
             if (key !== 'modelNames' && key !== 'embeddingNames') {
-                this.props.handleTaskSpecificState(key, value)
+                this.props.handleTaskSpecificState(this.props.type, key, value)
             }
         }
     }
 
     handleModelTypeChange(event) {
         let value = event.target.value
-        this.props.handleTaskSpecificState('modelType', event.target.value)
+        this.props.handleTaskSpecificState(this.props.type, 'modelType', event.target.value)
         this.setState(state => {
             state.modelType = value;
             return state
@@ -291,7 +265,7 @@ class ModelSettingsForTxtclf extends Component {
         let curr_embeddings = lang === 'ru' ? 'ru_fasttext_300' : 'en_glove-wiki-gigaword-50'
         this.handleEmbeddingsChange(null, curr_embeddings)
 
-        this.props.handleTaskSpecificState('lang', lang)
+        this.props.handleTaskSpecificState(this.props.type, 'lang', lang)
         this.setState(state => {
             state.lang = lang
             return state
@@ -300,7 +274,7 @@ class ModelSettingsForTxtclf extends Component {
 
     handleModelNameChange(event) {
         let value = event.target.value;
-        this.props.handleTaskSpecificState('modelName', value)
+        this.props.handleTaskSpecificState(this.props.type, 'modelName', value)
         this.setState(state => {
             state.modelName = value
             return state
@@ -314,7 +288,7 @@ class ModelSettingsForTxtclf extends Component {
         } else {
             value = event.target.value;
         }
-        this.props.handleTaskSpecificState('embeddings', value)
+        this.props.handleTaskSpecificState(this.props.type, 'embeddings', value)
         this.setState(state => {
             state.embeddings = value
             return state
@@ -327,7 +301,7 @@ class ModelSettingsForTxtclf extends Component {
             variableModelSettings = (
                 <div>
                     <h5>Number of hidden units</h5>
-                    <Numeric value={this.state.nHidden} nameKey={'nHidden'}
+                    <Numeric value={this.state.nHidden} nameKey={'nHidden'} type={this.props.type}
                              passData={this.props.handleTaskSpecificState} max={2048}/>
 
                     <h5>Embeddings</h5>

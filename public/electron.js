@@ -35,7 +35,7 @@ const createMainWindow = (x_custom, y_custom) => {
     // Create the browser mainWindow
     mainWindow = new BrowserWindow({
         width: 1200,
-        minWidth: 800,
+        minWidth: 1200,
         height: 800,
         minHeight: 800,
         x: x_custom,

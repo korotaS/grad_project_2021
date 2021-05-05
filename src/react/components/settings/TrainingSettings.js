@@ -1,36 +1,17 @@
 import React, {Component} from 'react';
-import {Button, Col, Form, Row} from "react-bootstrap";
+import {Col, Form, Row} from "react-bootstrap";
 import {Numeric} from "./Common";
 
 class TrainingSettings extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            commonSettings: {
-                gpus: null,
-                maxEpochs: 100,
-                batchSizeTrain: 8,
-                batchSizeVal: 8,
-                workers: 0,
-                optimizer: {
-                    name: 'Adam',
-                    params: {
-                        lr: 0.001
-                    }
-                }
-            },
-            taskSpecificSettings: {},
-            // additional stuff
-            taskSpecificCache: {},
             optimizers: ['Adam', 'SGD', 'RMSprop', 'Adadelta', 'Adagrad', 'AdamW',
                 'SparseAdam', 'Adamax', 'ASGD', 'LBFGS', 'Rprop']
         }
 
-        this.handleCommonState = this.handleCommonState.bind(this);
         this.handleBatchSize = this.handleBatchSize.bind(this);
         this.handleOptNameChange = this.handleOptNameChange.bind(this);
-        this.handleTaskSpecificState = this.handleTaskSpecificState.bind(this);
-        this.clearTaskSpecificState = this.clearTaskSpecificState.bind(this);
     }
 
     getGpuRange() {
@@ -48,64 +29,27 @@ class TrainingSettings extends Component {
 
     handleGpuChange(event) {
         let value = event.target.value;
-        this.setState(state => {
-            state.commonSettings.gpus = value === 'cpu' ? null : value
-            return state
-        })
-    }
-
-    handleCommonState(key, value) {
-        this.setState(state => {
-            state.commonSettings[key] = value;
-            return state
-        })
-    }
-
-    handleTaskSpecificState(key, value) {
-        this.setState(state => {
-            state.taskSpecificSettings[key] = value;
-            state.taskSpecificCache[key] = value;
-            return state
-        })
-    }
-
-    clearTaskSpecificState() {
-        this.setState(state => {
-            state.taskSpecificSettings = {};
-            return state
-        })
+        this.props.setCommonState(this.props.type, 'gpus', value === 'cpu' ? null : value)
     }
 
     handleBatchSize(event, type) {
         let value = event.target.value
         if (type === 'train') {
-            this.setState(state => {
-                state.commonSettings.batchSizeTrain = parseInt(value)
-                return state
-            })
+            this.props.setCommonState(this.props.type, 'batchSizeTrain', parseInt(value))
         } else {
-            this.setState(state => {
-                state.commonSettings.batchSizeVal = parseInt(value)
-                return state
-            })
+            this.props.setCommonState(this.props.type, 'batchSizeVal', parseInt(value))
         }
     }
 
     handleOptNameChange(event) {
         let value = event.target.value;
-        this.setState(state => {
-            state.commonSettings.optimizer.name = value
-            return state
-        })
+        this.props.setCommonState(this.props.type, 'optimizer.name', value)
     }
 
     handleLrChange(event) {
         let {value, min, max} = event.target;
         value = Math.max(Number(min), Math.min(max, Number(value)));
-        this.setState(state => {
-            state.commonSettings.optimizer.params.lr = value;
-            return state
-        })
+        this.props.setCommonState(this.props.type, 'optimizer.params.lr', value)
     }
 
     render() {
@@ -115,19 +59,22 @@ class TrainingSettings extends Component {
         let taskSpecificSettings;
         if (this.props.taskSubClass === 'imclf') {
             taskSpecificSettings = <TrainingSettingsForImclf
-                handleTaskSpecificState={this.handleTaskSpecificState}
-                clearTaskSpecificState={this.clearTaskSpecificState}
-                defaultState={this.state.taskSpecificCache}/>
+                handleTaskSpecificState={this.props.setTaskSpecificState}
+                clearTaskSpecificState={this.props.clearTaskSpecificState}
+                defaultState={this.props.data.taskSpecificCache}
+                type={this.props.type}/>
         } else if (this.props.taskSubClass === 'imsgm') {
             taskSpecificSettings = <TrainingSettingsForImsgm
-                handleTaskSpecificState={this.handleTaskSpecificState}
-                clearTaskSpecificState={this.clearTaskSpecificState}
-                defaultState={this.state.taskSpecificCache}/>
+                handleTaskSpecificState={this.props.setTaskSpecificState}
+                clearTaskSpecificState={this.props.clearTaskSpecificState}
+                defaultState={this.props.data.taskSpecificCache}
+                type={this.props.type}/>
         } else {
             taskSpecificSettings = <TrainingSettingsForTxtclf
-                handleTaskSpecificState={this.handleTaskSpecificState}
-                clearTaskSpecificState={this.clearTaskSpecificState}
-                defaultState={this.state.taskSpecificCache}/>
+                handleTaskSpecificState={this.props.setTaskSpecificState}
+                clearTaskSpecificState={this.props.clearTaskSpecificState}
+                defaultState={this.props.data.taskSpecificCache}
+                type={this.props.type}/>
         }
         return (
             <div align={'center'}>
@@ -144,8 +91,8 @@ class TrainingSettings extends Component {
                 </Form.Control>
 
                 <h5>Max epochs</h5>
-                <Numeric value={this.state.commonSettings.maxEpochs} nameKey={'maxEpochs'}
-                         passData={this.handleCommonState}/>
+                <Numeric value={this.props.data.common.maxEpochs} nameKey={'maxEpochs'} type={this.props.type}
+                         passData={this.props.setCommonState}/>
 
                 <h5>Batch size</h5>
                 <Row className="justify-content-md-center">
@@ -178,8 +125,8 @@ class TrainingSettings extends Component {
                 </Row>
 
                 <h5>Workers</h5>
-                <Numeric value={this.state.commonSettings.workers} nameKey={'workers'}
-                         passData={this.handleCommonState} min={0}/>
+                <Numeric value={this.props.data.common.workers} nameKey={'workers'} type={this.props.type}
+                         passData={this.props.setCommonState} min={0}/>
 
                 <h5>Optimizer</h5>
                 <div>Name</div>
@@ -196,7 +143,7 @@ class TrainingSettings extends Component {
                 <div>Learning rate</div>
                 <input
                     type="number" min={0} max={Infinity} step={0.1}
-                    value={this.state.commonSettings.optimizer.params.lr}
+                    value={this.props.data.common.optimizer.params.lr}
                     onChange={(event) => {
                         event.persist();
                         this.handleLrChange(event)
@@ -204,11 +151,6 @@ class TrainingSettings extends Component {
                     style={{width: '50%'}}
                 />
                 {taskSpecificSettings}
-                <Button
-                    variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {
-                    console.log(this.state)
-                }}
-                >Submit</Button>
             </div>
         )
     }
@@ -224,10 +166,10 @@ class TrainingSettingsForImclf extends TrainingSettings {
             criterion: props.criterion || 'CrossEntropyLoss',
         }
 
-        this.props.clearTaskSpecificState();
+        this.props.clearTaskSpecificState(this.props.type);
         for (const [key, value] of Object.entries(this.state)) {
             if (key !== 'criterions') {
-                this.props.handleTaskSpecificState(key, value)
+                this.props.handleTaskSpecificState(this.props.type, key, value)
             }
         }
 
@@ -236,11 +178,7 @@ class TrainingSettingsForImclf extends TrainingSettings {
 
     handleLossChange(event) {
         let value = event.target.value;
-        this.props.handleTaskSpecificState('criterion', value)
-        this.setState(state => {
-            state.criterion = value
-            return state
-        })
+        this.props.handleTaskSpecificState(this.props.type, 'criterion', value)
     }
 
     render() {
@@ -263,7 +201,7 @@ class TrainingSettingsForImclf extends TrainingSettings {
 }
 
 class TrainingSettingsForImsgm extends TrainingSettings {
-        constructor(props) {
+    constructor(props) {
         super(props)
 
         this.state = {
@@ -273,10 +211,10 @@ class TrainingSettingsForImsgm extends TrainingSettings {
             criterion: props.criterion || 'CrossEntropyLoss',
         }
 
-        this.props.clearTaskSpecificState();
+        this.props.clearTaskSpecificState(this.props.type);
         for (const [key, value] of Object.entries(this.state)) {
             if (key !== 'criterions') {
-                this.props.handleTaskSpecificState(key, value)
+                this.props.handleTaskSpecificState(this.props.type, key, value)
             }
         }
 
@@ -285,11 +223,7 @@ class TrainingSettingsForImsgm extends TrainingSettings {
 
     handleLossChange(event) {
         let value = event.target.value;
-        this.props.handleTaskSpecificState('criterion', value)
-        this.setState(state => {
-            state.criterion = value
-            return state
-        })
+        this.props.handleTaskSpecificState(this.props.type, 'criterion', value)
     }
 
     render() {
@@ -312,7 +246,7 @@ class TrainingSettingsForImsgm extends TrainingSettings {
 }
 
 class TrainingSettingsForTxtclf extends TrainingSettings {
-        constructor(props) {
+    constructor(props) {
         super(props)
 
         this.state = {
@@ -321,10 +255,10 @@ class TrainingSettingsForTxtclf extends TrainingSettings {
             criterion: props.criterion || 'CrossEntropyLoss',
         }
 
-        this.props.clearTaskSpecificState();
+        this.props.clearTaskSpecificState(this.props.type);
         for (const [key, value] of Object.entries(this.state)) {
             if (key !== 'criterions') {
-                this.props.handleTaskSpecificState(key, value)
+                this.props.handleTaskSpecificState(this.props.type, key, value)
             }
         }
 
@@ -333,11 +267,7 @@ class TrainingSettingsForTxtclf extends TrainingSettings {
 
     handleLossChange(event) {
         let value = event.target.value;
-        this.props.handleTaskSpecificState('criterion', value)
-        this.setState(state => {
-            state.criterion = value
-            return state
-        })
+        this.props.handleTaskSpecificState(this.props.type, 'criterion', value)
     }
 
     render() {

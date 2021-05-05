@@ -44,7 +44,7 @@ export class Numeric extends Component {
         let {value, min, max} = event.target;
         value = Math.max(Number(min), Math.min(max, Number(value)));
         if (this.props.passData) {
-            this.props.passData(this.props.nameKey, value)
+            this.props.passData(this.props.type, this.props.nameKey, value)
         }
         this.setState(state => {
             state.value = value;
@@ -79,7 +79,7 @@ export class LabelArray extends Component {
     handleArrayChange = (event, index) => {
         let labels = [...this.state.labels];
         labels[index] = event.target.value;
-        this.props.passData('labels', labels)
+        this.props.passData(this.props.type, 'labels', labels)
         this.setState(state => {
             state.labels = labels;
             return state
@@ -88,7 +88,7 @@ export class LabelArray extends Component {
 
     addLabel = (e) => {
         let labels = [...this.state.labels, `label${this.state.labels.length + 1}`]
-        this.props.passData('labels', labels)
+        this.props.passData(this.props.type, 'labels', labels)
         this.setState(state => {
             state.labels = labels;
             return state
@@ -99,7 +99,7 @@ export class LabelArray extends Component {
         if (this.state.labels.length > 2) {
             let labels = [...this.state.labels]
             labels.splice(index, 1)
-            this.props.passData('labels', labels)
+            this.props.passData(this.props.type, 'labels', labels)
             this.setState(state => {
                 state.labels = labels;
                 return state
