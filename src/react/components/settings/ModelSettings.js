@@ -1,12 +1,8 @@
 import React, {Component} from 'react';
-import {Button, Col, Form, Row} from "react-bootstrap";
+import {Col, Form, Row} from "react-bootstrap";
 import {Numeric} from "./Common";
 
 class ModelSettings extends Component {
-    constructor(props) {
-        super(props);
-    }
-
     render() {
         if (!this.props.show) {
             return null

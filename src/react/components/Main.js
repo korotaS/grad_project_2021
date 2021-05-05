@@ -4,23 +4,25 @@ import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSett
 import DataSettings from "./settings/DataSettings"
 import ModelSettings from "./settings/ModelSettings";
 import TrainingSettings from "./settings/TrainingSettings";
+import {InitialState, StopTraining} from "./Launching";
 
-const {set, get} = require('lodash');
+const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
 
 class Main extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            task: '',
-            pushedTask: false,
-            subTask: '',
-            pushedSubTask: false,
-            projectName: '',
-            expName: '',
-            text: '',
+            general: {
+                task: '',
+                pushedTask: false,
+                subTask: '',
+                pushedSubTask: false,
+                projectName: '',
+                expName: '',
+                text: '',
+            },
             numGpus: -1,
-
             data: {
                 common: {
                     datasetFolder: "",
@@ -51,6 +53,11 @@ class Main extends Component {
                 },
                 taskSpecific: {},
                 taskSpecificCache: {}
+            },
+            run: {
+                training: false,
+                tbLaunched: false,
+                tbLink: ''
             }
         };
 
@@ -98,18 +105,18 @@ class Main extends Component {
 
     changeTaskChoice(event) {
         this.setState(state => {
-            state.task = event.target.value;
-            state.pushedTask = true;
-            state.pushedSubTask = false;
-            state.subTask = ''
+            state.general.task = event.target.value;
+            state.general.pushedTask = true;
+            state.general.pushedSubTask = false;
+            state.general.subTask = ''
             return state
         })
     }
 
     changeSubTaskChoice(event) {
         this.setState(state => {
-            state.subTask = event.target.value;
-            state.pushedSubTask = true;
+            state.general.subTask = event.target.value;
+            state.general.pushedSubTask = true;
             return state
         })
     }
@@ -117,7 +124,7 @@ class Main extends Component {
     changeProjectName(event) {
         let value = event.target.value;
         this.setState(state => {
-            state.projectName = value;
+            state.general.projectName = value;
             return state
         })
     }
@@ -125,7 +132,7 @@ class Main extends Component {
     changeExpName(event) {
         let value = event.target.value;
         this.setState(state => {
-            state.expName = value;
+            state.general.expName = value;
             return state
         })
     }
@@ -148,6 +155,23 @@ class Main extends Component {
     clearTaskSpecificState(type) {
         this.setState(state => {
             state[type].taskSpecific = {};
+            return state
+        })
+    }
+
+    runTraining() {
+        console.log('Running training with these params:')
+        console.log(this.state)
+        this.setState(state => {
+            state.run.training = true
+            return state
+        })
+    }
+
+    stopTraining() {
+        console.log('Stopping training!')
+        this.setState(state => {
+            state.run.training = false
             return state
         })
     }
@@ -181,6 +205,14 @@ class Main extends Component {
             fontSize: '15px',
             marginTop: '10px',
         }
+        let footer;
+        if (!this.state.run.training) {
+            footer = <InitialState runTraining={this.runTraining.bind(this)}
+                                   show={this.state.general.pushedSubTask}/>
+        } else {
+            footer = <StopTraining stopTraining={this.stopTraining.bind(this)}
+                                   show={this.state.general.pushedSubTask}/>
+        }
         return (
             <div className="Main">
                 <header className="main">
@@ -201,21 +233,21 @@ class Main extends Component {
 
                     {ChooseMainTask({
                         changeTaskChoice: this.changeTaskChoice,
-                        ...this.state
+                        ...this.state.general
                     })}
                     {ChooseSubTask({
                         changeSubTaskChoice: this.changeSubTaskChoice,
-                        ...this.state
+                        ...this.state.general
                     })}
                     {ChooseNames({
                         changeProjectName: this.changeProjectName,
                         changeExpName: this.changeExpName,
-                        ...this.state
+                        ...this.state.general
                     })}
                     <Row style={{marginTop: "10px"}}>
                         <Col>
-                            <DataSettings show={this.state.pushedSubTask}
-                                          taskSubClass={this.state.subTask}
+                            <DataSettings show={this.state.general.pushedSubTask}
+                                          taskSubClass={this.state.general.subTask}
                                           data={this.state.data}
                                           type={'data'}
                                           setCommonState={this.setCommonState.bind(this)}
@@ -223,8 +255,8 @@ class Main extends Component {
                                           clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                         <Col>
-                            <ModelSettings show={this.state.pushedSubTask}
-                                           taskSubClass={this.state.subTask}
+                            <ModelSettings show={this.state.general.pushedSubTask}
+                                           taskSubClass={this.state.general.subTask}
                                            data={this.state.model}
                                            type={'model'}
                                            setCommonState={this.setCommonState.bind(this)}
@@ -232,8 +264,8 @@ class Main extends Component {
                                            clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                         <Col>
-                            <TrainingSettings show={this.state.pushedSubTask}
-                                              taskSubClass={this.state.subTask}
+                            <TrainingSettings show={this.state.general.pushedSubTask}
+                                              taskSubClass={this.state.general.subTask}
                                               numGpus={this.state.numGpus}
                                               data={this.state.training}
                                               type={'training'}
@@ -242,11 +274,16 @@ class Main extends Component {
                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                     </Row>
-                    {/*<Button*/}
-                    {/*    variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {*/}
-                    {/*    console.log(this.state)*/}
-                    {/*}}*/}
-                    {/*>Submit</Button>*/}
+                    {/*<Row style={{marginTop: "10px"}} className="justify-content-md-center">*/}
+                    {/*    <Button*/}
+                    {/*        variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {*/}
+                    {/*        console.log(this.state)*/}
+                    {/*    }}*/}
+                    {/*    >Submit</Button>*/}
+                    {/*</Row>*/}
+                    <Row style={{marginTop: "10px"}} className="justify-content-md-center">
+                        {footer}
+                    </Row>
                 </header>
             </div>
         );
