@@ -4,7 +4,7 @@ import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSett
 import DataSettings from "./settings/DataSettings"
 import ModelSettings from "./settings/ModelSettings";
 import TrainingSettings from "./settings/TrainingSettings";
-import {InitialState, StopTraining} from "./Launching";
+import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
 
 const {set} = require('lodash');
@@ -254,14 +254,6 @@ class Main extends Component {
         if (this.state.port === -1) {
             return null
         }
-        let footer;
-        if (!this.state.run.training) {
-            footer = <InitialState runTraining={this.runTraining.bind(this)}
-                                   show={this.state.general.pushedSubTask}/>
-        } else {
-            footer = <StopTraining stopTraining={this.stopTraining.bind(this)}
-                                   show={this.state.general.pushedSubTask}/>
-        }
         return (
             <div className="Main">
                 <header className="main">
@@ -308,8 +300,18 @@ class Main extends Component {
                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                     </Row>
-                    <Row style={{marginTop: "10px"}} className="justify-content-md-center">
-                        {footer}
+                    <Row style={{marginTop: "10px"}} align={'center'}>
+                        <Col>
+                            <TrainButtons show={this.state.general.pushedSubTask}
+                                          training={this.state.training}
+                                          runTraining={this.runTraining.bind(this)}
+                                          stopTraining={this.stopTraining.bind(this)}/>
+                        </Col>
+                    </Row>
+                    <Row style={{marginTop: "10px"}} align={'center'}>
+                        <Col>
+                            <TBButtons show={this.state.general.pushedSubTask}/>
+                        </Col>
                     </Row>
                     <TextLog show={this.state.general.pushedSubTask}/>
                 </header>

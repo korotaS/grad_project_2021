@@ -79,6 +79,13 @@ def launch_tb(task_key, tb_port):
     return jsonify({'status': 'ok', 'url': url})
 
 
+@app.route("/killTB")
+def kill_tb():
+    global TB_THREAD
+    killed = TB_THREAD.kill_tb()
+    return jsonify({'status': 'ok', 'info': killed})
+
+
 @app.route("/getArchs/<task>")
 def get_archs(task):
     archs = get_image_architectures_by_type(task)

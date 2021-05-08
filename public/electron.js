@@ -231,6 +231,19 @@ ipcMain.on('launchTB', function (e, item) {
     })();
 });
 
+ipcMain.on('killTB', function () {
+    const path = `http://localhost:${port}/killTB`
+    const request = net.request(path);
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString());
+            mainWindow.webContents.send('tbKilled', {info: json.info}
+            );
+        })
+    });
+    request.end()
+});
+
 ipcMain.on('getNumGpus', function (e) {
     if (numGpus === -1) {
         if (SERVER_RUNNING) {
