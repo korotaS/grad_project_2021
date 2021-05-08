@@ -13,8 +13,6 @@ const DEV = true;
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let subpy = null;
-let PROJECT_NAME = '';
-let LAST_EPOCH = 0;
 let port = 5000;
 let numGpus = -1
 
@@ -25,9 +23,11 @@ const startPythonSubprocess = () => {
         (async () => {
             port = await getPort({port: 5000});
             subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
-            // subpy = require("child_process").spawn("python", [PY_MODULE]);
             console.log(`started process at ${subpy.pid} on port ${port}`);
+            mainWindow.webContents.send('pythonPortSet', {port: port});
         })();
+    } else {
+        mainWindow.webContents.send('pythonPortSet', {port: port});
     }
 };
 
@@ -74,8 +74,8 @@ const createMainWindow = (x_custom, y_custom) => {
 // Some APIs can only be used after this event occurs.
 app.on("ready", function () {
     // start the backend server
-    startPythonSubprocess();
     createMainWindow(0, 0);
+    startPythonSubprocess();
 });
 
 // disable menu
@@ -95,40 +95,40 @@ app.on("activate", () => {
 
 // -----RUNTIME-----
 
-// ipcMain.on('startTraining', function (e, item) {
-//     PROJECT_NAME = item;
-//     const request = net.request(`http://localhost:${port}/runTrain/` + PROJECT_NAME);
-//     request.on('response', (response) => {
-//         response.on('data', (data) => {
-//             let json = JSON.parse(data.toString());
-//             if (json.status === 'ready') {
-//                 mainWindow.webContents.send('changeStatus', json.status);
-//                 checkStatus();
-//             }
-//         })
-//     });
-//     request.end()
-// });
-//
-// function checkStatus() {
-//     let rl = setInterval(function () {
-//         const request = net.request(`http://localhost:${port}/trainStatus/` + PROJECT_NAME + '/' + LAST_EPOCH);
-//         request.on('response', (response) => {
-//             response.on('data', (data) => {
-//                 let json = JSON.parse(data.toString());
-//                 mainWindow.webContents.send('changeStatus', json.status);
-//                 if (json.status === 'done') {
-//                     mainWindow.webContents.send('addEpochs', JSON.stringify(json.new_epochs));
-//                     clearInterval(rl);
-//                 } else if (!!json.new_epochs) {
-//                     LAST_EPOCH = json.new_epochs[json.new_epochs.length - 1].epoch_num;
-//                     mainWindow.webContents.send('addEpochs', JSON.stringify(json.new_epochs));
-//                 }
-//             })
-//         });
-//         request.end()
-//     }, 1500)
-// }
+ipcMain.on('getPythonPort', function (e) {
+    mainWindow.webContents.send('pythonPort', JSON.stringify({port: port}));
+});
+
+ipcMain.on('runTraining', function (e, item) {
+    const request = net.request({
+        method: 'POST',
+        hostname: 'localhost',
+        port: port,
+        path: '/init'
+    });
+
+    let post_data = JSON.stringify(item.config);
+    request.write(post_data);
+    request.end();
+});
+
+ipcMain.on('stopTraining', function (e) {
+    const path = `http://localhost:${port}/stopTraining`
+    const request = net.request(path);
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString());
+            if (json.status === 'ok') {
+                mainWindow.webContents.send('trainingStopped');
+            }
+        })
+    });
+    request.on('error', (error) => {
+        console.log(path);
+        console.log(error)
+    })
+    request.end()
+});
 
 ipcMain.on('configChosen', function (e, item) {
     let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
@@ -229,24 +229,6 @@ ipcMain.on('launchTB', function (e, item) {
         })
         request.end()
     })();
-});
-
-ipcMain.on('stopTraining', function (e) {
-    const path = `http://localhost:${port}/stopTraining`
-    const request = net.request(path);
-    request.on('response', (response) => {
-        response.on('data', (data) => {
-            let json = JSON.parse(data.toString());
-            if (json.status === 'ok') {
-                mainWindow.webContents.send('trainingStopped');
-            }
-        })
-    });
-    request.on('error', (error) => {
-        console.log(path);
-        console.log(error)
-    })
-    request.end()
 });
 
 ipcMain.on('getNumGpus', function (e) {

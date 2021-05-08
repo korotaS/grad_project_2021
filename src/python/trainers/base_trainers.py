@@ -33,7 +33,7 @@ class BaseTrainer:
         self.batch_size_train = self.cfg['training']['batch_size_train']
         self.batch_size_val = self.cfg['training']['batch_size_val']
         self.shuffle_train = self.cfg['training']['shuffle_train']
-        self.shuffle_val = self.cfg['training']['batch_size_val']
+        self.shuffle_val = self.cfg['training']['shuffle_val']
         self.num_workers = self.cfg['training']['workers']
         self.criterion_name = self.cfg['training']['criterion']
         # optimizer, scheduler

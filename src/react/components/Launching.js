@@ -6,19 +6,12 @@ export function InitialState(props) {
         return null
     }
     return (
-        <Form.Row className="align-items-center" style={{
-            marginTop: '10px',
-            marginLeft: '5px'
-        }}>
-            <Col xs="auto">
-                <Button
-                    variant="success"
-                    type="submit"
-                    size={'lg'}
-                    onClick={props.runTraining}
-                >Train!</Button>
-            </Col>
-        </Form.Row>
+        <Button
+            variant="success"
+            type="submit"
+            size={'lg'}
+            onClick={props.runTraining}
+        >Train!</Button>
     )
 }
 
@@ -27,19 +20,12 @@ export function StopTraining(props) {
         return null
     }
     return (
-        <Form.Row className="align-items-center" style={{
-            marginTop: '10px',
-            marginLeft: '5px'
-        }}>
-            <Col xs="auto">
-                <Button
-                    variant="danger"
-                    type="submit"
-                    size={'lg'}
-                    onClick={props.stopTraining}
-                >Stop training!</Button>
-            </Col>
-        </Form.Row>
+        <Button
+            variant="danger"
+            type="submit"
+            size={'lg'}
+            onClick={props.stopTraining}
+        >Stop training!</Button>
     )
 }
 

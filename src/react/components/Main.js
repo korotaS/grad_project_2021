@@ -1,10 +1,11 @@
 import React, {Component} from 'react';
-import {Button, Col, Row} from "react-bootstrap";
+import {Col, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
 import DataSettings from "./settings/DataSettings"
 import ModelSettings from "./settings/ModelSettings";
 import TrainingSettings from "./settings/TrainingSettings";
 import {InitialState, StopTraining} from "./Launching";
+import {TextLog} from "./settings/Common";
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -20,7 +21,6 @@ class Main extends Component {
                 pushedSubTask: false,
                 projectName: '',
                 expName: '',
-                text: '',
             },
             numGpus: -1,
             data: {
@@ -61,47 +61,12 @@ class Main extends Component {
             }
         };
 
-        this.submitChoice = this.submitChoice.bind(this);
         this.changeTaskChoice = this.changeTaskChoice.bind(this);
         this.changeSubTaskChoice = this.changeSubTaskChoice.bind(this);
         this.changeProjectName = this.changeProjectName.bind(this);
         this.changeExpName = this.changeExpName.bind(this);
-        // this.clearLogs = this.clearLogs.bind(this);
-
-        // this.textLog = React.createRef();
-        // const socket = openSocket(`http://localhost:5000`);
-        //
-        // socket.on('message', message => {
-        //     console.log(message);
-        // })
-        //
-        // socket.on('log', data => {
-        //     console.log(data);
-        //     this.setState(state => {
-        //         if (data.toString().trim().length > 0) {
-        //             let prefix = state.text === '' ? '' : '\n'
-        //             state.text += prefix + data.toString().trim();
-        //         }
-        //         return state
-        //     });
-        // })
+        this.makeConfigFromState = this.makeConfigFromState.bind(this);
     }
-
-    submitChoice(event) {
-        // event.preventDefault();
-        // this.setState(state => {
-        //     state.pushed = true;
-        //     return state
-        // });
-    }
-
-    // clearLogs(event) {
-    //     event.preventDefault();
-    //     this.setState(state => {
-    //         state.text = '';
-    //         return state
-    //     });
-    // }
 
     changeTaskChoice(event) {
         this.setState(state => {
@@ -161,19 +126,107 @@ class Main extends Component {
 
     runTraining() {
         console.log('Running training with these params:')
-        console.log(this.state)
         this.setState(state => {
             state.run.training = true
             return state
         })
+        let config = this.makeConfigFromState()
+        if (this.validateConfig(config)) {
+            ipcRenderer.send('runTraining', {
+                config: config,
+            });
+        }
+        console.log(config);
     }
 
     stopTraining() {
         console.log('Stopping training!')
-        this.setState(state => {
-            state.run.training = false
-            return state
+        ipcRenderer.send('stopTraining');
+    }
+
+    makeConfigFromState() {
+        const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+
+        let config = {
+            general: {
+                task: this.state.general.task,
+                subtask: this.state.general.subTask,
+                project_name: this.state.general.projectName,
+                exp_name: this.state.general.expName
+            },
+            data: {},
+            model: {},
+            trainer: {},
+            training: {},
+            optimizer: this.state.training.common.optimizer,
+            scheduler: {
+                name: 'ReduceLROnPlateau',
+                params: {
+                    factor: 0.6,
+                    patience: 25,
+                    min_lr: 1.0e-5,
+                    verbose: true
+                }
+            },
+            checkpoint_callback: {
+                mode: 'max',
+                monitor: 'val_acc',
+                save_top_k: 1,
+                verbose: true,
+                filename: '{epoch}_{val_acc:.3f}'
+            }
+        };
+        ['data', 'model', 'training'].forEach(key => {
+            ['common', 'taskSpecific'].forEach(mode => {
+                for (const [innerKey, value] of Object.entries(this.state[key][mode])) {
+                    if (key === 'training') {
+                        switch (innerKey) {
+                            case 'maxEpochs': {
+                                config.trainer.max_epochs = value
+                                break
+                            }
+                            case 'gpus': {
+                                config.trainer.gpus = value
+                                break
+                            }
+                            default: {
+                                config[key][camelToSnakeCase(innerKey)] = value
+                            }
+                        }
+                    } else {
+                        config[key][camelToSnakeCase(innerKey)] = value
+                    }
+                }
+            })
+
         })
+        // ADVANCED
+        config.data.transforms_train = 'default'
+        config.data.transforms_val = 'default'
+        config.training.seed = 42
+        config.training.shuffle_train = true
+        config.training.shuffle_val = false
+
+        config.general.project_name = 'project_test'
+        config.general.exp_name = 'exp_1'
+        config.data.dataset_folder = '/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats'
+        return config
+    }
+
+    validateConfig(config) {
+        if (config.general.project_name === '') {
+            alert('Please enter project name!')
+            return false
+        }
+        if (config.general.exp_name === '') {
+            alert('Please enter experiment name!')
+            return false
+        }
+        if (config.data.dataset_folder === '') {
+            alert('Please choose dataset folder!')
+            return false
+        }
+        return true
     }
 
     componentDidMount() {
@@ -188,22 +241,18 @@ class Main extends Component {
                 return state;
             })
         }.bind(this));
-    }
 
-    componentDidUpdate() {
-        // this.textLog.current.scrollTop = this.textLog.current.scrollHeight;
+        ipcRenderer.on('trainingStopped', function () {
+            this.setState(state => {
+                state.run.training = false;
+                return state
+            })
+        }.bind(this));
     }
 
     render() {
         if (this.state.port === -1) {
             return null
-        }
-        const textAreaStyle = {
-            height: '300px',
-            minHeight: '300px',
-            width: '100%',
-            fontSize: '15px',
-            marginTop: '10px',
         }
         let footer;
         if (!this.state.run.training) {
@@ -216,21 +265,6 @@ class Main extends Component {
         return (
             <div className="Main">
                 <header className="main">
-
-                    {/* THIS IS LOGGING!!! */}
-                    {/*<Form style={{marginLeft: '10px', marginRight: '10px'}}>*/}
-                    {/*<textarea ref={this.textLog}*/}
-                    {/*          value={this.state.text}*/}
-                    {/*          readOnly={true}*/}
-                    {/*          style={textAreaStyle}/>*/}
-                    {/*    <Button*/}
-                    {/*        variant="success"*/}
-                    {/*        type="submit"*/}
-                    {/*        onClick={this.clearLogs}*/}
-                    {/*        // style={{marginLeft: '10px'}}*/}
-                    {/*    >Clear logs</Button>*/}
-                    {/*</Form>*/}
-
                     {ChooseMainTask({
                         changeTaskChoice: this.changeTaskChoice,
                         ...this.state.general
@@ -274,16 +308,10 @@ class Main extends Component {
                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                         </Col>
                     </Row>
-                    {/*<Row style={{marginTop: "10px"}} className="justify-content-md-center">*/}
-                    {/*    <Button*/}
-                    {/*        variant="success" type="submit" style={{marginTop: '10px'}} onClick={() => {*/}
-                    {/*        console.log(this.state)*/}
-                    {/*    }}*/}
-                    {/*    >Submit</Button>*/}
-                    {/*</Row>*/}
                     <Row style={{marginTop: "10px"}} className="justify-content-md-center">
                         {footer}
                     </Row>
+                    <TextLog show={this.state.general.pushedSubTask}/>
                 </header>
             </div>
         );

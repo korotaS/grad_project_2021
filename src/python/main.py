@@ -27,20 +27,6 @@ def ping():
     return jsonify({'status': STATUS})
 
 
-@app.route("/trainStatus/<project_name>/<last_epoch>")
-def train_status(project_name, last_epoch):
-    with open(f'projects/{project_name}/log.json', 'r') as r:
-        epochs = json.load(r)
-
-    response = {'status': epochs['status']}
-    if not epochs['epochs'] or epochs['epochs'][-1]['epoch_num'] == int(last_epoch):
-        response['new_epochs'] = None
-    else:
-        response['new_epochs'] = epochs['epochs'][int(last_epoch):]
-
-    return jsonify(response)
-
-
 @app.route("/init", methods=['POST'])
 def run_train():
     data = request.get_json(force=True)

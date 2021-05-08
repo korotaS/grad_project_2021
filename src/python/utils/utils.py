@@ -180,3 +180,8 @@ def validate_config(cfg):
                 error = f'Missing key "model_name" in config["model"].'
                 return {'status': status, 'error': error}
     return {'status': status, 'error': error}
+
+
+class StoppingTrainingException(Exception):
+    """Raised when training needs to be stopped."""
+    pass

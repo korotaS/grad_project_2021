@@ -1,5 +1,8 @@
 import {Button, Col, Form, Row} from "react-bootstrap";
 import React, {Component} from "react";
+import openSocket from 'socket.io-client';
+
+const {ipcRenderer} = window.require("electron");
 
 export function DatasetLength(props) {
     return (
@@ -127,6 +130,109 @@ export class LabelArray extends Component {
                     })}
                 </ul>
                 <Button size={'sm'} onClick={this.addLabel}>Add label</Button>
+            </div>
+        )
+    }
+}
+
+export class TextLog extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            text: 'asdfg',
+            socket: null,
+            port: null,
+            listenerSet: false
+        }
+
+        this.textLog = React.createRef();
+        ipcRenderer.send('getPythonPort');
+    }
+
+    clearLogs(event) {
+        event.preventDefault();
+        this.setState(state => {
+            state.text = '';
+            return state
+        });
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.textLog.current !== null) {
+            this.textLog.current.scrollTop = this.textLog.current.scrollHeight;
+        }
+
+        if (this.state.socket !== null && !this.state.listenerSet) {
+            this.setState(state => {
+                state.listenerSet = true
+                return state
+            });
+
+            this.state.socket.on('log', data => {
+                this.setState(state => {
+                    if (data.toString().trim().length > 0) {
+                        let prefix = state.text === '' ? '' : '\n'
+                        state.text += prefix + data.toString().trim();
+                    }
+                    return state
+                });
+            })
+        }
+    }
+
+    componentDidMount() {
+        ipcRenderer.on('pythonPort', function (e, data) {
+            let port = JSON.parse(data).port
+            if (this.state.socket === null) {
+                this.setState(state => {
+                    state.port = port;
+                    state.socket = openSocket(`http://localhost:${port}`);
+                    return state
+                })
+            }
+        }.bind(this));
+
+        // console.log('did mount')
+        // if (this.state.socket !== null) {
+        //     console.log('notnull')
+        //     this.state.socket.on('log', data => {
+        //         this.setState(state => {
+        //             if (data.toString().trim().length > 0) {
+        //                 let prefix = state.text === '' ? '' : '\n'
+        //                 state.text += prefix + data.toString().trim();
+        //             }
+        //             return state
+        //         });
+        //     })
+        // }
+    }
+
+    render() {
+        if (!this.props.show) {
+            return null
+        }
+
+        const textAreaStyle = {
+            height: '300px',
+            minHeight: '300px',
+            width: '100%',
+            fontSize: '15px',
+            marginTop: '10px',
+        }
+
+        return (
+            <div style={{marginBottom: '10px'}}>
+                <Form style={{marginLeft: '10px', marginRight: '10px'}}>
+                    <textarea ref={this.textLog}
+                              value={this.state.text}
+                              readOnly={true}
+                              style={textAreaStyle}/>
+                    <Button
+                        variant="success"
+                        type="submit"
+                        onClick={this.clearLogs.bind(this)}
+                    >Clear logs</Button>
+                </Form>
             </div>
         )
     }
