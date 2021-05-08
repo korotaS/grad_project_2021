@@ -4,8 +4,6 @@ import './react/index.css';
 import Main from "./react/components/Main";
 import * as serviceWorker from './react/serviceWorker';
 
-const {ipcRenderer} = window.require("electron");
-
 
 ReactDOM.render(
     <Main/>,

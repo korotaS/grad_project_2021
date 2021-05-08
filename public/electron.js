@@ -43,7 +43,8 @@ const createMainWindow = (x_custom, y_custom) => {
         resizeable: true,
         webPreferences: {
             nodeIntegration: true,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            worldSafeExecuteJavaScript: true,
         }
     });
 
@@ -257,7 +258,7 @@ ipcMain.on('getNumGpus', function (e) {
                 })
             });
             request.on('error', (error) => {
-                console.log(error)
+
             })
             request.end()
         } else {

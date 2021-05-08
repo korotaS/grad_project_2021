@@ -1,4 +1,4 @@
-import {Button, Col, Dropdown, DropdownButton, Form} from "react-bootstrap";
+import {Button, Dropdown, DropdownButton} from "react-bootstrap";
 import React, {Component} from "react";
 
 const {ipcRenderer} = window.require("electron");
@@ -96,7 +96,7 @@ export class TBButtons extends Component {
                 </DropdownButton>
             )
         } else {
-            let link = <a href={this.state.tbLink} target={'_blank'}>{this.state.tbLink}</a>;
+            let link = <a href={this.state.tbLink} target={'_blank'} rel={"noopener noreferrer"}>{this.state.tbLink}</a>;
             return (
                 <div>
                     <h5>TensorBoard is running on {link}</h5>
