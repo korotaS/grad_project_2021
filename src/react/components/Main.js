@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Col, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
-import DataSettings from "./settings/DataSettings"
+import DataSettings from "./settings/data/DataSettings"
 import ModelSettings from "./settings/ModelSettings";
 import TrainingSettings from "./settings/TrainingSettings";
 import {TBButtons, TrainButtons} from "./Launching";
@@ -110,6 +110,7 @@ class Main extends Component {
     }
 
     setTaskSpecificState(type, key, data) {
+        console.log(type, key, data)
         this.setState(state => {
             state[type].taskSpecific[key] = data;
             state[type].taskSpecificCache[key] = data;
