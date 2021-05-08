@@ -65,23 +65,19 @@ export class AdvancedForImsgm extends Component {
                 <Row className="justify-content-md-center">
                     <Col xs="auto">
                         <Form.Check
-                            type={'radio'} label={'3 (RGB)'}
-                            value={'rgb'} checked={this.state.rgb}
+                            type={'radio'} label={'3 (RGB)'} value={'rgb'} checked={this.state.rgb}
                             onChange={(event) => {
                                 event.persist();
                                 this.handleRgbChange(event)
-                            }}
-                        />
+                            }}/>
                     </Col>
                     <Col xs="auto">
                         <Form.Check
-                            type={'radio'} label={'1 (grey)'}
-                            value={'grey'} checked={!this.state.rgb}
+                            type={'radio'} label={'1 (grey)'} value={'grey'} checked={!this.state.rgb}
                             onChange={(event) => {
                                 event.persist();
                                 this.handleRgbChange(event)
-                            }}
-                        />
+                            }}/>
                     </Col>
                 </Row>
             </div>

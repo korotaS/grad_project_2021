@@ -2,8 +2,8 @@ import React, {Component} from 'react';
 import {Col, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
 import DataSettings from "./settings/data/DataSettings"
-import ModelSettings from "./settings/ModelSettings";
-import TrainingSettings from "./settings/TrainingSettings";
+import ModelSettings from "./settings/model/ModelSettings";
+import TrainingSettings from "./settings/training/TrainingSettings";
 import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
 
@@ -28,6 +28,8 @@ class Main extends Component {
                     datasetFolder: "",
                     trainLen: -1,
                     valLen: -1,
+                    shuffleTrain: true,
+                    shuffleVal: false,
                 },
                 taskSpecific: {},
                 taskSpecificCache: {}
@@ -49,6 +51,11 @@ class Main extends Component {
                         params: {
                             lr: 0.001
                         }
+                    },
+                    checkpointCallback: {
+                        monitor: 'val_loss',
+                        mode: 'min',
+                        save_top_k: 1
                     }
                 },
                 taskSpecific: {},
@@ -110,7 +117,6 @@ class Main extends Component {
     }
 
     setTaskSpecificState(type, key, data) {
-        console.log(type, key, data)
         this.setState(state => {
             state[type].taskSpecific[key] = data;
             state[type].taskSpecificCache[key] = data;
@@ -148,6 +154,7 @@ class Main extends Component {
     makeConfigFromState() {
         const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
 
+        let cc = this.state.training.common.checkpointCallback;
         let config = {
             general: {
                 task: this.state.general.task,
@@ -170,16 +177,19 @@ class Main extends Component {
                 }
             },
             checkpoint_callback: {
-                mode: 'max',
-                monitor: 'val_acc',
-                save_top_k: 1,
+                mode: cc.mode,
+                monitor: cc.monitor,
+                save_top_k: cc.save_top_k,
                 verbose: true,
-                filename: '{epoch}_{val_acc:.3f}'
+                filename: `{epoch}_{${cc.monitor}:.3f}`
             }
         };
         ['data', 'model', 'training'].forEach(key => {
             ['common', 'taskSpecific'].forEach(mode => {
                 for (const [innerKey, value] of Object.entries(this.state[key][mode])) {
+                    if (innerKey === 'checkpointCallback') {
+                        continue
+                    }
                     if (key === 'training') {
                         switch (innerKey) {
                             case 'maxEpochs': {
@@ -199,14 +209,10 @@ class Main extends Component {
                     }
                 }
             })
-
         })
         // ADVANCED
         config.data.transforms_train = 'default'
         config.data.transforms_val = 'default'
-        config.training.seed = 42
-        config.training.shuffle_train = true
-        config.training.shuffle_val = false
 
         config.general.project_name = 'project_test'
         config.general.exp_name = 'exp_1'

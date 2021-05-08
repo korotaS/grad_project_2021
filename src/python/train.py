@@ -15,7 +15,7 @@ class MainThread(Thread):
         super().__init__()
         self.cfg = cfg
         self.skt = skt
-        set_seed(self.cfg['training']['seed'])
+        set_seed(42)
         self.test_cfg = test_cfg
         subtask = self.cfg['general']['subtask']
         if subtask == 'imclf':

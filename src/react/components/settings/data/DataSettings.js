@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button} from "react-bootstrap";
+import {Button, Col, Form, Row} from "react-bootstrap";
 import {DatasetLength} from "../Common";
 import {TaskSpecificForImclf, TaskSpecificForImsgm, TaskSpecificForTxtclf} from "./TaskSpecific";
 import {AdvancedForImclf, AdvancedForImsgm} from "./Advanced";
@@ -67,6 +67,18 @@ class DataSettings extends Component {
     handleAdvanced() {
         this.setState(state => {
             state.advancedPushed = !state.advancedPushed
+            return state
+        })
+    }
+
+    handleShuffleCheckbox(event, mode) {
+        function cap(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+        let key = 'shuffle' + cap(mode)
+        this.props.setCommonState(this.props.type, key, event.target.checked)
+        this.setState(state => {
+            state[key] = event.target.checked
             return state
         })
     }
@@ -149,6 +161,32 @@ class DataSettings extends Component {
                         handleLengthCheckbox={this.handleLengthCheckbox}
                         handleLengthNumber={this.handleLengthNumber}
                     />
+
+                    <h5>Shuffle</h5>
+                    <Row className="justify-content-md-center">
+                        <Col md="auto">
+                            <div>Train</div>
+                            <Form.Check
+                                type={'checkbox'}
+                                checked={this.props.data.common.shuffleTrain}
+                                onChange={(event) => {
+                                    event.persist();
+                                    this.handleShuffleCheckbox(event, 'train')
+                                }}
+                            />
+                        </Col>
+                        <Col md="Val">
+                            <div>Val</div>
+                            <Form.Check
+                                type={'checkbox'}
+                                checked={this.props.data.common.shuffleVal}
+                                onChange={(event) => {
+                                    event.persist();
+                                    this.handleShuffleCheckbox(event, 'val')
+                                }}
+                            />
+                        </Col>
+                    </Row>
                     {/*Task specific advanced*/}
                     {advancedSettings}
                 </div>

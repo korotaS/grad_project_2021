@@ -89,8 +89,12 @@ export class LabelArray extends Component {
         })
     }
 
-    addLabel = (e) => {
-        let labels = [...this.state.labels, `label${this.state.labels.length + 1}`]
+    addLabel = () => {
+        let lastLabelIndex = this.state.labels.length + 1
+        while (this.state.labels.includes(`label${lastLabelIndex}`)) {
+            lastLabelIndex += 1
+        }
+        let labels = [...this.state.labels, `label${lastLabelIndex}`]
         this.props.passData(this.props.type, 'labels', labels)
         this.setState(state => {
             state.labels = labels;
@@ -191,20 +195,6 @@ export class TextLog extends Component {
                 })
             }
         }.bind(this));
-
-        // console.log('did mount')
-        // if (this.state.socket !== null) {
-        //     console.log('notnull')
-        //     this.state.socket.on('log', data => {
-        //         this.setState(state => {
-        //             if (data.toString().trim().length > 0) {
-        //                 let prefix = state.text === '' ? '' : '\n'
-        //                 state.text += prefix + data.toString().trim();
-        //             }
-        //             return state
-        //         });
-        //     })
-        // }
     }
 
     render() {

@@ -1,7 +1,7 @@
 general:
   task: 'cv'
   subtask: 'imclf'
-  project_name: 'project_1'
+  project_name: 'project_test'
   exp_name: 'experiment_1'
 
 model:
@@ -16,21 +16,21 @@ data:
   labels:
     - 'cat'
     - 'dog'
-  train_len: -1
-  val_len: -1
+  train_len: 500
+  val_len: 150
+  shuffle_train: True
+  shuffle_val: False
   transforms_train: 'default'
   transforms_val: 'default'
 
 trainer:
-  gpus: '3'
-  max_epochs: 10
+  gpus: null
+  max_epochs: 5
 
 training:
   seed: 42
   batch_size_train: 8
-  shuffle_train: True
   batch_size_val: 8
-  shuffle_val: False
   workers: 0
   criterion: 'CrossEntropyLoss'
 

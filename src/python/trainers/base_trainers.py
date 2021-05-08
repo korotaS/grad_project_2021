@@ -26,14 +26,14 @@ class BaseTrainer:
         self.dataset_folder = self.cfg['data']['dataset_folder']
         self.train_len = self.cfg['data']['train_len']
         self.val_len = self.cfg['data']['val_len']
+        self.shuffle_train = self.cfg['data']['shuffle_train']
+        self.shuffle_val = self.cfg['data']['shuffle_val']
         self.train_dataset = self.val_dataset = self.train_loader = self.val_loader = None
         # trainer
         self.trainer_params = self.cfg['trainer']
         # training
         self.batch_size_train = self.cfg['training']['batch_size_train']
         self.batch_size_val = self.cfg['training']['batch_size_val']
-        self.shuffle_train = self.cfg['training']['shuffle_train']
-        self.shuffle_val = self.cfg['training']['shuffle_val']
         self.num_workers = self.cfg['training']['workers']
         self.criterion_name = self.cfg['training']['criterion']
         # optimizer, scheduler

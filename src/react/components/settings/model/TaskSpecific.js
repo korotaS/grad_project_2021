@@ -1,42 +1,8 @@
-import React, {Component} from 'react';
+import React, {Component} from "react";
 import {Col, Form, Row} from "react-bootstrap";
-import {Numeric} from "./Common";
+import {Numeric} from "../Common";
 
-class ModelSettings extends Component {
-    render() {
-        if (!this.props.show) {
-            return null
-        }
-        let taskSpecificSettings;
-        if (this.props.taskSubClass === 'imclf') {
-            taskSpecificSettings = <ModelSettingsForImclf
-                handleTaskSpecificState={this.props.setTaskSpecificState}
-                clearTaskSpecificState={this.props.clearTaskSpecificState}
-                defaultState={this.props.data.taskSpecificCache}
-                type={this.props.type}/>
-        } else if (this.props.taskSubClass === 'imsgm') {
-            taskSpecificSettings = <ModelSettingsForImsgm
-                handleTaskSpecificState={this.props.setTaskSpecificState}
-                clearTaskSpecificState={this.props.clearTaskSpecificState}
-                defaultState={this.props.data.taskSpecificCache}
-                type={this.props.type}/>
-        } else {
-            taskSpecificSettings = <ModelSettingsForTxtclf
-                handleTaskSpecificState={this.props.setTaskSpecificState}
-                clearTaskSpecificState={this.props.clearTaskSpecificState}
-                defaultState={this.props.data.taskSpecificCache}
-                type={this.props.type}/>
-        }
-        return (
-            <div align={'center'}>
-                <h3>Model</h3>
-                {taskSpecificSettings}
-            </div>
-        )
-    }
-}
-
-class ModelSettingsForImclf extends Component {
+export class ModelSettingsForImclf extends Component {
     constructor(props) {
         super(props)
 
@@ -125,7 +91,7 @@ class ModelSettingsForImclf extends Component {
     }
 }
 
-class ModelSettingsForImsgm extends Component {
+export class ModelSettingsForImsgm extends Component {
     constructor(props) {
         super(props)
 
@@ -217,7 +183,7 @@ class ModelSettingsForImsgm extends Component {
     }
 }
 
-class ModelSettingsForTxtclf extends Component {
+export class ModelSettingsForTxtclf extends Component {
     constructor(props) {
         super(props)
 
@@ -383,5 +349,3 @@ class ModelSettingsForTxtclf extends Component {
     }
 
 }
-
-export default ModelSettings;
