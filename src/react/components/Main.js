@@ -6,6 +6,7 @@ import ModelSettings from "./settings/model/ModelSettings";
 import TrainingSettings from "./settings/training/TrainingSettings";
 import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
+import FadeIn from 'react-fade-in';
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -279,55 +280,57 @@ class Main extends Component {
                         changeSubTaskChoice: this.changeSubTaskChoice,
                         ...this.state.general
                     })}
-                    {ChooseNames({
-                        changeProjectName: this.changeProjectName,
-                        changeExpName: this.changeExpName,
-                        ...this.state.general
-                    })}
-                    <Row style={{marginTop: "10px"}}>
-                        <Col>
-                            <DataSettings show={this.state.general.pushedSubTask}
-                                          taskSubClass={this.state.general.subTask}
-                                          data={this.state.data}
-                                          type={'data'}
-                                          setCommonState={this.setCommonState.bind(this)}
-                                          setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                          clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                        </Col>
-                        <Col>
-                            <ModelSettings show={this.state.general.pushedSubTask}
-                                           taskSubClass={this.state.general.subTask}
-                                           data={this.state.model}
-                                           type={'model'}
-                                           setCommonState={this.setCommonState.bind(this)}
-                                           setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                           clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                        </Col>
-                        <Col>
-                            <TrainingSettings show={this.state.general.pushedSubTask}
+                    <FadeIn visible={this.state.general.pushedSubTask}>
+                        {ChooseNames({
+                            changeProjectName: this.changeProjectName,
+                            changeExpName: this.changeExpName,
+                            ...this.state.general
+                        })}
+                        <Row style={{marginTop: "10px"}}>
+                            <Col>
+                                <DataSettings show={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
-                                              numGpus={this.state.numGpus}
-                                              data={this.state.training}
-                                              type={'training'}
+                                              data={this.state.data}
+                                              type={'data'}
                                               setCommonState={this.setCommonState.bind(this)}
                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                        </Col>
-                    </Row>
-                    <Row style={{marginTop: "10px"}} align={'center'}>
-                        <Col>
-                            <TrainButtons show={this.state.general.pushedSubTask}
-                                          training={this.state.run.training}
-                                          runTraining={this.runTraining.bind(this)}
-                                          stopTraining={this.stopTraining.bind(this)}/>
-                        </Col>
-                    </Row>
-                    <Row style={{marginTop: "10px"}} align={'center'}>
-                        <Col>
-                            <TBButtons show={this.state.general.pushedSubTask}/>
-                        </Col>
-                    </Row>
-                    <TextLog show={this.state.general.pushedSubTask}/>
+                            </Col>
+                            <Col>
+                                <ModelSettings show={this.state.general.pushedSubTask}
+                                               taskSubClass={this.state.general.subTask}
+                                               data={this.state.model}
+                                               type={'model'}
+                                               setCommonState={this.setCommonState.bind(this)}
+                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                            </Col>
+                            <Col>
+                                <TrainingSettings show={this.state.general.pushedSubTask}
+                                                  taskSubClass={this.state.general.subTask}
+                                                  numGpus={this.state.numGpus}
+                                                  data={this.state.training}
+                                                  type={'training'}
+                                                  setCommonState={this.setCommonState.bind(this)}
+                                                  setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                                  clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                            </Col>
+                        </Row>
+                        <Row style={{marginTop: "10px"}} align={'center'}>
+                            <Col>
+                                <TrainButtons show={this.state.general.pushedSubTask}
+                                              training={this.state.run.training}
+                                              runTraining={this.runTraining.bind(this)}
+                                              stopTraining={this.stopTraining.bind(this)}/>
+                            </Col>
+                        </Row>
+                        <Row style={{marginTop: "10px"}} align={'center'}>
+                            <Col>
+                                <TBButtons show={this.state.general.pushedSubTask}/>
+                            </Col>
+                        </Row>
+                        <TextLog show={this.state.general.pushedSubTask}/>
+                    </FadeIn>
                 </header>
             </div>
         );
