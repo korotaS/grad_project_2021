@@ -6,6 +6,7 @@ import Editor from 'react-simple-code-editor';
 import {highlight, languages} from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-yaml';
 import "prismjs/themes/prism-coy.css";
+import FadeIn from 'react-fade-in';
 
 const yaml = require('js-yaml');
 
@@ -16,6 +17,7 @@ class TrainingSettings extends Component {
             optimizers: ['Adam', 'SGD', 'RMSprop', 'Adadelta', 'Adagrad', 'AdamW',
                 'SparseAdam', 'Adamax', 'ASGD', 'LBFGS', 'Rprop'],
             advancedPushed: false,
+            fade: false,
             advancedTexts: ['Advanced ▼', 'Advanced ▲'],
 
             noParams: true,
@@ -65,11 +67,23 @@ class TrainingSettings extends Component {
         this.props.setCommonState(this.props.type, 'optimizer.params.lr', value)
     }
 
-    handleAdvanced() {
+    handleFade() {
         this.setState(state => {
-            state.advancedPushed = !state.advancedPushed
+            state.fade = !state.fade
+            if (!this.state.advancedPushed) {
+                state.advancedPushed = !state.advancedPushed
+            }
             return state
         })
+    }
+
+    hide() {
+        if (this.state.advancedPushed && !this.state.fade) {
+            this.setState(state => {
+                state.advancedPushed = !state.advancedPushed
+                return state
+            })
+        }
     }
 
     handleCheckMonitorChange(event) {
@@ -83,7 +97,8 @@ class TrainingSettings extends Component {
         let paramsConfig = {}
         try {
             paramsConfig = yaml.load(this.state.params)
-        } catch {}
+        } catch {
+        }
         this.props.setCommonState(this.props.type, 'optimizer.paramsAdd', event.target.checked ? {} : paramsConfig)
         this.setState(state => {
             state.noParams = event.target.checked
@@ -197,75 +212,79 @@ class TrainingSettings extends Component {
                 />
                 {taskSpecificSettings}
                 <Button style={{marginTop: '10px'}} variant="outline-secondary"
-                        onClick={this.handleAdvanced.bind(this)} size={'sm'}
+                        onClick={this.handleFade.bind(this)} size={'sm'}
                 >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
                 {/*Common advanced*/}
                 <div hidden={!this.state.advancedPushed}>
-                    <h5>Optimizer</h5>
-                    <div>Name</div>
-                    <Form.Control as="select" custom style={{width: '50%'}}
-                                  onChange={(event) => {
-                                      this.handleOptNameChange(event)
-                                  }}>
-                        {this.state.optimizers.map((obj, index) => {
-                            return (
-                                <option key={index} value={obj}>{obj}</option>
-                            )
-                        })}
-                    </Form.Control>
-                    <div>Params</div>
-                    <Form.Check
-                        label={'no params'} type={'checkbox'} checked={this.state.noParams}
-                        onChange={(event) => {
-                            event.persist();
-                            this.handleNoParamsCheckbox(event)
-                        }}
-                    />
-                    <div hidden={this.state.paramsValid}>Please enter the valid YAML.</div>
-                    <div className="container_editor_area">
-                        <Editor
-                            disabled={this.state.noParams}
-                            value={this.state.params}
-                            onValueChange={this.handleParams.bind(this)}
-                            highlight={code => highlight(code, languages.yaml, 'yaml')}
-                            padding={10}
-                            onClick={() => {
-                            }}
-                            style={{
-                                fontSize: 15,
-                                width: '50%',
+                    <FadeIn visible={this.state.fade} onComplete={() => {
+                        this.hide()
+                    }}>
+                        <h5>Optimizer</h5>
+                        <div>Name</div>
+                        <Form.Control as="select" custom style={{width: '50%'}}
+                                      onChange={(event) => {
+                                          this.handleOptNameChange(event)
+                                      }}>
+                            {this.state.optimizers.map((obj, index) => {
+                                return (
+                                    <option key={index} value={obj}>{obj}</option>
+                                )
+                            })}
+                        </Form.Control>
+                        <div>Params</div>
+                        <Form.Check
+                            label={'no params'} type={'checkbox'} checked={this.state.noParams}
+                            onChange={(event) => {
+                                event.persist();
+                                this.handleNoParamsCheckbox(event)
                             }}
                         />
-                    </div>
+                        <div hidden={this.state.paramsValid}>Please enter the valid YAML.</div>
+                        <div className="container_editor_area">
+                            <Editor
+                                disabled={this.state.noParams}
+                                value={this.state.params}
+                                onValueChange={this.handleParams.bind(this)}
+                                highlight={code => highlight(code, languages.yaml, 'yaml')}
+                                padding={10}
+                                onClick={() => {
+                                }}
+                                style={{
+                                    fontSize: 15,
+                                    width: '50%',
+                                }}
+                            />
+                        </div>
 
-                    <h5>Checkpoint</h5>
-                    <div>Monitor</div>
-                    <Row className="justify-content-md-center">
-                        <Col xs="auto">
-                            <Form.Check
-                                type={'radio'} label={'Loss'} value={'val_loss'}
-                                checked={this.props.data.common.checkpointCallback.monitor === 'val_loss'}
-                                onChange={(event) => {
-                                    event.persist();
-                                    this.handleCheckMonitorChange(event)
-                                }}/>
-                        </Col>
-                        <Col xs="auto">
-                            <Form.Check
-                                type={'radio'} label={this.props.taskSubClass === 'imsgm' ? 'IOU' : 'Accuracy'}
-                                value={this.props.taskSubClass === 'imsgm' ? 'val_iou' : 'val_acc'}
-                                checked={this.props.data.common.checkpointCallback.monitor !== 'val_loss'}
-                                onChange={(event) => {
-                                    event.persist();
-                                    this.handleCheckMonitorChange(event)
-                                }}/>
-                        </Col>
-                    </Row>
-                    <div>Save top K</div>
-                    <Numeric value={this.props.data.common.checkpointCallback.save_top_k}
-                             nameKey={'checkpointCallback.save_top_k'}
-                             type={this.props.type}
-                             passData={this.props.setCommonState} max={100}/>
+                        <h5>Checkpoint</h5>
+                        <div>Monitor</div>
+                        <Row className="justify-content-md-center">
+                            <Col xs="auto">
+                                <Form.Check
+                                    type={'radio'} label={'Loss'} value={'val_loss'}
+                                    checked={this.props.data.common.checkpointCallback.monitor === 'val_loss'}
+                                    onChange={(event) => {
+                                        event.persist();
+                                        this.handleCheckMonitorChange(event)
+                                    }}/>
+                            </Col>
+                            <Col xs="auto">
+                                <Form.Check
+                                    type={'radio'} label={this.props.taskSubClass === 'imsgm' ? 'IOU' : 'Accuracy'}
+                                    value={this.props.taskSubClass === 'imsgm' ? 'val_iou' : 'val_acc'}
+                                    checked={this.props.data.common.checkpointCallback.monitor !== 'val_loss'}
+                                    onChange={(event) => {
+                                        event.persist();
+                                        this.handleCheckMonitorChange(event)
+                                    }}/>
+                            </Col>
+                        </Row>
+                        <div>Save top K</div>
+                        <Numeric value={this.props.data.common.checkpointCallback.save_top_k}
+                                 nameKey={'checkpointCallback.save_top_k'}
+                                 type={this.props.type}
+                                 passData={this.props.setCommonState} max={100}/>
+                    </FadeIn>
                 </div>
             </div>
         )

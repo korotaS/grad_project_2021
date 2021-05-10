@@ -3,6 +3,7 @@ import {Button, Col, Form, Row} from "react-bootstrap";
 import {DatasetLength} from "../Common";
 import {TaskSpecificForImclf, TaskSpecificForImsgm, TaskSpecificForTxtclf} from "./TaskSpecific";
 import {AdvancedForImclf, AdvancedForImsgm} from "./Advanced";
+import FadeIn from 'react-fade-in';
 
 const {dialog} = window.require('electron').remote;
 
@@ -14,6 +15,7 @@ class DataSettings extends Component {
             valLenNumeric: 1,
 
             advancedPushed: false,
+            fade: false,
             advancedTexts: ['Advanced ▼', 'Advanced ▲']
         }
 
@@ -64,11 +66,23 @@ class DataSettings extends Component {
         }
     }
 
-    handleAdvanced() {
+    handleFade() {
         this.setState(state => {
-            state.advancedPushed = !state.advancedPushed
+            state.fade = !state.fade
+            if (!this.state.advancedPushed) {
+                state.advancedPushed = !state.advancedPushed
+            }
             return state
         })
+    }
+
+    hide() {
+        if (this.state.advancedPushed && !this.state.fade) {
+            this.setState(state => {
+                state.advancedPushed = !state.advancedPushed
+                return state
+            })
+        }
     }
 
     handleShuffleCheckbox(event, mode) {
@@ -139,58 +153,59 @@ class DataSettings extends Component {
                 {taskSpecificSettings}
                 <Button style={{marginTop: '10px'}}
                         variant="outline-secondary"
-                        onClick={this.handleAdvanced.bind(this)}
+                        onClick={this.handleFade.bind(this)}
                         size={'sm'}
                 >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
                 {/*Common advanced*/}
                 <div hidden={!this.state.advancedPushed}>
-                    <h5>Train dataset length</h5>
-                    <DatasetLength
-                        len={this.props.data.common.trainLen}
-                        type={'train'}
-                        lenNumeric={this.state.trainLenNumeric}
-                        handleLengthCheckbox={this.handleLengthCheckbox}
-                        handleLengthNumber={this.handleLengthNumber}
-                    />
+                    <FadeIn visible={this.state.fade} onComplete={() => {this.hide()}}>
+                        <h5>Train dataset length</h5>
+                        <DatasetLength
+                            len={this.props.data.common.trainLen}
+                            type={'train'}
+                            lenNumeric={this.state.trainLenNumeric}
+                            handleLengthCheckbox={this.handleLengthCheckbox}
+                            handleLengthNumber={this.handleLengthNumber}
+                        />
 
-                    <h5>Val dataset length</h5>
-                    <DatasetLength
-                        len={this.props.data.common.valLen}
-                        type={'val'}
-                        lenNumeric={this.state.valLenNumeric}
-                        handleLengthCheckbox={this.handleLengthCheckbox}
-                        handleLengthNumber={this.handleLengthNumber}
-                    />
+                        <h5>Val dataset length</h5>
+                        <DatasetLength
+                            len={this.props.data.common.valLen}
+                            type={'val'}
+                            lenNumeric={this.state.valLenNumeric}
+                            handleLengthCheckbox={this.handleLengthCheckbox}
+                            handleLengthNumber={this.handleLengthNumber}
+                        />
 
-                    <h5>Shuffle</h5>
-                    <Row className="justify-content-md-center">
-                        <Col md="auto">
-                            <div>Train</div>
-                            <Form.Check
-                                type={'checkbox'}
-                                checked={this.props.data.common.shuffleTrain}
-                                onChange={(event) => {
-                                    event.persist();
-                                    this.handleShuffleCheckbox(event, 'train')
-                                }}
-                            />
-                        </Col>
-                        <Col md="Val">
-                            <div>Val</div>
-                            <Form.Check
-                                type={'checkbox'}
-                                checked={this.props.data.common.shuffleVal}
-                                onChange={(event) => {
-                                    event.persist();
-                                    this.handleShuffleCheckbox(event, 'val')
-                                }}
-                            />
-                        </Col>
-                    </Row>
-                    {/*Task specific advanced*/}
-                    {advancedSettings}
+                        <h5>Shuffle</h5>
+                        <Row className="justify-content-md-center">
+                            <Col md="auto">
+                                <div>Train</div>
+                                <Form.Check
+                                    type={'checkbox'}
+                                    checked={this.props.data.common.shuffleTrain}
+                                    onChange={(event) => {
+                                        event.persist();
+                                        this.handleShuffleCheckbox(event, 'train')
+                                    }}
+                                />
+                            </Col>
+                            <Col md="Val">
+                                <div>Val</div>
+                                <Form.Check
+                                    type={'checkbox'}
+                                    checked={this.props.data.common.shuffleVal}
+                                    onChange={(event) => {
+                                        event.persist();
+                                        this.handleShuffleCheckbox(event, 'val')
+                                    }}
+                                />
+                            </Col>
+                        </Row>
+                        {/*Task specific advanced*/}
+                        {advancedSettings}
+                    </FadeIn>
                 </div>
-
             </div>
         )
     }
