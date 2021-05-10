@@ -317,7 +317,7 @@ class Main extends Component {
                     <Row style={{marginTop: "10px"}} align={'center'}>
                         <Col>
                             <TrainButtons show={this.state.general.pushedSubTask}
-                                          training={this.state.training}
+                                          training={this.state.run.training}
                                           runTraining={this.runTraining.bind(this)}
                                           stopTraining={this.stopTraining.bind(this)}/>
                         </Col>

@@ -7,7 +7,7 @@ export function TrainButtons(props) {
     if (!props.show) {
         return null
     }
-    if (props.training) {
+    if (!props.training) {
         return (
             <Button
                 variant="success"
