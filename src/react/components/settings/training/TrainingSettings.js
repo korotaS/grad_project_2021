@@ -2,6 +2,12 @@ import React, {Component} from 'react';
 import {Button, Col, Form, Row} from "react-bootstrap";
 import {Numeric} from "../Common";
 import {TrainingSettingsForImclf, TrainingSettingsForImsgm, TrainingSettingsForTxtclf} from "./TaskSpecific";
+import Editor from 'react-simple-code-editor';
+import {highlight, languages} from 'prismjs/components/prism-core';
+import 'prismjs/components/prism-yaml';
+import "prismjs/themes/prism-coy.css";
+
+const yaml = require('js-yaml');
 
 class TrainingSettings extends Component {
     constructor(props) {
@@ -10,7 +16,11 @@ class TrainingSettings extends Component {
             optimizers: ['Adam', 'SGD', 'RMSprop', 'Adadelta', 'Adagrad', 'AdamW',
                 'SparseAdam', 'Adamax', 'ASGD', 'LBFGS', 'Rprop'],
             advancedPushed: false,
-            advancedTexts: ['Advanced ▼', 'Advanced ▲']
+            advancedTexts: ['Advanced ▼', 'Advanced ▲'],
+
+            noParams: true,
+            params: 'param1: 42',
+            paramsValid: true
         }
 
         this.handleBatchSize = this.handleBatchSize.bind(this);
@@ -67,6 +77,39 @@ class TrainingSettings extends Component {
         let mode = monitor === 'val_loss' ? 'min' : 'max'
         this.props.setCommonState(this.props.type, 'checkpointCallback.monitor', monitor)
         this.props.setCommonState(this.props.type, 'checkpointCallback.mode', mode)
+    }
+
+    handleNoParamsCheckbox(event) {
+        let paramsConfig = {}
+        try {
+            paramsConfig = yaml.load(this.state.params)
+        } catch {}
+        this.props.setCommonState(this.props.type, 'optimizer.paramsAdd', event.target.checked ? {} : paramsConfig)
+        this.setState(state => {
+            state.noParams = event.target.checked
+            return state
+        })
+    }
+
+    handleParams(value) {
+        let paramsConfig = {}
+        try {
+            paramsConfig = yaml.load(value)
+            this.setState(state => {
+                state.paramsValid = true
+                return state
+            })
+        } catch (e) {
+            this.setState(state => {
+                state.paramsValid = false
+                return state
+            })
+        }
+        this.props.setCommonState(this.props.type, 'optimizer.paramsAdd', paramsConfig)
+        this.setState(state => {
+            state.params = value
+            return state
+        })
     }
 
     render() {
@@ -170,7 +213,30 @@ class TrainingSettings extends Component {
                             )
                         })}
                     </Form.Control>
-                    <div>Maybe params...</div>
+                    <div>Params</div>
+                    <Form.Check
+                        label={'no params'} type={'checkbox'} checked={this.state.noParams}
+                        onChange={(event) => {
+                            event.persist();
+                            this.handleNoParamsCheckbox(event)
+                        }}
+                    />
+                    <div hidden={this.state.paramsValid}>Please enter the valid YAML.</div>
+                    <div className="container_editor_area">
+                        <Editor
+                            disabled={this.state.noParams}
+                            value={this.state.params}
+                            onValueChange={this.handleParams.bind(this)}
+                            highlight={code => highlight(code, languages.yaml, 'yaml')}
+                            padding={10}
+                            onClick={() => {
+                            }}
+                            style={{
+                                fontSize: 15,
+                                width: '50%',
+                            }}
+                        />
+                    </div>
 
                     <h5>Checkpoint</h5>
                     <div>Monitor</div>

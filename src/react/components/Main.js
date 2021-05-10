@@ -50,7 +50,8 @@ class Main extends Component {
                         name: 'Adam',
                         params: {
                             lr: 0.001
-                        }
+                        },
+                        paramsAdd: {}
                     },
                     checkpointCallback: {
                         monitor: 'val_loss',
@@ -138,11 +139,11 @@ class Main extends Component {
             return state
         })
         let config = this.makeConfigFromState()
-        if (this.validateConfig(config)) {
-            ipcRenderer.send('runTraining', {
-                config: config,
-            });
-        }
+        // if (this.validateConfig(config)) {
+        //     ipcRenderer.send('runTraining', {
+        //         config: config,
+        //     });
+        // }
         console.log(config);
     }
 
@@ -166,7 +167,13 @@ class Main extends Component {
             model: {},
             trainer: {},
             training: {},
-            optimizer: this.state.training.common.optimizer,
+            optimizer: {
+                name: this.state.training.common.optimizer.name,
+                params: {
+                    lr: this.state.training.common.optimizer.params.lr,
+                    ...this.state.training.common.optimizer.paramsAdd
+                }
+            },
             scheduler: {
                 name: 'ReduceLROnPlateau',
                 params: {
@@ -200,6 +207,9 @@ class Main extends Component {
                                 config.trainer.gpus = value
                                 break
                             }
+                            case 'optimizer': {
+                                break
+                            }
                             default: {
                                 config[key][camelToSnakeCase(innerKey)] = value
                             }
@@ -211,9 +221,6 @@ class Main extends Component {
             })
         })
         // ADVANCED
-        config.data.transforms_train = 'default'
-        config.data.transforms_val = 'default'
-
         config.general.project_name = 'project_test'
         config.general.exp_name = 'exp_1'
         config.data.dataset_folder = '/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats'
