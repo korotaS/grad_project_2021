@@ -139,11 +139,11 @@ class Main extends Component {
             return state
         })
         let config = this.makeConfigFromState()
-        // if (this.validateConfig(config)) {
-        //     ipcRenderer.send('runTraining', {
-        //         config: config,
-        //     });
-        // }
+        if (this.validateConfig(config)) {
+            ipcRenderer.send('runTraining', {
+                config: config,
+            });
+        }
         console.log(config);
     }
 
