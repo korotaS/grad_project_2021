@@ -153,7 +153,7 @@ class TrainingSettings extends Component {
                 <Button style={{marginTop: '10px'}}
                         variant="outline-secondary"
                         onClick={() => {
-                            this.props.changeView('training', 'training', false);
+                            this.props.changeView('training');
                         }}
                         size={'lg'}
                 >{'Training ' + (this.props.showContent ? '▲' : '▼')}</Button>

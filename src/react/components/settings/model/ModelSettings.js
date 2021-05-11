@@ -29,7 +29,7 @@ class ModelSettings extends Component {
                 <Button style={{marginTop: '10px'}}
                         variant="outline-secondary"
                         onClick={() => {
-                            this.props.changeView('model', 'model', false);
+                            this.props.changeView('model');
                         }}
                         size={'lg'}
                 >{'Model ' + (this.props.showContent ? '▲' : '▼')}</Button>

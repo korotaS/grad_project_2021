@@ -7,6 +7,7 @@ import TrainingSettings from "./settings/training/TrainingSettings";
 import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
 import {makeConfigFromState, validateConfig} from "./utils/configSettings";
+import {ExportModal} from "./ExportModal";
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -74,10 +75,7 @@ class Main extends Component {
                 viewTraining: false,
                 viewFooter: false,
 
-                pushedNames: false,
-                pushedData: false,
-                pushedModel: false,
-                pushedTraining: false
+                viewExport: false
             }
         };
 
@@ -120,16 +118,15 @@ class Main extends Component {
         })
     }
 
-    changeView(pushedKey, viewKey, onlyShow = true) {
+    changeView(viewKey) {
         function cap(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         }
 
-        pushedKey = cap(pushedKey)
         viewKey = cap(viewKey)
         this.setState(state => {
             let key1 = 'view' + viewKey
-            state.view[key1] = onlyShow ? true : !state.view[key1]
+            state.view[key1] = !state.view[key1]
             return state
         })
     }
@@ -184,6 +181,13 @@ class Main extends Component {
         ipcRenderer.send('stopTraining');
     }
 
+    setShowExport(value) {
+        this.setState(state => {
+            state.view.viewExport = value
+            return state
+        })
+    }
+
     componentDidMount() {
         if (this.state.numGpus === -1) {
             ipcRenderer.send('getNumGpus');
@@ -212,6 +216,11 @@ class Main extends Component {
         return (
             <div className="Main">
                 <header className="main">
+                    <div align={'center'}>
+                        <Button variant="primary" onClick={() => this.setShowExport(true)}>
+                            Export
+                        </Button>
+                    </div>
                     {ChooseMainTask({
                         changeTaskChoice: this.changeTaskChoice,
                         ...this.state.general
@@ -262,7 +271,7 @@ class Main extends Component {
                         <Button style={{marginTop: '10px'}}
                                 variant="outline-secondary"
                                 onClick={() => {
-                                    this.changeView('footer', 'footer', false);
+                                    this.changeView('footer');
                                 }}
                                 size={'lg'}
                         >{'Run! ' + (this.state.view.viewFooter ? '▲' : '▼')}</Button>
@@ -283,6 +292,11 @@ class Main extends Component {
                             <TextLog show={this.state.general.pushedSubTask}/>
                         </div>
                     </div>
+
+                    <ExportModal
+                        show={this.state.view.viewExport}
+                        onHide={() => this.setShowExport(false)}
+                    />
                 </header>
             </div>
         );

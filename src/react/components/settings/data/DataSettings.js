@@ -4,7 +4,6 @@ import {DatasetLength} from "../Common";
 import {TaskSpecificForImclf, TaskSpecificForImsgm, TaskSpecificForTxtclf} from "./TaskSpecific";
 import {AdvancedForImclf, AdvancedForImsgm} from "./Advanced";
 import FadeIn from 'react-fade-in';
-import './test.css'
 
 const {dialog} = window.require('electron').remote;
 
@@ -144,7 +143,7 @@ class DataSettings extends Component {
                     <Button style={{marginTop: '10px'}}
                             variant="outline-secondary"
                             onClick={() => {
-                                this.props.changeView('data', 'data', false);
+                                this.props.changeView('data');
                             }}
                             size={'lg'}
                     >{'Data ' + (this.props.showContent ? '▲' : '▼')}</Button>
