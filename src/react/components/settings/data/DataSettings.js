@@ -4,6 +4,7 @@ import {DatasetLength} from "../Common";
 import {TaskSpecificForImclf, TaskSpecificForImsgm, TaskSpecificForTxtclf} from "./TaskSpecific";
 import {AdvancedForImclf, AdvancedForImsgm} from "./Advanced";
 import FadeIn from 'react-fade-in';
+import './test.css'
 
 const {dialog} = window.require('electron').remote;
 
@@ -89,6 +90,7 @@ class DataSettings extends Component {
         function cap(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
         }
+
         let key = 'shuffle' + cap(mode)
         this.props.setCommonState(this.props.type, key, event.target.checked)
         this.setState(state => {
@@ -98,7 +100,7 @@ class DataSettings extends Component {
     }
 
     render() {
-        if (!this.props.show) {
+        if (!this.props.showFull) {
             return null
         }
         let taskSpecificSettings;
@@ -138,73 +140,83 @@ class DataSettings extends Component {
         }
         return (
             <div align={'center'}>
-                <h3>Data</h3>
-
-                <h5>Dataset folder</h5>
                 <div>
+                    <Button style={{marginTop: '10px'}}
+                            variant="outline-secondary"
+                            onClick={() => {
+                                this.props.changeView('data', 'data', false);
+                            }}
+                            size={'lg'}
+                    >{'Data ' + (this.props.showContent ? '▲' : '▼')}</Button>
+                </div>
+
+                <div hidden={!this.props.showContent} className={'expandable'}>
+                    <h5>Dataset folder</h5>
                     <Button
                         variant="success"
                         type="submit"
                         onClick={this.chooseDatasetFolder}
                         size={'sm'}
                     >choose path</Button>
-                </div>
-                <div style={{fontSize: 10}}>{this.getCurrentDatasetFolder()}</div>
-                {taskSpecificSettings}
-                <Button style={{marginTop: '10px'}}
-                        variant="outline-secondary"
-                        onClick={this.handleFade.bind(this)}
-                        size={'sm'}
-                >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
-                {/*Common advanced*/}
-                <div hidden={!this.state.advancedPushed}>
-                    <FadeIn visible={this.state.fade} onComplete={() => {this.hide()}}>
-                        <h5>Train dataset length</h5>
-                        <DatasetLength
-                            len={this.props.data.common.trainLen}
-                            type={'train'}
-                            lenNumeric={this.state.trainLenNumeric}
-                            handleLengthCheckbox={this.handleLengthCheckbox}
-                            handleLengthNumber={this.handleLengthNumber}
-                        />
+                    <div style={{fontSize: 10}}>{this.getCurrentDatasetFolder()}</div>
+                    {taskSpecificSettings}
+                    <Button style={{marginTop: '10px'}}
+                            variant="outline-secondary"
+                            onClick={this.handleFade.bind(this)}
+                            size={'sm'}
+                    >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
+                    {/*Common advanced*/}
+                    <div hidden={!this.state.advancedPushed}>
+                        <FadeIn visible={this.state.fade} onComplete={() => {
+                            this.hide()
+                        }}>
+                            <h5>Train dataset length</h5>
+                            <DatasetLength
+                                len={this.props.data.common.trainLen}
+                                type={'train'}
+                                lenNumeric={this.state.trainLenNumeric}
+                                handleLengthCheckbox={this.handleLengthCheckbox}
+                                handleLengthNumber={this.handleLengthNumber}
+                            />
 
-                        <h5>Val dataset length</h5>
-                        <DatasetLength
-                            len={this.props.data.common.valLen}
-                            type={'val'}
-                            lenNumeric={this.state.valLenNumeric}
-                            handleLengthCheckbox={this.handleLengthCheckbox}
-                            handleLengthNumber={this.handleLengthNumber}
-                        />
+                            <h5>Val dataset length</h5>
+                            <DatasetLength
+                                len={this.props.data.common.valLen}
+                                type={'val'}
+                                lenNumeric={this.state.valLenNumeric}
+                                handleLengthCheckbox={this.handleLengthCheckbox}
+                                handleLengthNumber={this.handleLengthNumber}
+                            />
 
-                        <h5>Shuffle</h5>
-                        <Row className="justify-content-md-center">
-                            <Col md="auto">
-                                <div>Train</div>
-                                <Form.Check
-                                    type={'checkbox'}
-                                    checked={this.props.data.common.shuffleTrain}
-                                    onChange={(event) => {
-                                        event.persist();
-                                        this.handleShuffleCheckbox(event, 'train')
-                                    }}
-                                />
-                            </Col>
-                            <Col md="Val">
-                                <div>Val</div>
-                                <Form.Check
-                                    type={'checkbox'}
-                                    checked={this.props.data.common.shuffleVal}
-                                    onChange={(event) => {
-                                        event.persist();
-                                        this.handleShuffleCheckbox(event, 'val')
-                                    }}
-                                />
-                            </Col>
-                        </Row>
-                        {/*Task specific advanced*/}
-                        {advancedSettings}
-                    </FadeIn>
+                            <h5>Shuffle</h5>
+                            <Row className="justify-content-md-center">
+                                <Col md="auto">
+                                    <div>Train</div>
+                                    <Form.Check
+                                        type={'checkbox'}
+                                        checked={this.props.data.common.shuffleTrain}
+                                        onChange={(event) => {
+                                            event.persist();
+                                            this.handleShuffleCheckbox(event, 'train')
+                                        }}
+                                    />
+                                </Col>
+                                <Col md="Val">
+                                    <div>Val</div>
+                                    <Form.Check
+                                        type={'checkbox'}
+                                        checked={this.props.data.common.shuffleVal}
+                                        onChange={(event) => {
+                                            event.persist();
+                                            this.handleShuffleCheckbox(event, 'val')
+                                        }}
+                                    />
+                                </Col>
+                            </Row>
+                            {/*Task specific advanced*/}
+                            {advancedSettings}
+                        </FadeIn>
+                    </div>
                 </div>
             </div>
         )

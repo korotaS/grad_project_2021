@@ -128,7 +128,7 @@ class TrainingSettings extends Component {
     }
 
     render() {
-        if (!this.props.show) {
+        if (!this.props.showFull) {
             return null
         }
         let taskSpecificSettings;
@@ -150,141 +150,149 @@ class TrainingSettings extends Component {
         }
         return (
             <div align={'center'}>
-                <h3>Training</h3>
+                <Button style={{marginTop: '10px'}}
+                        variant="outline-secondary"
+                        onClick={() => {
+                            this.props.changeView('training', 'training', false);
+                        }}
+                        size={'lg'}
+                >{'Training ' + (this.props.showContent ? '▲' : '▼')}</Button>
 
-                <h5>Device</h5>
-                <Form.Control as="select" custom style={{width: '50%'}}
-                              onChange={this.handleGpuChange.bind(this)}>
-                    {['cpu'].concat(this.getGpuRange()).map((obj, index) => {
-                        return (
-                            <option key={index} value={obj}>{obj}</option>
-                        )
-                    })}
-                </Form.Control>
+                <div hidden={!this.props.showContent}>
+                    <h5>Device</h5>
+                    <Form.Control as="select" custom style={{width: '50%'}}
+                                  onChange={this.handleGpuChange.bind(this)}>
+                        {['cpu'].concat(this.getGpuRange()).map((obj, index) => {
+                            return (
+                                <option key={index} value={obj}>{obj}</option>
+                            )
+                        })}
+                    </Form.Control>
 
-                <h5>Max epochs</h5>
-                <Numeric value={this.props.data.common.maxEpochs} nameKey={'maxEpochs'} type={this.props.type}
-                         passData={this.props.setCommonState}/>
+                    <h5>Max epochs</h5>
+                    <Numeric value={this.props.data.common.maxEpochs} nameKey={'maxEpochs'} type={this.props.type}
+                             passData={this.props.setCommonState}/>
 
-                <h5>Batch size</h5>
-                <Row className="justify-content-md-center">
-                    <Col md="auto">
-                        <div>Train</div>
-                        <Form.Control as="select" custom defaultValue={8}
-                                      onChange={(event) => {
-                                          this.handleBatchSize(event, 'train')
-                                      }}>
-                            {this.getBatchSizeRange().map((obj, index) => {
-                                return (
-                                    <option key={index} value={obj}>{obj}</option>
-                                )
-                            })}
-                        </Form.Control>
-                    </Col>
-                    <Col md="auto">
-                        <div>Val</div>
-                        <Form.Control as="select" custom defaultValue={8}
-                                      onChange={(event) => {
-                                          this.handleBatchSize(event, 'val')
-                                      }}>
-                            {this.getBatchSizeRange().map((obj, index) => {
-                                return (
-                                    <option key={index} value={obj}>{obj}</option>
-                                )
-                            })}
-                        </Form.Control>
-                    </Col>
-                </Row>
+                    <h5>Batch size</h5>
+                    <Row className="justify-content-md-center">
+                        <Col md="auto">
+                            <div>Train</div>
+                            <Form.Control as="select" custom defaultValue={8}
+                                          onChange={(event) => {
+                                              this.handleBatchSize(event, 'train')
+                                          }}>
+                                {this.getBatchSizeRange().map((obj, index) => {
+                                    return (
+                                        <option key={index} value={obj}>{obj}</option>
+                                    )
+                                })}
+                            </Form.Control>
+                        </Col>
+                        <Col md="auto">
+                            <div>Val</div>
+                            <Form.Control as="select" custom defaultValue={8}
+                                          onChange={(event) => {
+                                              this.handleBatchSize(event, 'val')
+                                          }}>
+                                {this.getBatchSizeRange().map((obj, index) => {
+                                    return (
+                                        <option key={index} value={obj}>{obj}</option>
+                                    )
+                                })}
+                            </Form.Control>
+                        </Col>
+                    </Row>
 
-                <h5>Workers</h5>
-                <Numeric value={this.props.data.common.workers} nameKey={'workers'} type={this.props.type}
-                         passData={this.props.setCommonState} min={0}/>
+                    <h5>Workers</h5>
+                    <Numeric value={this.props.data.common.workers} nameKey={'workers'} type={this.props.type}
+                             passData={this.props.setCommonState} min={0}/>
 
-                <h5>Learning rate</h5>
-                <input
-                    type="number" min={0} max={Infinity} step={0.1}
-                    value={this.props.data.common.optimizer.params.lr}
-                    onChange={(event) => {
-                        event.persist();
-                        this.handleLrChange(event)
-                    }}
-                    style={{width: '50%'}}
-                />
-                {taskSpecificSettings}
-                <Button style={{marginTop: '10px'}} variant="outline-secondary"
-                        onClick={this.handleFade.bind(this)} size={'sm'}
-                >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
-                {/*Common advanced*/}
-                <div hidden={!this.state.advancedPushed}>
-                    <FadeIn visible={this.state.fade} onComplete={() => {
-                        this.hide()
-                    }}>
-                        <h5>Optimizer</h5>
-                        <div>Name</div>
-                        <Form.Control as="select" custom style={{width: '50%'}}
-                                      onChange={(event) => {
-                                          this.handleOptNameChange(event)
-                                      }}>
-                            {this.state.optimizers.map((obj, index) => {
-                                return (
-                                    <option key={index} value={obj}>{obj}</option>
-                                )
-                            })}
-                        </Form.Control>
-                        <div>Params</div>
-                        <Form.Check
-                            label={'no params'} type={'checkbox'} checked={this.state.noParams}
-                            onChange={(event) => {
-                                event.persist();
-                                this.handleNoParamsCheckbox(event)
-                            }}
-                        />
-                        <div hidden={this.state.paramsValid}>Please enter the valid YAML.</div>
-                        <div className="container_editor_area">
-                            <Editor
-                                disabled={this.state.noParams}
-                                value={this.state.params}
-                                onValueChange={this.handleParams.bind(this)}
-                                highlight={code => highlight(code, languages.yaml, 'yaml')}
-                                padding={10}
-                                onClick={() => {
-                                }}
-                                style={{
-                                    fontSize: 15,
-                                    width: '50%',
+                    <h5>Learning rate</h5>
+                    <input
+                        type="number" min={0} max={Infinity} step={0.1}
+                        value={this.props.data.common.optimizer.params.lr}
+                        onChange={(event) => {
+                            event.persist();
+                            this.handleLrChange(event)
+                        }}
+                        style={{width: '50%'}}
+                    />
+                    {taskSpecificSettings}
+                    <Button style={{marginTop: '10px'}} variant="outline-secondary"
+                            onClick={this.handleFade.bind(this)} size={'sm'}
+                    >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
+                    {/*Common advanced*/}
+                    <div hidden={!this.state.advancedPushed}>
+                        <FadeIn visible={this.state.fade} onComplete={() => {
+                            this.hide()
+                        }}>
+                            <h5>Optimizer</h5>
+                            <div>Name</div>
+                            <Form.Control as="select" custom style={{width: '50%'}}
+                                          onChange={(event) => {
+                                              this.handleOptNameChange(event)
+                                          }}>
+                                {this.state.optimizers.map((obj, index) => {
+                                    return (
+                                        <option key={index} value={obj}>{obj}</option>
+                                    )
+                                })}
+                            </Form.Control>
+                            <div>Params</div>
+                            <Form.Check
+                                label={'no params'} type={'checkbox'} checked={this.state.noParams}
+                                onChange={(event) => {
+                                    event.persist();
+                                    this.handleNoParamsCheckbox(event)
                                 }}
                             />
-                        </div>
+                            <div hidden={this.state.paramsValid}>Please enter the valid YAML.</div>
+                            <div className="container_editor_area">
+                                <Editor
+                                    disabled={this.state.noParams}
+                                    value={this.state.params}
+                                    onValueChange={this.handleParams.bind(this)}
+                                    highlight={code => highlight(code, languages.yaml, 'yaml')}
+                                    padding={10}
+                                    onClick={() => {
+                                    }}
+                                    style={{
+                                        fontSize: 15,
+                                        width: '50%',
+                                    }}
+                                />
+                            </div>
 
-                        <h5>Checkpoint</h5>
-                        <div>Monitor</div>
-                        <Row className="justify-content-md-center">
-                            <Col xs="auto">
-                                <Form.Check
-                                    type={'radio'} label={'Loss'} value={'val_loss'}
-                                    checked={this.props.data.common.checkpointCallback.monitor === 'val_loss'}
-                                    onChange={(event) => {
-                                        event.persist();
-                                        this.handleCheckMonitorChange(event)
-                                    }}/>
-                            </Col>
-                            <Col xs="auto">
-                                <Form.Check
-                                    type={'radio'} label={this.props.taskSubClass === 'imsgm' ? 'IOU' : 'Accuracy'}
-                                    value={this.props.taskSubClass === 'imsgm' ? 'val_iou' : 'val_acc'}
-                                    checked={this.props.data.common.checkpointCallback.monitor !== 'val_loss'}
-                                    onChange={(event) => {
-                                        event.persist();
-                                        this.handleCheckMonitorChange(event)
-                                    }}/>
-                            </Col>
-                        </Row>
-                        <div>Save top K</div>
-                        <Numeric value={this.props.data.common.checkpointCallback.save_top_k}
-                                 nameKey={'checkpointCallback.save_top_k'}
-                                 type={this.props.type}
-                                 passData={this.props.setCommonState} max={100}/>
-                    </FadeIn>
+                            <h5>Checkpoint</h5>
+                            <div>Monitor</div>
+                            <Row className="justify-content-md-center">
+                                <Col xs="auto">
+                                    <Form.Check
+                                        type={'radio'} label={'Loss'} value={'val_loss'}
+                                        checked={this.props.data.common.checkpointCallback.monitor === 'val_loss'}
+                                        onChange={(event) => {
+                                            event.persist();
+                                            this.handleCheckMonitorChange(event)
+                                        }}/>
+                                </Col>
+                                <Col xs="auto">
+                                    <Form.Check
+                                        type={'radio'} label={this.props.taskSubClass === 'imsgm' ? 'IOU' : 'Accuracy'}
+                                        value={this.props.taskSubClass === 'imsgm' ? 'val_iou' : 'val_acc'}
+                                        checked={this.props.data.common.checkpointCallback.monitor !== 'val_loss'}
+                                        onChange={(event) => {
+                                            event.persist();
+                                            this.handleCheckMonitorChange(event)
+                                        }}/>
+                                </Col>
+                            </Row>
+                            <div>Save top K</div>
+                            <Numeric value={this.props.data.common.checkpointCallback.save_top_k}
+                                     nameKey={'checkpointCallback.save_top_k'}
+                                     type={this.props.type}
+                                     passData={this.props.setCommonState} max={100}/>
+                        </FadeIn>
+                    </div>
                 </div>
             </div>
         )

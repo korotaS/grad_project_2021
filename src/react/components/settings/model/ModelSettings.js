@@ -1,9 +1,10 @@
 import React, {Component} from 'react';
 import {ModelSettingsForImclf, ModelSettingsForImsgm, ModelSettingsForTxtclf} from "./TaskSpecific";
+import {Button} from "react-bootstrap";
 
 class ModelSettings extends Component {
     render() {
-        if (!this.props.show) {
+        if (!this.props.showFull) {
             return null
         }
         let taskSpecificSettings;
@@ -25,8 +26,16 @@ class ModelSettings extends Component {
         }
         return (
             <div align={'center'}>
-                <h3>Model</h3>
-                {taskSpecificSettings}
+                <Button style={{marginTop: '10px'}}
+                        variant="outline-secondary"
+                        onClick={() => {
+                            this.props.changeView('model', 'model', false);
+                        }}
+                        size={'lg'}
+                >{'Model ' + (this.props.showContent ? '▲' : '▼')}</Button>
+                <div hidden={!this.props.showContent}>
+                    {taskSpecificSettings}
+                </div>
             </div>
         )
     }

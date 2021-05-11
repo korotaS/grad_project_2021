@@ -34,10 +34,10 @@ const startPythonSubprocess = () => {
 const createMainWindow = (x_custom, y_custom) => {
     // Create the browser mainWindow
     mainWindow = new BrowserWindow({
-        width: 1200,
-        minWidth: 1200,
-        height: 800,
-        minHeight: 800,
+        width: 800,
+        minWidth: 800,
+        height: 1000,
+        minHeight: 1000,
         x: x_custom,
         y: y_custom,
         resizeable: true,

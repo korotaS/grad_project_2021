@@ -1,12 +1,12 @@
 import React, {Component} from 'react';
-import {Col, Row} from "react-bootstrap";
+import {Button, Col, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
 import DataSettings from "./settings/data/DataSettings"
 import ModelSettings from "./settings/model/ModelSettings";
 import TrainingSettings from "./settings/training/TrainingSettings";
 import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
-import FadeIn from 'react-fade-in';
+import {makeConfigFromState, validateConfig} from "./utils/configSettings";
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -67,6 +67,17 @@ class Main extends Component {
                 training: false,
                 tbLaunched: false,
                 tbLink: ''
+            },
+            view: {
+                viewData: false,
+                viewModel: false,
+                viewTraining: false,
+                viewFooter: false,
+
+                pushedNames: false,
+                pushedData: false,
+                pushedModel: false,
+                pushedTraining: false
             }
         };
 
@@ -74,7 +85,7 @@ class Main extends Component {
         this.changeSubTaskChoice = this.changeSubTaskChoice.bind(this);
         this.changeProjectName = this.changeProjectName.bind(this);
         this.changeExpName = this.changeExpName.bind(this);
-        this.makeConfigFromState = this.makeConfigFromState.bind(this);
+        this.changeView = this.changeView.bind(this);
     }
 
     changeTaskChoice(event) {
@@ -83,6 +94,9 @@ class Main extends Component {
             state.general.pushedTask = true;
             state.general.pushedSubTask = false;
             state.general.subTask = ''
+            for (const key of Object.keys(state.view)) {
+                state.view[key] = false
+            }
             return state
         })
     }
@@ -91,6 +105,9 @@ class Main extends Component {
         this.setState(state => {
             state.general.subTask = event.target.value;
             state.general.pushedSubTask = true;
+            for (const key of Object.keys(state.view)) {
+                state.view[key] = false
+            }
             return state
         })
     }
@@ -99,6 +116,20 @@ class Main extends Component {
         let value = event.target.value;
         this.setState(state => {
             state.general.projectName = value;
+            return state
+        })
+    }
+
+    changeView(pushedKey, viewKey, onlyShow = true) {
+        function cap(string) {
+            return string.charAt(0).toUpperCase() + string.slice(1);
+        }
+
+        pushedKey = cap(pushedKey)
+        viewKey = cap(viewKey)
+        this.setState(state => {
+            let key1 = 'view' + viewKey
+            state.view[key1] = onlyShow ? true : !state.view[key1]
             return state
         })
     }
@@ -139,8 +170,8 @@ class Main extends Component {
             state.run.training = true
             return state
         })
-        let config = this.makeConfigFromState()
-        if (this.validateConfig(config)) {
+        let config = makeConfigFromState(this.state)
+        if (validateConfig(config)) {
             ipcRenderer.send('runTraining', {
                 config: config,
             });
@@ -151,97 +182,6 @@ class Main extends Component {
     stopTraining() {
         console.log('Stopping training!')
         ipcRenderer.send('stopTraining');
-    }
-
-    makeConfigFromState() {
-        const camelToSnakeCase = str => str.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
-
-        let cc = this.state.training.common.checkpointCallback;
-        let config = {
-            general: {
-                task: this.state.general.task,
-                subtask: this.state.general.subTask,
-                project_name: this.state.general.projectName,
-                exp_name: this.state.general.expName
-            },
-            data: {},
-            model: {},
-            trainer: {},
-            training: {},
-            optimizer: {
-                name: this.state.training.common.optimizer.name,
-                params: {
-                    lr: this.state.training.common.optimizer.params.lr,
-                    ...this.state.training.common.optimizer.paramsAdd
-                }
-            },
-            scheduler: {
-                name: 'ReduceLROnPlateau',
-                params: {
-                    factor: 0.6,
-                    patience: 25,
-                    min_lr: 1.0e-5,
-                    verbose: true
-                }
-            },
-            checkpoint_callback: {
-                mode: cc.mode,
-                monitor: cc.monitor,
-                save_top_k: cc.save_top_k,
-                verbose: true,
-                filename: `{epoch}_{${cc.monitor}:.3f}`
-            }
-        };
-        ['data', 'model', 'training'].forEach(key => {
-            ['common', 'taskSpecific'].forEach(mode => {
-                for (const [innerKey, value] of Object.entries(this.state[key][mode])) {
-                    if (innerKey === 'checkpointCallback') {
-                        continue
-                    }
-                    if (key === 'training') {
-                        switch (innerKey) {
-                            case 'maxEpochs': {
-                                config.trainer.max_epochs = value
-                                break
-                            }
-                            case 'gpus': {
-                                config.trainer.gpus = value
-                                break
-                            }
-                            case 'optimizer': {
-                                break
-                            }
-                            default: {
-                                config[key][camelToSnakeCase(innerKey)] = value
-                            }
-                        }
-                    } else {
-                        config[key][camelToSnakeCase(innerKey)] = value
-                    }
-                }
-            })
-        })
-        // ADVANCED
-        config.general.project_name = 'project_test'
-        config.general.exp_name = 'exp_1'
-        config.data.dataset_folder = '/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats'
-        return config
-    }
-
-    validateConfig(config) {
-        if (config.general.project_name === '') {
-            alert('Please enter project name!')
-            return false
-        }
-        if (config.general.exp_name === '') {
-            alert('Please enter experiment name!')
-            return false
-        }
-        if (config.data.dataset_folder === '') {
-            alert('Please choose dataset folder!')
-            return false
-        }
-        return true
     }
 
     componentDidMount() {
@@ -280,57 +220,69 @@ class Main extends Component {
                         changeSubTaskChoice: this.changeSubTaskChoice,
                         ...this.state.general
                     })}
-                    <FadeIn visible={this.state.general.pushedSubTask}>
-                        {ChooseNames({
-                            changeProjectName: this.changeProjectName,
-                            changeExpName: this.changeExpName,
-                            ...this.state.general
-                        })}
-                        <Row style={{marginTop: "10px"}}>
-                            <Col>
-                                <DataSettings show={this.state.general.pushedSubTask}
+                    {ChooseNames({
+                        changeProjectName: this.changeProjectName,
+                        changeExpName: this.changeExpName,
+                        changeView: this.changeView,
+                        ...this.state.general
+                    })}
+                    <Row style={{marginTop: "10px"}}>
+                        <Col>
+                            <DataSettings showContent={this.state.view.viewData}
+                                          showFull={this.state.general.pushedSubTask}
+                                          taskSubClass={this.state.general.subTask}
+                                          changeView={this.changeView}
+                                          data={this.state.data}
+                                          type={'data'}
+                                          setCommonState={this.setCommonState.bind(this)}
+                                          setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                          clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                            <ModelSettings showContent={this.state.view.viewModel}
+                                           showFull={this.state.general.pushedSubTask}
+                                           taskSubClass={this.state.general.subTask}
+                                           changeView={this.changeView}
+                                           data={this.state.model}
+                                           type={'model'}
+                                           setCommonState={this.setCommonState.bind(this)}
+                                           setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                           clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                            <TrainingSettings showContent={this.state.view.viewTraining}
+                                              showFull={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
-                                              data={this.state.data}
-                                              type={'data'}
+                                              changeView={this.changeView}
+                                              numGpus={this.state.numGpus}
+                                              data={this.state.training}
+                                              type={'training'}
                                               setCommonState={this.setCommonState.bind(this)}
                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                            </Col>
-                            <Col>
-                                <ModelSettings show={this.state.general.pushedSubTask}
-                                               taskSubClass={this.state.general.subTask}
-                                               data={this.state.model}
-                                               type={'model'}
-                                               setCommonState={this.setCommonState.bind(this)}
-                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                            </Col>
-                            <Col>
-                                <TrainingSettings show={this.state.general.pushedSubTask}
-                                                  taskSubClass={this.state.general.subTask}
-                                                  numGpus={this.state.numGpus}
-                                                  data={this.state.training}
-                                                  type={'training'}
-                                                  setCommonState={this.setCommonState.bind(this)}
-                                                  setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                                  clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                            </Col>
-                        </Row>
-                        <Row style={{marginTop: "10px"}} align={'center'}>
-                            <Col>
-                                <TrainButtons show={this.state.general.pushedSubTask}
-                                              training={this.state.run.training}
-                                              runTraining={this.runTraining.bind(this)}
-                                              stopTraining={this.stopTraining.bind(this)}/>
-                            </Col>
-                        </Row>
-                        <Row style={{marginTop: "10px"}} align={'center'}>
-                            <Col>
-                                <TBButtons show={this.state.general.pushedSubTask}/>
-                            </Col>
-                        </Row>
-                        <TextLog show={this.state.general.pushedSubTask}/>
-                    </FadeIn>
+                        </Col>
+                    </Row>
+                    <div hidden={!this.state.general.pushedSubTask} align={'center'}>
+                        <Button style={{marginTop: '10px'}}
+                                variant="outline-secondary"
+                                onClick={() => {
+                                    this.changeView('footer', 'footer', false);
+                                }}
+                                size={'lg'}
+                        >{'Run! ' + (this.state.view.viewFooter ? '▲' : '▼')}</Button>
+                        <div hidden={!this.state.view.viewFooter}>
+                            <Row style={{marginTop: "10px"}} align={'center'}>
+                                <Col>
+                                    <TrainButtons show={this.state.general.pushedSubTask}
+                                                  training={this.state.run.training}
+                                                  runTraining={this.runTraining.bind(this)}
+                                                  stopTraining={this.stopTraining.bind(this)}/>
+                                </Col>
+                            </Row>
+                            <Row style={{marginTop: "10px"}} align={'center'}>
+                                <Col>
+                                    <TBButtons show={this.state.general.pushedSubTask}/>
+                                </Col>
+                            </Row>
+                            <TextLog show={this.state.general.pushedSubTask}/>
+                        </div>
+                    </div>
                 </header>
             </div>
         );
