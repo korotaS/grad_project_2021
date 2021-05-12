@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button, Col, Row} from "react-bootstrap";
+import {Col, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
 import DataSettings from "./settings/data/DataSettings"
 import ModelSettings from "./settings/model/ModelSettings";
@@ -7,7 +7,7 @@ import TrainingSettings from "./settings/training/TrainingSettings";
 import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
 import {makeConfigFromState, validateConfig} from "./utils/configSettings";
-import {ExportModal} from "./ExportModal";
+import {ExportModal, NameMissingModal} from "./Modals";
 import Carousel from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
 
@@ -77,7 +77,8 @@ class Main extends Component {
                 viewTraining: false,
                 viewFooter: false,
                 viewExport: false,
-
+                missingMessage: '',
+                missingValue: '',
                 carouselIndex: 0
             }
         };
@@ -91,40 +92,83 @@ class Main extends Component {
     }
 
     handleCarouselChange(value) {
-        this.setState(state => {
-            state.view.carouselIndex = value;
-            return state
-        })
+        let ok = true
+        if (value === 3) {
+            if (this.state.general.projectName === '') {
+                this.setState(state => {
+                    state.view.missingMessage = 'Please enter project name.'
+                    return state
+                })
+                ok = false
+            } else if (this.state.general.expName === '') {
+                this.setState(state => {
+                    state.view.missingMessage = 'Please enter experiment name.'
+                    return state
+                })
+                ok = false
+            }
+        } else if (value === 4) {
+            if (this.state.data.common.datasetFolder === '') {
+                this.setState(state => {
+                    state.view.missingMessage = 'Please choose dataset folder.'
+                    return state
+                })
+                ok = false
+            }
+        }
+        if (ok) {
+            this.setState(state => {
+                state.view.carouselIndex = value;
+                return state
+            })
+        }
     }
 
     changeTaskChoice(event) {
-        this.setState(state => {
-            state.general.task = event.target.value;
-            state.general.pushedTask = true;
-            state.general.pushedSubTask = false;
-            state.general.subTask = ''
-            for (const key of Object.keys(state.view)) {
-                if (key.includes('view')) {
-                    state.view[key] = false
+        if (this.state.general.pushedSubTask) {
+            this.setState(state => {
+                state.view.missingMessage = 'Are you sure you want to change task? Some settings may be lost.'
+                state.view.missingValue = event.target.value
+                return state
+            })
+        } else {
+            this.setState(state => {
+                state.general.task = event.target.value;
+                state.general.pushedTask = true;
+                state.general.pushedSubTask = false;
+                state.general.subTask = ''
+                for (const key of Object.keys(state.view)) {
+                    if (key.includes('view')) {
+                        state.view[key] = false
+                    }
                 }
-            }
-            state.view.carouselIndex = 1
-            return state
-        })
+                state.view.carouselIndex = 1
+                return state
+            })
+        }
     }
 
     changeSubTaskChoice(event) {
-        this.setState(state => {
-            state.general.subTask = event.target.value;
-            state.general.pushedSubTask = true;
-            for (const key of Object.keys(state.view)) {
-                if (key.includes('view')) {
-                    state.view[key] = false
+        if (this.state.general.pushedSubTask) {
+            this.setState(state => {
+                state.view.missingMessage = 'Are you sure you want to change subtask? Some settings may be lost.'
+                state.view.missingValue = event.target.value
+                return state
+            })
+        } else {
+            this.setState(state => {
+                state.general.subTask = event.target.value;
+                state.general.pushedSubTask = true;
+                for (const key of Object.keys(state.view)) {
+                    if (key.includes('view')) {
+                        state.view[key] = false
+                    }
                 }
-            }
-            state.view.carouselIndex = 2
-            return state
-        })
+                state.view.carouselIndex = 2
+                return state
+            })
+        }
+
     }
 
     changeProjectName(event) {
@@ -205,6 +249,32 @@ class Main extends Component {
         })
     }
 
+    hideMissingModal(value = '') {
+        this.setState(state => {
+            state.view.missingMessage = ''
+            state.view.missingValue = ''
+            if (value !== '') {
+                if (['cv', 'nlp'].includes(value)) {
+                    state.general.task = value;
+                    state.general.pushedTask = true;
+                    state.general.pushedSubTask = false;
+                    state.general.subTask = ''
+                    state.view.carouselIndex = 1
+                } else {
+                    state.general.subTask = value;
+                    state.general.pushedSubTask = true;
+                    state.view.carouselIndex = 2
+                }
+                for (const key of Object.keys(state.view)) {
+                    if (key.includes('view')) {
+                        state.view[key] = false
+                    }
+                }
+            }
+            return state
+        })
+    }
+
     componentDidMount() {
         if (this.state.numGpus === -1) {
             ipcRenderer.send('getNumGpus');
@@ -233,7 +303,7 @@ class Main extends Component {
         return (
             <Row className="align-items-center" style={{minHeight: '100vh'}}>
                 <Col>
-                    <div className="Main" >
+                    <div className="Main">
                         <header className="main">
                             {/*<div align={'center'}>*/}
                             {/*    <Button variant="primary" onClick={() => this.setShowExport(true)}>*/}
@@ -310,6 +380,12 @@ class Main extends Component {
                             <ExportModal
                                 show={this.state.view.viewExport}
                                 onHide={() => this.setShowExport(false)}
+                            />
+                            <NameMissingModal
+                                show={this.state.view.missingMessage !== ''}
+                                onHide={this.hideMissingModal.bind(this)}
+                                message={this.state.view.missingMessage}
+                                value={this.state.view.missingValue}
                             />
                         </header>
                     </div>

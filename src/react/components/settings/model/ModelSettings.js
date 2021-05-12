@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import {ModelSettingsForImclf, ModelSettingsForImsgm, ModelSettingsForTxtclf} from "./TaskSpecific";
-import {Button} from "react-bootstrap";
 
 class ModelSettings extends Component {
     render() {

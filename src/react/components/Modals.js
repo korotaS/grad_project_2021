@@ -162,3 +162,34 @@ export class ExportModal extends Component {
         )
     }
 }
+
+export function NameMissingModal(props) {
+    let buttons;
+    if (props.value !== '') {
+        buttons = (
+            <div>
+                <Button variant="secondary" onClick={() => props.onHide()}>Close</Button>
+                <Button variant="primary" onClick={() => props.onHide(props.value)}>Change</Button>
+            </div>
+        )
+    } else {
+        buttons = (
+            <Button onClick={() => props.onHide()}>Got it!</Button>
+        )
+    }
+    return (
+        <Modal
+            {...props}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Body>
+                <h5>{props.message}</h5>
+            </Modal.Body>
+            <Modal.Footer>
+                {buttons}
+            </Modal.Footer>
+        </Modal>
+    );
+}
