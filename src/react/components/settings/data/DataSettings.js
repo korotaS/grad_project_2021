@@ -140,13 +140,7 @@ class DataSettings extends Component {
         return (
             <div align={'center'}>
                 <div>
-                    <Button style={{marginTop: '10px'}}
-                            variant="outline-secondary"
-                            onClick={() => {
-                                this.props.changeView('data');
-                            }}
-                            size={'lg'}
-                    >{'Data ' + (this.props.showContent ? '▲' : '▼')}</Button>
+                    <h3>Data</h3>
                 </div>
 
                 <div hidden={!this.props.showContent} className={'expandable'}>

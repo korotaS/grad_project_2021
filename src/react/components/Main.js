@@ -8,6 +8,8 @@ import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
 import {makeConfigFromState, validateConfig} from "./utils/configSettings";
 import {ExportModal} from "./ExportModal";
+import Carousel from '@brainhubeu/react-carousel';
+import '@brainhubeu/react-carousel/lib/style.css';
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -74,8 +76,9 @@ class Main extends Component {
                 viewModel: false,
                 viewTraining: false,
                 viewFooter: false,
+                viewExport: false,
 
-                viewExport: false
+                carouselIndex: 0
             }
         };
 
@@ -84,6 +87,14 @@ class Main extends Component {
         this.changeProjectName = this.changeProjectName.bind(this);
         this.changeExpName = this.changeExpName.bind(this);
         this.changeView = this.changeView.bind(this);
+        this.handleCarouselChange = this.handleCarouselChange.bind(this);
+    }
+
+    handleCarouselChange(value) {
+        this.setState(state => {
+            state.view.carouselIndex = value;
+            return state
+        })
     }
 
     changeTaskChoice(event) {
@@ -93,8 +104,11 @@ class Main extends Component {
             state.general.pushedSubTask = false;
             state.general.subTask = ''
             for (const key of Object.keys(state.view)) {
-                state.view[key] = false
+                if (key.includes('view')) {
+                    state.view[key] = false
+                }
             }
+            state.view.carouselIndex = 1
             return state
         })
     }
@@ -104,8 +118,11 @@ class Main extends Component {
             state.general.subTask = event.target.value;
             state.general.pushedSubTask = true;
             for (const key of Object.keys(state.view)) {
-                state.view[key] = false
+                if (key.includes('view')) {
+                    state.view[key] = false
+                }
             }
+            state.view.carouselIndex = 2
             return state
         })
     }
@@ -214,91 +231,90 @@ class Main extends Component {
             return null
         }
         return (
-            <div className="Main">
-                <header className="main">
-                    <div align={'center'}>
-                        <Button variant="primary" onClick={() => this.setShowExport(true)}>
-                            Export
-                        </Button>
-                    </div>
-                    {ChooseMainTask({
-                        changeTaskChoice: this.changeTaskChoice,
-                        ...this.state.general
-                    })}
-                    {ChooseSubTask({
-                        changeSubTaskChoice: this.changeSubTaskChoice,
-                        ...this.state.general
-                    })}
-                    {ChooseNames({
-                        changeProjectName: this.changeProjectName,
-                        changeExpName: this.changeExpName,
-                        changeView: this.changeView,
-                        ...this.state.general
-                    })}
-                    <Row style={{marginTop: "10px"}}>
-                        <Col>
-                            <DataSettings showContent={this.state.view.viewData}
-                                          showFull={this.state.general.pushedSubTask}
-                                          taskSubClass={this.state.general.subTask}
-                                          changeView={this.changeView}
-                                          data={this.state.data}
-                                          type={'data'}
-                                          setCommonState={this.setCommonState.bind(this)}
-                                          setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                          clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                            <ModelSettings showContent={this.state.view.viewModel}
-                                           showFull={this.state.general.pushedSubTask}
-                                           taskSubClass={this.state.general.subTask}
-                                           changeView={this.changeView}
-                                           data={this.state.model}
-                                           type={'model'}
-                                           setCommonState={this.setCommonState.bind(this)}
-                                           setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                           clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                            <TrainingSettings showContent={this.state.view.viewTraining}
+            <Row className="align-items-center" style={{minHeight: '100vh'}}>
+                <Col>
+                    <div className="Main" >
+                        <header className="main">
+                            {/*<div align={'center'}>*/}
+                            {/*    <Button variant="primary" onClick={() => this.setShowExport(true)}>*/}
+                            {/*        Export*/}
+                            {/*    </Button>*/}
+                            {/*</div>*/}
+                            <Carousel value={this.state.view.carouselIndex}
+                                      onChange={this.handleCarouselChange}
+                                      plugins={this.state.general.pushedSubTask ? ['arrows'] : []}
+                                      draggable={false}>
+                                {ChooseMainTask({
+                                    changeTaskChoice: this.changeTaskChoice,
+                                    ...this.state.general
+                                })}
+                                {ChooseSubTask({
+                                    changeSubTaskChoice: this.changeSubTaskChoice,
+                                    ...this.state.general
+                                })}
+                                {ChooseNames({
+                                    changeProjectName: this.changeProjectName,
+                                    changeExpName: this.changeExpName,
+                                    changeView: this.changeView,
+                                    ...this.state.general
+                                })}
+                                <DataSettings showContent={true}
                                               showFull={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
                                               changeView={this.changeView}
-                                              numGpus={this.state.numGpus}
-                                              data={this.state.training}
-                                              type={'training'}
+                                              data={this.state.data}
+                                              type={'data'}
                                               setCommonState={this.setCommonState.bind(this)}
                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                        </Col>
-                    </Row>
-                    <div hidden={!this.state.general.pushedSubTask} align={'center'}>
-                        <Button style={{marginTop: '10px'}}
-                                variant="outline-secondary"
-                                onClick={() => {
-                                    this.changeView('footer');
-                                }}
-                                size={'lg'}
-                        >{'Run! ' + (this.state.view.viewFooter ? '▲' : '▼')}</Button>
-                        <div hidden={!this.state.view.viewFooter}>
-                            <Row style={{marginTop: "10px"}} align={'center'}>
-                                <Col>
-                                    <TrainButtons show={this.state.general.pushedSubTask}
-                                                  training={this.state.run.training}
-                                                  runTraining={this.runTraining.bind(this)}
-                                                  stopTraining={this.stopTraining.bind(this)}/>
-                                </Col>
-                            </Row>
-                            <Row style={{marginTop: "10px"}} align={'center'}>
-                                <Col>
-                                    <TBButtons show={this.state.general.pushedSubTask}/>
-                                </Col>
-                            </Row>
-                            <TextLog show={this.state.general.pushedSubTask}/>
-                        </div>
-                    </div>
+                                <ModelSettings showContent={true}
+                                               showFull={this.state.general.pushedSubTask}
+                                               taskSubClass={this.state.general.subTask}
+                                               changeView={this.changeView}
+                                               data={this.state.model}
+                                               type={'model'}
+                                               setCommonState={this.setCommonState.bind(this)}
+                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                                <TrainingSettings showContent={true}
+                                                  showFull={this.state.general.pushedSubTask}
+                                                  taskSubClass={this.state.general.subTask}
+                                                  changeView={this.changeView}
+                                                  numGpus={this.state.numGpus}
+                                                  data={this.state.training}
+                                                  type={'training'}
+                                                  setCommonState={this.setCommonState.bind(this)}
+                                                  setTaskSpecificState={this.setTaskSpecificState.bind(this)}
+                                                  clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                                <div hidden={!this.state.general.pushedSubTask} align={'center'}>
+                                    <h3>Run</h3>
+                                    <div>
+                                        <Row style={{marginTop: "10px"}} align={'center'}>
+                                            <Col>
+                                                <TrainButtons show={this.state.general.pushedSubTask}
+                                                              training={this.state.run.training}
+                                                              runTraining={this.runTraining.bind(this)}
+                                                              stopTraining={this.stopTraining.bind(this)}/>
+                                            </Col>
+                                        </Row>
+                                        <Row style={{marginTop: "10px"}} align={'center'}>
+                                            <Col>
+                                                <TBButtons show={this.state.general.pushedSubTask}/>
+                                            </Col>
+                                        </Row>
+                                        <TextLog show={this.state.general.pushedSubTask}/>
+                                    </div>
+                                </div>
+                            </Carousel>
 
-                    <ExportModal
-                        show={this.state.view.viewExport}
-                        onHide={() => this.setShowExport(false)}
-                    />
-                </header>
-            </div>
+                            <ExportModal
+                                show={this.state.view.viewExport}
+                                onHide={() => this.setShowExport(false)}
+                            />
+                        </header>
+                    </div>
+                </Col>
+            </Row>
         );
     }
 }

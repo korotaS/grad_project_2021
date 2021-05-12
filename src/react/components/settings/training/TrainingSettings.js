@@ -150,13 +150,7 @@ class TrainingSettings extends Component {
         }
         return (
             <div align={'center'}>
-                <Button style={{marginTop: '10px'}}
-                        variant="outline-secondary"
-                        onClick={() => {
-                            this.props.changeView('training');
-                        }}
-                        size={'lg'}
-                >{'Training ' + (this.props.showContent ? '▲' : '▼')}</Button>
+                <h3>Training</h3>
 
                 <div hidden={!this.props.showContent}>
                     <h5>Device</h5>

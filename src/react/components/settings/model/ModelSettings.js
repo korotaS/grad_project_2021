@@ -26,13 +26,7 @@ class ModelSettings extends Component {
         }
         return (
             <div align={'center'}>
-                <Button style={{marginTop: '10px'}}
-                        variant="outline-secondary"
-                        onClick={() => {
-                            this.props.changeView('model');
-                        }}
-                        size={'lg'}
-                >{'Model ' + (this.props.showContent ? '▲' : '▼')}</Button>
+                <h3>Model</h3>
                 <div hidden={!this.props.showContent}>
                     {taskSpecificSettings}
                 </div>
