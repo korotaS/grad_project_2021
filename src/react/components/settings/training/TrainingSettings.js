@@ -1,12 +1,11 @@
 import React, {Component} from 'react';
-import {Button, Col, Form, Row} from "react-bootstrap";
+import {Button, Col, Collapse, Form, Row} from "react-bootstrap";
 import {Numeric} from "../Common";
 import {TrainingSettingsForImclf, TrainingSettingsForImsgm, TrainingSettingsForTxtclf} from "./TaskSpecific";
 import Editor from 'react-simple-code-editor';
 import {highlight, languages} from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-yaml';
 import "prismjs/themes/prism-coy.css";
-import FadeIn from 'react-fade-in';
 
 const yaml = require('js-yaml');
 
@@ -17,7 +16,6 @@ class TrainingSettings extends Component {
             optimizers: ['Adam', 'SGD', 'RMSprop', 'Adadelta', 'Adagrad', 'AdamW',
                 'SparseAdam', 'Adamax', 'ASGD', 'LBFGS', 'Rprop'],
             advancedPushed: false,
-            fade: false,
             advancedTexts: ['Advanced ▼', 'Advanced ▲'],
 
             noParams: true,
@@ -67,23 +65,11 @@ class TrainingSettings extends Component {
         this.props.setCommonState(this.props.type, 'optimizer.params.lr', value)
     }
 
-    handleFade() {
+    handleAdvanced() {
         this.setState(state => {
-            state.fade = !state.fade
-            if (!this.state.advancedPushed) {
-                state.advancedPushed = !state.advancedPushed
-            }
+            state.advancedPushed = !state.advancedPushed
             return state
         })
-    }
-
-    hide() {
-        if (this.state.advancedPushed && !this.state.fade) {
-            this.setState(state => {
-                state.advancedPushed = !state.advancedPushed
-                return state
-            })
-        }
     }
 
     handleCheckMonitorChange(event) {
@@ -212,14 +198,12 @@ class TrainingSettings extends Component {
                         style={{width: '50%'}}
                     />
                     {taskSpecificSettings}
-                    <Button style={{marginTop: '10px'}} variant="outline-secondary"
-                            onClick={this.handleFade.bind(this)} size={'sm'}
+                    <Button style={{marginTop: '10px', marginBottom: '5px'}} variant="outline-secondary"
+                            onClick={this.handleAdvanced.bind(this)} size={'sm'}
                     >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
                     {/*Common advanced*/}
-                    <div hidden={!this.state.advancedPushed}>
-                        <FadeIn visible={this.state.fade} onComplete={() => {
-                            this.hide()
-                        }}>
+                    <Collapse in={this.state.advancedPushed}>
+                        <div>
                             <h5>Optimizer</h5>
                             <div>Name</div>
                             <Form.Control as="select" custom style={{width: '50%'}}
@@ -285,8 +269,8 @@ class TrainingSettings extends Component {
                                      nameKey={'checkpointCallback.save_top_k'}
                                      type={this.props.type}
                                      passData={this.props.setCommonState} max={100}/>
-                        </FadeIn>
-                    </div>
+                        </div>
+                    </Collapse>
                 </div>
             </div>
         )
