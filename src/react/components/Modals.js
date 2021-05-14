@@ -1,5 +1,6 @@
 import {Button, Form, FormControl, Modal} from "react-bootstrap";
 import React, {Component} from 'react';
+import '../styles/modals.css'
 
 const {dialog} = window.require('electron').remote;
 const {ipcRenderer} = window.require("electron");
@@ -189,6 +190,29 @@ export function NameMissingModal(props) {
             </Modal.Body>
             <Modal.Footer>
                 {buttons}
+            </Modal.Footer>
+        </Modal>
+    );
+}
+
+export function TracebackModal(props) {
+    return (
+        <Modal
+            {...props}
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+            dialogClassName="modal-traceback"
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    Traceback
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                 <p style={{whiteSpace: 'pre-line'}}>{props.value}</p>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="primary" onClick={props.onHide}>Close</Button>
             </Modal.Footer>
         </Modal>
     );

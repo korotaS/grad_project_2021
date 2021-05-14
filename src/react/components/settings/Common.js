@@ -1,6 +1,7 @@
 import {Button, Col, Form, Row} from "react-bootstrap";
 import React, {Component} from "react";
 import openSocket from 'socket.io-client';
+import {TracebackModal} from "../Modals";
 
 const {ipcRenderer} = window.require("electron");
 
@@ -147,7 +148,10 @@ export class TextLog extends Component {
             log: [],
             socket: null,
             port: null,
-            listenerSet: false
+            listenerSet: false,
+
+            showTraceback: false,
+            currentTracebackIndex: null
         }
 
         this.textLog = React.createRef();
@@ -159,6 +163,17 @@ export class TextLog extends Component {
         this.setState(state => {
             state.text = '';
             state.log = []
+            state.currentTracebackIndex = null
+            return state
+        });
+    }
+
+    setShowTraceback(value, index = null) {
+        this.setState(state => {
+            if (index !== null) {
+                state.currentTracebackIndex = index
+            }
+            state.showTraceback = value;
             return state
         });
     }
@@ -187,7 +202,7 @@ export class TextLog extends Component {
                 let ex = JSON.parse(data.toString())
                 let ex_string = `Error: ${ex.name}\nMessage: ${ex.message}`
                 this.setState(state => {
-                    state.log = state.log.concat({text: ex_string, error: true})
+                    state.log = state.log.concat({text: ex_string, error: true, traceback: ex.traceback})
                     return state
                 });
                 this.props.stopTraining()
@@ -220,6 +235,10 @@ export class TextLog extends Component {
                                 marginBottom: '0px',
                                 whiteSpace: 'pre-line'
                             }}>{obj.text}</p>
+                            {obj.error
+                                ? <div style={{color: 'gray'}}
+                                       onClick={() => this.setShowTraceback(true, index)}>(show full traceback)</div>
+                                : null}
                         </div>
                     )
                 })}
@@ -230,14 +249,6 @@ export class TextLog extends Component {
     render() {
         if (!this.props.show) {
             return null
-        }
-
-        const textAreaStyle = {
-            height: '300px',
-            minHeight: '300px',
-            width: '100%',
-            fontSize: '15px',
-            marginTop: '10px',
         }
 
         let log = this.renderLog()
@@ -251,6 +262,11 @@ export class TextLog extends Component {
                         onClick={this.clearLogs.bind(this)}
                     >Clear logs</Button>
                 </Form>
+                <TracebackModal show={this.state.showTraceback}
+                                onHide={() => this.setShowTraceback(false)}
+                                value={this.state.currentTracebackIndex === null
+                                    ? null
+                                    : this.state.log[this.state.currentTracebackIndex].traceback}/>
             </div>
         )
     }
