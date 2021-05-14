@@ -143,7 +143,8 @@ export class TextLog extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            text: 'asdfg',
+            text: '',
+            log: [],
             socket: null,
             port: null,
             listenerSet: false
@@ -157,6 +158,7 @@ export class TextLog extends Component {
         event.preventDefault();
         this.setState(state => {
             state.text = '';
+            state.log = []
             return state
         });
     }
@@ -175,11 +177,20 @@ export class TextLog extends Component {
             this.state.socket.on('log', data => {
                 this.setState(state => {
                     if (data.toString().trim().length > 0) {
-                        let prefix = state.text === '' ? '' : '\n'
-                        state.text += prefix + data.toString().trim();
+                        state.log = state.log.concat({text: data.toString().trim(), error: false})
                     }
                     return state
                 });
+            })
+
+            this.state.socket.on('exception', data => {
+                let ex = JSON.parse(data.toString())
+                let ex_string = `Error: ${ex.name}\nMessage: ${ex.message}`
+                this.setState(state => {
+                    state.log = state.log.concat({text: ex_string, error: true})
+                    return state
+                });
+                this.props.stopTraining()
             })
         }
     }
@@ -197,6 +208,25 @@ export class TextLog extends Component {
         }.bind(this));
     }
 
+    renderLog() {
+        return (
+            <div style={{height: '300px', width: '600px', overflow: 'auto', border: '4px solid black'}}
+                 align={'left'} ref={this.textLog}>
+                {this.state.log.map((obj, index) => {
+                    return (
+                        <div key={index}>
+                            <p style={{
+                                color: obj.error ? 'red' : 'black',
+                                marginBottom: '0px',
+                                whiteSpace: 'pre-line'
+                            }}>{obj.text}</p>
+                        </div>
+                    )
+                })}
+            </div>
+        )
+    }
+
     render() {
         if (!this.props.show) {
             return null
@@ -210,13 +240,11 @@ export class TextLog extends Component {
             marginTop: '10px',
         }
 
+        let log = this.renderLog()
         return (
             <div style={{marginBottom: '10px'}}>
                 <Form style={{marginLeft: '10px', marginRight: '10px'}}>
-                    <textarea ref={this.textLog}
-                              value={this.state.text}
-                              readOnly={true}
-                              style={textAreaStyle}/>
+                    {log}
                     <Button
                         variant="success"
                         type="submit"

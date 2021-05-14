@@ -1,6 +1,8 @@
+import json
 import logging
 import sys
 from threading import Thread
+import traceback
 
 import yaml
 
@@ -31,6 +33,14 @@ class MainThread(Thread):
                 self.trainer.run()
         except StoppingTrainingException:
             pass
+        except Exception as e:
+            ex_log = {
+                'message': e.args[0],
+                'name': e.__class__.__name__,
+                'traceback': traceback.format_exc()
+            }
+            if self.skt is not None:
+                self.skt.emit('exception', json.dumps(ex_log))
 
     def stop_training(self):
         try:

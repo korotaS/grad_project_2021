@@ -243,6 +243,13 @@ class Main extends Component {
         ipcRenderer.send('stopTraining');
     }
 
+    stopTrainingFromLogs() {
+        this.setState(state => {
+            state.run.training = false;
+            return state
+        })
+    }
+
     setShowExport(value) {
         this.setState(state => {
             state.view.viewExport = value
@@ -305,9 +312,9 @@ class Main extends Component {
             resolve: arrowsPlugin,
             options: {
                 arrowLeft: <LeftArrow/>,
-                arrowLeftDisabled: <div style={{width: '60px'}}> </div>,
+                arrowLeftDisabled: <div style={{width: '60px'}}></div>,
                 arrowRight: <RightArrow/>,
-                arrowRightDisabled: <div style={{width: '60px'}}> </div>,
+                arrowRightDisabled: <div style={{width: '60px'}}></div>,
                 addArrowClickHandler: true,
             }
         }
@@ -323,7 +330,7 @@ class Main extends Component {
                             {/*</div>*/}
                             <Carousel value={this.state.view.carouselIndex}
                                       onChange={this.handleCarouselChange}
-                                plugins={this.state.general.pushedSubTask ? [arrows] : []}
+                                      plugins={this.state.general.pushedSubTask ? [arrows] : []}
                                       draggable={false}>
                                 {ChooseMainTask({
                                     changeTaskChoice: this.changeTaskChoice,
@@ -383,7 +390,8 @@ class Main extends Component {
                                                 <TBButtons show={this.state.general.pushedSubTask}/>
                                             </Col>
                                         </Row>
-                                        <TextLog show={this.state.general.pushedSubTask}/>
+                                        <TextLog show={this.state.general.pushedSubTask}
+                                                 stopTraining={this.stopTrainingFromLogs.bind(this)}/>
                                     </div>
                                 </div>
                             </Carousel>
