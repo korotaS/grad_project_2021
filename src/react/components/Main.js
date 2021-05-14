@@ -8,8 +8,9 @@ import {TBButtons, TrainButtons} from "./Launching";
 import {TextLog} from "./settings/Common";
 import {makeConfigFromState, validateConfig} from "./utils/configSettings";
 import {ExportModal, NameMissingModal} from "./Modals";
-import Carousel from '@brainhubeu/react-carousel';
+import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
+import {LeftArrow, RightArrow} from "./utils/Arrows";
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -300,6 +301,16 @@ class Main extends Component {
         if (this.state.port === -1) {
             return null
         }
+        let arrows = {
+            resolve: arrowsPlugin,
+            options: {
+                arrowLeft: <LeftArrow/>,
+                arrowLeftDisabled: <div style={{width: '60px'}}> </div>,
+                arrowRight: <RightArrow/>,
+                arrowRightDisabled: <div style={{width: '60px'}}> </div>,
+                addArrowClickHandler: true,
+            }
+        }
         return (
             <Row className="align-items-center" style={{minHeight: '100vh'}}>
                 <Col>
@@ -312,7 +323,7 @@ class Main extends Component {
                             {/*</div>*/}
                             <Carousel value={this.state.view.carouselIndex}
                                       onChange={this.handleCarouselChange}
-                                      plugins={this.state.general.pushedSubTask ? ['arrows'] : []}
+                                plugins={this.state.general.pushedSubTask ? [arrows] : []}
                                       draggable={false}>
                                 {ChooseMainTask({
                                     changeTaskChoice: this.changeTaskChoice,
