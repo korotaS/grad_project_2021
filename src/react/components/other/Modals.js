@@ -264,17 +264,20 @@ export function ErrorModal(props) {
     );
 }
 
-export class RemoteModal extends Component {
+export class LocalToRemoteModal extends Component {
     constructor(props) {
         super(props);
         this.state = {
             connecting: false,
-            afterTestedMessage: '',
+            message: '',
             creds: {
                 host: '46.138.241.190',
                 port: '8819'
             }
         }
+
+        this.connect = this.connect.bind(this);
+        this.clearState = this.clearState.bind(this);
     }
 
     changeRemoteField(event, field) {
@@ -285,33 +288,64 @@ export class RemoteModal extends Component {
         })
     }
 
-    testConnection() {
+    clearState() {
         this.setState(state => {
-            state.connecting = true
-            state.afterTestedMessage = ''
+            state.message = ''
+            state.connecting = false
+            state.creds.host = ''
+            state.creds.port = ''
             return state
         })
-        ipcRenderer.send('testConnection', this.state.creds);
+    }
+
+    connect(test) {
+        if (this.state.creds.host === '') {
+            this.setState(state => {
+                state.message = 'Please enter host.'
+                return state
+            })
+        } else if (this.state.creds.port === '') {
+            this.setState(state => {
+                state.message = 'Please enter port.'
+                return state
+            })
+        } else {
+            this.setState(state => {
+                state.connecting = true
+                state.message = ''
+                return state
+            })
+            ipcRenderer.send('testConnection', {...this.state.creds, test: test});
+        }
+
     }
 
     componentDidMount() {
         ipcRenderer.on('testedConnection', function (e, data) {
-            this.setState(state => {
-                state.connecting = false
-                if (data.status === 'ok') {
-                    state.afterTestedMessage = 'Connected successfully!'
-                } else {
-                    state.afterTestedMessage = `Failed to connect due to error: ${data.errorName}`
-                }
-                return state
-            })
+            if (data.status === 'ok' && !data.test) {
+                this.props.onHide({
+                    status: 'connected',
+                    ...this.state.creds
+                })
+                this.clearState()
+            } else {
+                this.setState(state => {
+                    state.connecting = false
+                    if (data.status === 'ok') {
+                        state.message = 'Connected successfully!'
+                    } else {
+                        state.message = `Failed to connect due to error: ${data.errorName}`
+                    }
+                    return state
+                })
+            }
         }.bind(this))
     }
 
     render() {
         let afterTestedText
-        if (this.state.afterTestedMessage) {
-            afterTestedText = <div>{this.state.afterTestedMessage}</div>
+        if (this.state.message) {
+            afterTestedText = <div>{this.state.message}</div>
         }
 
         return (
@@ -319,6 +353,10 @@ export class RemoteModal extends Component {
                 {...this.props}
                 aria-labelledby="contained-modal-title-vcenter"
                 centered
+                onHide={() => {
+                    this.clearState();
+                    this.props.onHide()
+                }}
             >
                 <Modal.Header closeButton>
                     <Modal.Title id="contained-modal-title-vcenter">
@@ -336,13 +374,35 @@ export class RemoteModal extends Component {
                 </Modal.Body>
                 <Modal.Footer>
                     <Button variant="primary" style={{transition: "none"}}
-                            onClick={this.testConnection.bind(this)}
+                            onClick={() => this.connect(true)}
                             disabled={this.state.connecting}
-                    >{this.state.connecting ? 'Connecting' : 'Test connection'}</Button>
+                    >{this.state.connecting ? 'Connecting...' : 'Test connection'}</Button>
                     <Button variant="primary" style={{transition: "none"}}
+                            onClick={() => this.connect(false)}
                             disabled={this.state.connecting}>Connect</Button>
                 </Modal.Footer>
             </Modal>
         );
     }
+}
+
+export function RemoteToLocalModal(props) {
+    return (
+        <Modal
+            {...props}
+            size="lg"
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+        >
+            <Modal.Body>
+                <h5>Are you sure you want to change from remote server to local?</h5>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="secondary" onClick={() => props.onHide()}
+                        style={{transition: "none"}}>Cancel</Button>
+                <Button variant="primary" onClick={() => props.onHide(true)}
+                        style={{transition: "none"}}>Change</Button>
+            </Modal.Footer>
+        </Modal>
+    );
 }

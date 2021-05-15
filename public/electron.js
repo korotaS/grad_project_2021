@@ -259,7 +259,7 @@ ipcMain.on('testConnection', function (e, item) {
                 errorName: err.code
             });
         } else {
-            mainWindow.webContents.send('testedConnection', {status: 'ok'});
+            mainWindow.webContents.send('testedConnection', {status: 'ok', test: item.test});
         }
     })
 });

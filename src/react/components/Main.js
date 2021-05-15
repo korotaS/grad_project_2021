@@ -299,6 +299,28 @@ class Main extends Component {
         })
     }
 
+    onHideLocalToRemoteModal(data = null) {
+        if (data !== null && data.status === 'connected') {
+            this.setState(state => {
+                state.server.remote = true;
+                state.server.creds.host = data.host;
+                state.server.creds.port = data.port;
+                return state
+            })
+        }
+    }
+
+    onHideRemoteToLocalModal(change=false) {
+        if (change) {
+            this.setState(state => {
+                state.server.remote = false;
+                state.server.creds.host = 'localhost';
+                state.server.creds.port = '5000';
+                return state
+            })
+        }
+    }
+
     componentDidMount() {
         if (this.state.numGpus === -1) {
             ipcRenderer.send('getNumGpus');
@@ -349,7 +371,9 @@ class Main extends Component {
         return (
             <div>
                 <div>
-                    <Header/>
+                    <Header onHideLocalToRemoteModal={this.onHideLocalToRemoteModal.bind(this)}
+                            onHideRemoteToLocalModal={this.onHideRemoteToLocalModal.bind(this)}
+                            remoteToLocal={this.state.server.remote}/>
                 </div>
                 <Row className="align-items-center" style={{minHeight: '95vh'}}>
                     <Col>
