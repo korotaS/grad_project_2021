@@ -12,7 +12,8 @@ export class ExportModal extends Component {
             configPath: '',
             exportFolder: '',
             exportType: 'onnx',
-            exportPrefix: ''
+            exportPrefix: '',
+            error: null
         };
 
         this.submitChoice = this.submitChoice.bind(this);
@@ -29,6 +30,10 @@ export class ExportModal extends Component {
         } else if (this.state.exportFolder === "") {
             alert("Choose export folder please!")
         } else {
+            this.setState(state => {
+                state.error = null;
+                return state
+            })
             ipcRenderer.send('export', {
                 configPath: this.state.configPath,
                 exportFolder: this.state.exportFolder,
@@ -44,6 +49,7 @@ export class ExportModal extends Component {
             state.exportFolder = ''
             state.exportPrefix = ''
             state.exportType = 'onnx'
+            state.error = null
             return state
         })
     }
@@ -88,14 +94,26 @@ export class ExportModal extends Component {
     }
 
     onRadioChange = (event) => {
-        console.log(event.target.value);
         this.setState(state => {
             state.exportType = event.target.value;
             return state
         })
     }
 
+    componentDidMount() {
+        ipcRenderer.on('exportNetError', function (e, data) {
+            this.setState(state => {
+                state.error = data;
+                return state
+            })
+        }.bind(this))
+    }
+
     render() {
+        let errorMessage;
+        if (this.state.error !== null) {
+            errorMessage = <div>{`Error: ${this.state.error.message}`}</div>
+        }
         return (
             <Modal
                 {...this.props}
@@ -152,6 +170,7 @@ export class ExportModal extends Component {
                         />
                         <span style={{marginLeft: "5px"}}>JIT</span>
                         <br/>
+                        {errorMessage}
                         <Button style={{marginTop: '10px'}}
                                 variant="success"
                                 type="submit"
@@ -169,13 +188,15 @@ export function SmthWrongModal(props) {
     if (props.value !== '') {
         buttons = (
             <div>
-                <Button variant="secondary" onClick={() => props.onHide()}>Close</Button>
-                <Button variant="primary" onClick={() => props.onHide(props.value)}>Change</Button>
+                <Button variant="secondary" onClick={() => props.onHide()}
+                        style={{transition: "none"}}>Close</Button>
+                <Button variant="primary" onClick={() => props.onHide(props.value)}
+                        style={{transition: "none"}}>Change</Button>
             </div>
         )
     } else {
         buttons = (
-            <Button onClick={() => props.onHide()}>Got it!</Button>
+            <Button onClick={() => props.onHide()} style={{transition: "none"}}>Got it!</Button>
         )
     }
     return (
@@ -209,10 +230,35 @@ export function TracebackModal(props) {
                 </Modal.Title>
             </Modal.Header>
             <Modal.Body>
-                 <p style={{whiteSpace: 'pre-line'}}>{props.value}</p>
+                <p style={{whiteSpace: 'pre-line'}}>{props.value}</p>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="primary" onClick={props.onHide}>Close</Button>
+                <Button variant="primary" onClick={props.onHide} style={{transition: "none"}}>Close</Button>
+            </Modal.Footer>
+        </Modal>
+    );
+}
+
+export function ErrorModal(props) {
+    let errorName = props.value === null ? '' : props.value.name
+    let errorMessage = props.value === null ? '' : props.value.message
+    return (
+        <Modal
+            {...props}
+            aria-labelledby="contained-modal-title-vcenter"
+            centered
+            size={'lg'}
+        >
+            <Modal.Header closeButton>
+                <Modal.Title id="contained-modal-title-vcenter">
+                    {`Error: ${errorName}`}
+                </Modal.Title>
+            </Modal.Header>
+            <Modal.Body>
+                <h5>{errorMessage}</h5>
+            </Modal.Body>
+            <Modal.Footer>
+                <Button variant="primary" onClick={props.onHide} style={{transition: "none"}}>Close</Button>
             </Modal.Footer>
         </Modal>
     );

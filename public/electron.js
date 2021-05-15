@@ -108,6 +108,11 @@ ipcMain.on('runTraining', function (e, item) {
         path: '/init'
     });
 
+    request.on('error', (error) => {
+        let message = "Can't run training because python server is not running."
+        mainWindow.webContents.send('netError', {name: error.message, message: message, noTrain: true});
+    })
+
     let post_data = JSON.stringify(item.config);
     request.write(post_data);
     request.end();
@@ -125,44 +130,44 @@ ipcMain.on('stopTraining', function (e) {
         })
     });
     request.on('error', (error) => {
-        console.log(path);
-        console.log(error)
+        // console.log(path);
+        // console.log(error)
     })
     request.end()
 });
 
-ipcMain.on('configChosen', function (e, item) {
-    let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
-    const request = net.request({
-        method: 'POST',
-        hostname: 'localhost',
-        port: port,
-        path: '/validateConfig'
-    })
-
-    request.on('response', (response) => {
-        response.on('data', (data) => {
-            let json = JSON.parse(data.toString());
-            // dialog.showMessageBox({message: data.toString()});
-            if (json.status === 'ok') {
-                const requestInit = net.request({
-                    method: 'POST',
-                    hostname: 'localhost',
-                    port: port,
-                    path: '/init'
-                });
-                requestInit.write(post_data);
-                requestInit.end();
-            } else {
-                alert(json.error);
-            }
-        })
-    });
-
-    let post_data = JSON.stringify(config);
-    request.write(post_data);
-    request.end();
-});
+// ipcMain.on('configChosen', function (e, item) {
+//     let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
+//     const request = net.request({
+//         method: 'POST',
+//         hostname: 'localhost',
+//         port: port,
+//         path: '/validateConfig'
+//     })
+//
+//     request.on('response', (response) => {
+//         response.on('data', (data) => {
+//             let json = JSON.parse(data.toString());
+//             // dialog.showMessageBox({message: data.toString()});
+//             if (json.status === 'ok') {
+//                 const requestInit = net.request({
+//                     method: 'POST',
+//                     hostname: 'localhost',
+//                     port: port,
+//                     path: '/init'
+//                 });
+//                 requestInit.write(post_data);
+//                 requestInit.end();
+//             } else {
+//                 alert(json.error);
+//             }
+//         })
+//     });
+//
+//     let post_data = JSON.stringify(config);
+//     request.write(post_data);
+//     request.end();
+// });
 
 ipcMain.on('export', function (e, item) {
     let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
@@ -184,6 +189,11 @@ ipcMain.on('export', function (e, item) {
         })
     });
 
+    request.on('error', (error) => {
+        let message = "Can't export because python server is not running."
+        mainWindow.webContents.send('exportNetError', {name: error.message, message: message});
+    })
+
     let post_data = {
         cfg: config,
         cfgPath: item.configPath,
@@ -197,7 +207,6 @@ ipcMain.on('export', function (e, item) {
 
 ipcMain.on('launchTB', function (e, item) {
     const taskTypeForTB = item.taskTypeForTB;
-    console.log(taskTypeForTB);
 
     (async () => {
         const tb_port = await getPort({port: getPort.makeRange(6006, 6100)});
@@ -220,13 +229,9 @@ ipcMain.on('launchTB', function (e, item) {
             })
         });
         request.on('error', (error) => {
-            console.log(path);
-            console.log(error)
-            mainWindow.webContents.send('tbLaunched',
-                {
-                    status: 'error'
-                }
-            );
+            let message = "Can't launch TensorBoard because python server is not running."
+            mainWindow.webContents.send('netError', {name: error.message, message: message});
+            mainWindow.webContents.send('tbLaunched', {status: 'error'});
         })
         request.end()
     })();
@@ -258,7 +263,8 @@ ipcMain.on('getNumGpus', function (e) {
                 })
             });
             request.on('error', (error) => {
-
+                let message = "Can't get number of GPUs because python server is not running."
+                mainWindow.webContents.send('netError', {name: error.message, message: message});
             })
             request.end()
         } else {
@@ -269,51 +275,6 @@ ipcMain.on('getNumGpus', function (e) {
         mainWindow.webContents.send('gotNumGpus', JSON.stringify({numGpus: numGpus}));
     }
 });
-
-// ipcMain.on('submitChoice1', function (e, item) {
-//     mainWindow.webContents.send('afterChoice1', item);
-// });
-//
-// ipcMain.on('submitChoice2', function (e, item) {
-//     mainWindow.webContents.send('afterChoice2', item);
-// });
-//
-// ipcMain.on('submitChoice3', function (e, item) {
-//     const task = item.taskSubClass;
-//     const request = net.request(`http://localhost:${port}/getArchs/` + task);
-//     request.on('response', (response) => {
-//         response.on('data', (data) => {
-//             let json = JSON.parse(data.toString())
-//             item.architectures = json.architectures
-//             mainWindow.webContents.send('afterChoice3', item);
-//         })
-//     });
-//     request.end()
-// });
-//
-// ipcMain.on('submitChoice4', function (e, item) {
-//     const request = net.request({
-//         method: 'POST',
-//         hostname: 'localhost',
-//         port: 5000,
-//         path: '/init'
-//     })
-//
-//     request.on('response', (response) => {
-//         if (response.statusCode === 200) {
-//             response.on('data', (data) => {
-//                 let json = JSON.parse(data.toString());
-//                 if (json.status === 'INITIALIZED') {
-//                     mainWindow.webContents.send('projectInitialized', item.projectName);
-//                 }
-//             })
-//         }
-//     })
-//
-//     let post_data = JSON.stringify(item);
-//     request.write(post_data);
-//     request.end();
-// });
 
 // -----END OF RUNTIME-----
 

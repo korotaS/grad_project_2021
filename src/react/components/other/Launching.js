@@ -36,7 +36,6 @@ export class TBButtons extends Component {
     }
 
     launchTB(key) {
-        console.log(key);
         this.setState(state => {
             state.waiting = true
             return state
@@ -61,13 +60,16 @@ export class TBButtons extends Component {
                     return state
                 })
             } else if (args.status === 'error') {
-
+                this.setState(state => {
+                    state.tbLaunched = false;
+                    state.waiting = false
+                    return state
+                })
             }
 
         }.bind(this));
 
         ipcRenderer.on('tbKilled', function (e, data) {
-            console.log(data)
             this.setState(state => {
                 state.tbLaunched = false;
                 state.tbLink = '';

@@ -7,7 +7,7 @@ import TrainingSettings from "./settings/training/TrainingSettings";
 import {TrainButtons} from "./other/Launching";
 import {TextLog} from "./settings/Common";
 import {makeConfigFromState, validateConfig} from "./utils/configSettings";
-import {SmthWrongModal} from "./other/Modals";
+import {ErrorModal, SmthWrongModal} from "./other/Modals";
 import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
 import {LeftArrow, RightArrow} from "./utils/Arrows";
@@ -70,17 +70,12 @@ class Main extends Component {
             },
             run: {
                 training: false,
-                tbLaunched: false,
-                tbLink: ''
             },
             view: {
-                viewData: false,
-                viewModel: false,
-                viewTraining: false,
-                viewFooter: false,
                 missingMessage: '',
                 missingValue: '',
-                carouselIndex: 0
+                carouselIndex: 0,
+                error: null
             }
         };
 
@@ -290,6 +285,13 @@ class Main extends Component {
         })
     }
 
+    hideErrorModal() {
+        this.setState(state => {
+            state.view.error = null
+            return state
+        })
+    }
+
     componentDidMount() {
         if (this.state.numGpus === -1) {
             ipcRenderer.send('getNumGpus');
@@ -309,19 +311,31 @@ class Main extends Component {
                 return state
             })
         }.bind(this));
+
+        ipcRenderer.on('netError', function (e, data) {
+            this.setState(state => {
+                state.view.error = data;
+                if ('noTrain' in data) {
+                    state.run.training = false
+                }
+                return state
+            })
+        }.bind(this))
     }
 
     render() {
         if (this.state.port === -1) {
             return null
         }
+        let emptyTag = <div style={{width: '60px'}}></div>
+        let hideRight = this.state.general.pushedTask && !this.state.general.pushedSubTask
         let arrows = {
             resolve: arrowsPlugin,
             options: {
                 arrowLeft: <LeftArrow/>,
-                arrowLeftDisabled: <div style={{width: '60px'}}></div>,
-                arrowRight: <RightArrow/>,
-                arrowRightDisabled: <div style={{width: '60px'}}></div>,
+                arrowLeftDisabled: emptyTag,
+                arrowRight: hideRight ? emptyTag : <RightArrow/>,
+                arrowRightDisabled: emptyTag,
                 addArrowClickHandler: true,
             }
         }
@@ -335,7 +349,7 @@ class Main extends Component {
                         <div className="Main">
                             <Carousel value={this.state.view.carouselIndex}
                                       onChange={this.handleCarouselChange}
-                                      plugins={this.state.general.pushedSubTask ? [arrows] : []}
+                                      plugins={this.state.general.pushedTask ? [arrows] : []}
                                       draggable={false}>
                                 {ChooseMainTask({
                                     changeTaskChoice: this.changeTaskChoice,
@@ -394,12 +408,16 @@ class Main extends Component {
                                     </div>
                                 </div>
                             </Carousel>
+                            {/* MODALS */}
                             <SmthWrongModal
                                 show={this.state.view.missingMessage !== ''}
                                 onHide={this.hideMissingModal.bind(this)}
                                 message={this.state.view.missingMessage}
                                 value={this.state.view.missingValue}
                             />
+                            <ErrorModal show={this.state.view.error !== null}
+                                        onHide={this.hideErrorModal.bind(this)}
+                                        value={this.state.view.error}/>
                         </div>
                     </Col>
                 </Row>
