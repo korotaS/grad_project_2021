@@ -4,7 +4,7 @@ import torch.nn as nn
 from sklearn.metrics import classification_report, accuracy_score
 
 from src.python.utils.draw import draw_confusion_matrix
-from src.python.utils.utils import _configure_optimizers
+from src.python.utils.utils import _configure_optimizers, StoppingTrainingException
 
 
 class BaseTextClassificationModel(pl.LightningModule):
@@ -82,7 +82,7 @@ class LSTMTextClassificationModel(BaseTextClassificationModel):
     def training_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.train()
         _, torch_input, text_lengths, labels = batch
@@ -92,7 +92,7 @@ class LSTMTextClassificationModel(BaseTextClassificationModel):
     def validation_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.eval()
         raw_text, torch_input, text_lengths, labels = batch
@@ -123,7 +123,7 @@ class BertTextClassificationModel(BaseTextClassificationModel):
     def training_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.train()
         _, input_ids, mask, token_type_ids, labels = batch
@@ -133,7 +133,7 @@ class BertTextClassificationModel(BaseTextClassificationModel):
     def validation_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.eval()
         raw_text, input_ids, mask, token_type_ids, labels = batch

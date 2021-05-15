@@ -21,7 +21,7 @@ class RedirectStdStreams(object):
             custom_stderr = sys.stderr
         else:
             custom_stdout = SocketStdOut(skt)
-            custom_stderr = custom_stdout
+            custom_stderr = SocketStdOut(skt)
         logger = logging.getLogger("lightning")
         logger.setLevel(logging.INFO)
         handler = logging.StreamHandler(custom_stdout)

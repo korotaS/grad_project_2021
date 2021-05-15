@@ -7,7 +7,7 @@ from sklearn.metrics import classification_report, accuracy_score
 
 from src.python.utils.draw import draw_im_clf_predictions, draw_confusion_matrix, draw_prediction_masks_on_image, \
     draw_prediction_masks
-from src.python.utils.utils import _configure_optimizers
+from src.python.utils.utils import _configure_optimizers, StoppingTrainingException
 
 
 class ImageClassificationModel(pl.LightningModule):
@@ -43,7 +43,7 @@ class ImageClassificationModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.train()
         raw_images, inputs, labels = batch
@@ -64,7 +64,7 @@ class ImageClassificationModel(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.eval()
         raw_images, inputs, labels = batch
@@ -136,7 +136,7 @@ class ImageSegmentationModel(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.train()
         raw_images, images, masks = batch
@@ -157,7 +157,7 @@ class ImageSegmentationModel(pl.LightningModule):
     def validation_step(self, batch, batch_idx):
         if not self.running:
             print('\nSTOPPING TRAINING\n')
-            raise Exception
+            raise StoppingTrainingException
 
         self.model.eval()
         raw_images, images, masks = batch

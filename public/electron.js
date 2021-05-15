@@ -13,9 +13,9 @@ const DEV = true;
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let subpy = null;
-let PROJECT_NAME = '';
-let LAST_EPOCH = 0;
+let host = 'localhost'
 let port = 5000;
+let numGpus = -1
 
 // -----INITIALIZATION-----
 
@@ -25,21 +25,27 @@ const startPythonSubprocess = () => {
             port = await getPort({port: 5000});
             subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
             console.log(`started process at ${subpy.pid} on port ${port}`);
+            mainWindow.webContents.send('pythonPort', {port: port});
         })();
+    } else {
+        mainWindow.webContents.send('pythonPort', {port: port});
     }
 };
 
 const createMainWindow = (x_custom, y_custom) => {
     // Create the browser mainWindow
     mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 600,
+        width: 800,
+        minWidth: 800,
+        height: 1000,
+        minHeight: 1000,
         x: x_custom,
         y: y_custom,
         resizeable: true,
         webPreferences: {
             nodeIntegration: true,
-            enableRemoteModule: true
+            enableRemoteModule: true,
+            worldSafeExecuteJavaScript: true,
         }
     });
 
@@ -70,8 +76,8 @@ const createMainWindow = (x_custom, y_custom) => {
 // Some APIs can only be used after this event occurs.
 app.on("ready", function () {
     // start the backend server
-    startPythonSubprocess();
     createMainWindow(0, 0);
+    startPythonSubprocess();
 });
 
 // disable menu
@@ -91,79 +97,51 @@ app.on("activate", () => {
 
 // -----RUNTIME-----
 
-// ipcMain.on('startTraining', function (e, item) {
-//     PROJECT_NAME = item;
-//     const request = net.request(`http://localhost:${port}/runTrain/` + PROJECT_NAME);
-//     request.on('response', (response) => {
-//         response.on('data', (data) => {
-//             let json = JSON.parse(data.toString());
-//             if (json.status === 'ready') {
-//                 mainWindow.webContents.send('changeStatus', json.status);
-//                 checkStatus();
-//             }
-//         })
-//     });
-//     request.end()
-// });
-//
-// function checkStatus() {
-//     let rl = setInterval(function () {
-//         const request = net.request(`http://localhost:${port}/trainStatus/` + PROJECT_NAME + '/' + LAST_EPOCH);
-//         request.on('response', (response) => {
-//             response.on('data', (data) => {
-//                 let json = JSON.parse(data.toString());
-//                 mainWindow.webContents.send('changeStatus', json.status);
-//                 if (json.status === 'done') {
-//                     mainWindow.webContents.send('addEpochs', JSON.stringify(json.new_epochs));
-//                     clearInterval(rl);
-//                 } else if (!!json.new_epochs) {
-//                     LAST_EPOCH = json.new_epochs[json.new_epochs.length - 1].epoch_num;
-//                     mainWindow.webContents.send('addEpochs', JSON.stringify(json.new_epochs));
-//                 }
-//             })
-//         });
-//         request.end()
-//     }, 1500)
-// }
+ipcMain.on('getPythonPort', function (e) {
+    mainWindow.webContents.send('pythonPort', {port: port});
+});
 
-ipcMain.on('configChosen', function (e, item) {
-    let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
+ipcMain.on('runTraining', function (e, item) {
     const request = net.request({
         method: 'POST',
-        hostname: 'localhost',
+        hostname: host,
         port: port,
-        path: '/validateConfig'
+        path: '/init'
+    });
+
+    request.on('error', (error) => {
+        let message = "Can't run training because python server is not running."
+        mainWindow.webContents.send('netError', {name: error.message, message: message, noTrain: true});
     })
 
+    let post_data = JSON.stringify(item.config);
+    request.write(post_data);
+    request.end();
+});
+
+ipcMain.on('stopTraining', function (e) {
+    const path = `http://${host}:${port}/stopTraining`
+    const request = net.request(path);
     request.on('response', (response) => {
         response.on('data', (data) => {
             let json = JSON.parse(data.toString());
-            // dialog.showMessageBox({message: data.toString()});
             if (json.status === 'ok') {
-                const requestInit = net.request({
-                    method: 'POST',
-                    hostname: 'localhost',
-                    port: port,
-                    path: '/init'
-                });
-                requestInit.write(post_data);
-                requestInit.end();
-            } else {
-                alert(json.error);
+                mainWindow.webContents.send('trainingStopped');
             }
         })
     });
-
-    let post_data = JSON.stringify(config);
-    request.write(post_data);
-    request.end();
+    request.on('error', (error) => {
+        // console.log(path);
+        // console.log(error)
+    })
+    request.end()
 });
 
 ipcMain.on('export', function (e, item) {
     let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
     const request = net.request({
         method: 'POST',
-        hostname: 'localhost',
+        hostname: host,
         port: port,
         path: '/export'
     })
@@ -179,6 +157,11 @@ ipcMain.on('export', function (e, item) {
         })
     });
 
+    request.on('error', (error) => {
+        let message = "Can't export because python server is not running."
+        mainWindow.webContents.send('exportNetError', {name: error.message, message: message});
+    })
+
     let post_data = {
         cfg: config,
         cfgPath: item.configPath,
@@ -192,7 +175,6 @@ ipcMain.on('export', function (e, item) {
 
 ipcMain.on('launchTB', function (e, item) {
     const taskTypeForTB = item.taskTypeForTB;
-    console.log(taskTypeForTB);
 
     (async () => {
         const tb_port = await getPort({port: getPort.makeRange(6006, 6100)});
@@ -215,80 +197,86 @@ ipcMain.on('launchTB', function (e, item) {
             })
         });
         request.on('error', (error) => {
-            console.log(path);
-            console.log(error)
-            mainWindow.webContents.send('tbLaunched',
-                {
-                    status: 'error'
-                }
-            );
+            let message = "Can't launch TensorBoard because python server is not running."
+            mainWindow.webContents.send('netError', {name: error.message, message: message});
+            mainWindow.webContents.send('tbLaunched', {status: 'error'});
         })
         request.end()
     })();
 });
 
-ipcMain.on('stopTraining', function (e) {
-    const path = `http://localhost:${port}/stopTraining`
+ipcMain.on('killTB', function () {
+    const path = `http://localhost:${port}/killTB`
     const request = net.request(path);
     request.on('response', (response) => {
         response.on('data', (data) => {
             let json = JSON.parse(data.toString());
-            if (json.status === 'ok') {
-                mainWindow.webContents.send('trainingStopped');
-            }
+            mainWindow.webContents.send('tbKilled', {info: json.info});
         })
     });
-    request.on('error', (error) => {
-        console.log(path);
-        console.log(error)
-    })
     request.end()
 });
 
-// ipcMain.on('submitChoice1', function (e, item) {
-//     mainWindow.webContents.send('afterChoice1', item);
-// });
-//
-// ipcMain.on('submitChoice2', function (e, item) {
-//     mainWindow.webContents.send('afterChoice2', item);
-// });
-//
-// ipcMain.on('submitChoice3', function (e, item) {
-//     const task = item.taskSubClass;
-//     const request = net.request(`http://localhost:${port}/getArchs/` + task);
-//     request.on('response', (response) => {
-//         response.on('data', (data) => {
-//             let json = JSON.parse(data.toString())
-//             item.architectures = json.architectures
-//             mainWindow.webContents.send('afterChoice3', item);
-//         })
-//     });
-//     request.end()
-// });
-//
-// ipcMain.on('submitChoice4', function (e, item) {
-//     const request = net.request({
-//         method: 'POST',
-//         hostname: 'localhost',
-//         port: 5000,
-//         path: '/init'
-//     })
-//
-//     request.on('response', (response) => {
-//         if (response.statusCode === 200) {
-//             response.on('data', (data) => {
-//                 let json = JSON.parse(data.toString());
-//                 if (json.status === 'INITIALIZED') {
-//                     mainWindow.webContents.send('projectInitialized', item.projectName);
-//                 }
-//             })
-//         }
-//     })
-//
-//     let post_data = JSON.stringify(item);
-//     request.write(post_data);
-//     request.end();
-// });
+ipcMain.on('testConnection', function (e, item) {
+    const path = `http://${item.host}:${item.port}/health`
+    const request = require('request');
+    request.get({uri: path, timeout: 5000}, function (err, response, body) {
+        if (err) {
+            mainWindow.webContents.send('testedConnection', {
+                status: 'error',
+                errorName: err.code
+            });
+        } else {
+            mainWindow.webContents.send('testedConnection', {status: 'ok', test: item.test});
+        }
+    })
+});
+
+ipcMain.on('getNumGpus', function (e) {
+    if (SERVER_RUNNING) {
+        const path = `http://${host}:${port}/getNumGpus`
+        const request = net.request(path);
+        request.on('response', (response) => {
+            response.on('data', (data) => {
+                let json = JSON.parse(data.toString());
+                numGpus = json.numGpus
+                mainWindow.webContents.send('gotNumGpus', json);
+            })
+        });
+        request.on('error', (error) => {
+            let message = "Can't get number of GPUs because python server is not running."
+            mainWindow.webContents.send('netError', {name: error.message, message: message});
+        })
+        request.end()
+    } else {
+        numGpus = 0
+        mainWindow.webContents.send('gotNumGpus', {numGpus: numGpus});
+    }
+});
+
+ipcMain.on('changeToRemote', function (e, item) {
+    killPythonSubprocess().then(() => {
+        subpy = null
+        host = item.host
+        port = item.port
+    })
+})
+
+ipcMain.on('startNewPython', function () {
+    if (!SERVER_RUNNING) {
+        (async () => {
+            host = 'localhost'
+            port = await getPort({port: 5000});
+            subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
+            console.log(`started process at ${subpy.pid} on port ${port}`);
+            mainWindow.webContents.send('startedNewPython', {port: port});
+        })();
+    } else {
+        host = 'localhost'
+        port = 5000
+        mainWindow.webContents.send('startedNewPython', {port: port});
+    }
+})
 
 // -----END OF RUNTIME-----
 
@@ -300,8 +288,6 @@ function killPythonSubprocess() {
         if (!subpy.killed) {
             console.log(`killing python subprocess with pid=${subpy.pid}`);
             subpy.kill();
-            // console.log(`killing tensorboard subprocess with pid=${subtb.pid}`);
-            // subtb.kill();
         }
         cleanup_completed = true;
         return new Promise(function (resolve, reject) {

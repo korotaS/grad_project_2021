@@ -1,21 +1,22 @@
-import logging
-import sys
+import json
+import traceback
 from threading import Thread
 
 import yaml
+from pytorch_lightning.utilities.exceptions import MisconfigurationException
 
 from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer, TextClassificationTrainer
 from src.python.utils.seed import set_seed
 from src.python.utils.streams import RedirectStdStreams
-from src.python.utils.utils import camel_to_snake
+from src.python.utils.utils import StoppingTrainingException
 
 
 class MainThread(Thread):
     def __init__(self, cfg, test_cfg=None, skt=None):
         super().__init__()
+        self.cfg = cfg
         self.skt = skt
-        self.cfg = self.convert_params(cfg)
-        set_seed(self.cfg['training']['seed'])
+        set_seed(42)
         self.test_cfg = test_cfg
         subtask = self.cfg['general']['subtask']
         if subtask == 'imclf':
@@ -25,22 +26,25 @@ class MainThread(Thread):
         elif subtask == 'txtclf':
             self.trainer = TextClassificationTrainer(self.cfg, self.test_cfg)
 
-    def convert_params(self, d):
-        new_d = {camel_to_snake(key): self.convert_params(value) if isinstance(value, dict) else value
-                 for key, value in d.items()}
-        return new_d
-
     def run(self):
         try:
             with RedirectStdStreams(self.skt):
                 self.trainer.run()
-        except Exception:
+        except (StoppingTrainingException, MisconfigurationException):
             pass
+        except Exception as e:
+            ex_log = {
+                'message': e.args[0],
+                'name': e.__class__.__name__,
+                'traceback': traceback.format_exc()
+            }
+            if self.skt is not None:
+                self.skt.emit('exception', json.dumps(ex_log))
 
     def stop_training(self):
         try:
             self.trainer.stop_training()
-        except Exception:
+        except (StoppingTrainingException, MisconfigurationException):
             pass
 
 

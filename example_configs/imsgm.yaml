@@ -2,7 +2,7 @@ general:
   task: 'cv'
   subtask: 'imsgm'
   project_name: 'project_2'
-  exp_name: 'experiment_1'
+  exp_name: 'experiment_2'
 
 model:
   architecture: 'FPN'
@@ -20,6 +20,8 @@ data:
   in_channels: 3
   train_len: -1
   val_len: -1
+  shuffle_train: True
+  shuffle_val: False
 
 trainer:
   gpus: '3'
@@ -27,10 +29,8 @@ trainer:
 
 training:
   seed: 42
-  batch_size_train: 8
-  shuffle_train: True
+  batch_size_train: 32
   batch_size_val: 8
-  shuffle_val: False
   workers: 0
   criterion: 'JaccardLoss'
 
