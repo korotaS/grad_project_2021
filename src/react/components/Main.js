@@ -115,6 +115,20 @@ class Main extends Component {
                     return state
                 })
                 ok = false
+            } else if (this.state.data.taskSpecific.transformsTrain === 'not valid') {
+                this.setState(state => {
+                    state.view.missingMessage = 'Please enter the valid YAML for train transforms.'
+                    return state
+                })
+                ok = false
+            }
+        } else if (value === 6) {
+            if ('notValid' in this.state.training.common.optimizer.paramsAdd) {
+                this.setState(state => {
+                    state.view.missingMessage = 'Please enter the valid YAML for optimizer params.'
+                    return state
+                })
+                ok = false
             }
         }
         if (ok) {

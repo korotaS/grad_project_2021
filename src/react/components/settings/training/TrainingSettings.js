@@ -80,7 +80,7 @@ class TrainingSettings extends Component {
     }
 
     handleNoParamsCheckbox(event) {
-        let paramsConfig = {}
+        let paramsConfig = {notValid: true}
         try {
             paramsConfig = yaml.load(this.state.params)
         } catch {
@@ -93,7 +93,7 @@ class TrainingSettings extends Component {
     }
 
     handleParams(value) {
-        let paramsConfig = {}
+        let paramsConfig = {notValid: true}
         try {
             paramsConfig = yaml.load(value)
             this.setState(state => {
@@ -224,7 +224,7 @@ class TrainingSettings extends Component {
                                     this.handleNoParamsCheckbox(event)
                                 }}
                             />
-                            <div hidden={this.state.paramsValid}>Please enter the valid YAML.</div>
+                            <div hidden={this.state.noParams || this.state.paramsValid}>Please enter the valid YAML.</div>
                             <div className="container_editor_area">
                                 <Editor
                                     disabled={this.state.noParams}

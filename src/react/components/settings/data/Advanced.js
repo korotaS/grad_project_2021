@@ -30,7 +30,7 @@ export class AdvancedForImclf extends Component {
     }
 
     handleDefaultCheckbox(event) {
-        let transformsConfig = 'default'
+        let transformsConfig = 'not valid'
         try {
             transformsConfig = yaml.load(this.state._.transformsTrainCache)
         } catch {}
@@ -42,7 +42,7 @@ export class AdvancedForImclf extends Component {
     }
 
     handleTransformsTrain(value) {
-        let transformsConfig = 'default'
+        let transformsConfig = 'not valid'
         try {
             transformsConfig = yaml.load(value)
             this.setState(state => {
@@ -74,7 +74,7 @@ export class AdvancedForImclf extends Component {
                         this.handleDefaultCheckbox(event)
                     }}
                 />
-                <div hidden={this.state._.transformsValid}>Please enter the valid YAML.</div>
+                <div hidden={this.state._.transformsDefault || this.state._.transformsValid}>Please enter the valid YAML.</div>
                 <div className="container_editor_area">
                     <Editor
                         disabled={this.state._.transformsDefault}
