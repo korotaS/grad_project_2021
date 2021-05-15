@@ -1,7 +1,12 @@
-import json
 import argparse
+import json
+import os
+import sys
 
 from flask import jsonify, request
+import torch
+
+sys.path.append(os.getcwd())
 
 from src.python.app import socketio, app
 from src.python.train import MainThread
@@ -17,23 +22,9 @@ TB_THREAD.start()
 EXP_THREAD = None
 
 
-@app.route("/")
+@app.route("/health")
 def ping():
-    return jsonify({'status': STATUS})
-
-
-@app.route("/trainStatus/<project_name>/<last_epoch>")
-def train_status(project_name, last_epoch):
-    with open(f'projects/{project_name}/log.json', 'r') as r:
-        epochs = json.load(r)
-
-    response = {'status': epochs['status']}
-    if not epochs['epochs'] or epochs['epochs'][-1]['epoch_num'] == int(last_epoch):
-        response['new_epochs'] = None
-    else:
-        response['new_epochs'] = epochs['epochs'][int(last_epoch):]
-
-    return jsonify(response)
+    return jsonify({'status': 'ok'})
 
 
 @app.route("/init", methods=['POST'])
@@ -88,15 +79,24 @@ def launch_tb(task_key, tb_port):
     return jsonify({'status': 'ok', 'url': url})
 
 
-@app.route("/getArchs/<task>")
-def get_archs(task):
-    archs = get_image_architectures_by_type(task)
-    return jsonify({'architectures': archs})
+@app.route("/killTB")
+def kill_tb():
+    global TB_THREAD
+    killed = TB_THREAD.kill_tb()
+    return jsonify({'status': 'ok', 'info': killed})
+
+
+@app.route("/getNumGpus")
+def get_num_gpu():
+    return jsonify({'numGpus': torch.cuda.device_count()})
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=5000, required=False)
+    parser.add_argument('--expose', default=False, action='store_true', required=False)
     args = parser.parse_args()
     port = args.port
-    socketio.run(app, host='127.0.0.1', port=port)
+    expose = args.expose
+    host = '0.0.0.0' if expose else '127.0.0.1'
+    socketio.run(app, host=host, port=port)

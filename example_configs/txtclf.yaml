@@ -22,6 +22,8 @@ data:
   split: false
   train_len: 10000
   val_len: 2000
+  shuffle_train: True
+  shuffle_val: False
 
 cache_folder: 'embeddings/'
 
@@ -32,9 +34,7 @@ trainer:
 training:
   seed: 42
   batch_size_train: 64
-  shuffle_train: True
   batch_size_val: 64
-  shuffle_val: False
   workers: 0
   criterion: 'CrossEntropyLoss'
 

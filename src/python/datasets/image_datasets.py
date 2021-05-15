@@ -35,6 +35,9 @@ class ImageClassificationDataset(BaseDataset):
         for value in self.info.values():
             if not os.path.exists(os.path.join(self.images_path, value['filename'])):
                 raise DatasetContentError(f'File with name {value["filename"]} not found in {self.images_path}')
+            if value['label'] not in self.labels:
+                raise DatasetContentError(f'Label "{value["label"]}" from {self.info_path} '
+                                          f'is not in {list(self.labels.keys())}')
         print(f'{self.path}: Content OK!')
 
     def __len__(self):

@@ -46,10 +46,16 @@ class BaseTextClassificationDataset(BaseDataset):
                     data = json.load(r)
                 if 'text' not in data or 'label' not in data:
                     raise DatasetContentError(f'"text" or "label" key missing in {filename}')
+                if data['label'] not in self.labels:
+                    raise DatasetContentError(f'Label "{data["label"]}" from {self.json_path} '
+                                              f'is not in {list(self.labels.keys())}')
         else:
             for key, value in self.data.items():
                 if 'text' not in value or 'label' not in value:
                     raise DatasetContentError(f'"text" or "label" key missing in {self.json_path}, key={key}')
+                if value['label'] not in self.labels:
+                    raise DatasetContentError(f'Label "{value["label"]}" from {self.json_path} '
+                                              f'(key={key}) is not in {list(self.labels.keys())}')
             if max([int(key) for key in self.data.keys()]) != len(self.data) - 1:
                 raise DatasetContentError(f'{self.json_path} must contain keys from 0 to len(data)-1. ')
 
