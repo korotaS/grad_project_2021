@@ -243,11 +243,25 @@ ipcMain.on('killTB', function () {
     request.on('response', (response) => {
         response.on('data', (data) => {
             let json = JSON.parse(data.toString());
-            mainWindow.webContents.send('tbKilled', {info: json.info}
-            );
+            mainWindow.webContents.send('tbKilled', {info: json.info});
         })
     });
     request.end()
+});
+
+ipcMain.on('testConnection', function (e, item) {
+    const path = `http://${item.host}:${item.port}/health`
+    const request = require('request');
+    request.get({uri: path, timeout: 5000}, function (err, response, body) {
+        if (err) {
+            mainWindow.webContents.send('testedConnection', {
+                status: 'error',
+                errorName: err.code
+            });
+        } else {
+            mainWindow.webContents.send('testedConnection', {status: 'ok'});
+        }
+    })
 });
 
 ipcMain.on('getNumGpus', function (e) {

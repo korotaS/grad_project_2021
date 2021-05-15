@@ -22,9 +22,9 @@ TB_THREAD.start()
 EXP_THREAD = None
 
 
-@app.route("/")
+@app.route("/health")
 def ping():
-    return jsonify({'status': STATUS})
+    return jsonify({'status': 'ok'})
 
 
 @app.route("/init", methods=['POST'])
@@ -86,12 +86,6 @@ def kill_tb():
     return jsonify({'status': 'ok', 'info': killed})
 
 
-@app.route("/getArchs/<task>")
-def get_archs(task):
-    archs = get_image_architectures_by_type(task)
-    return jsonify({'architectures': archs})
-
-
 @app.route("/getNumGpus")
 def get_num_gpu():
     return jsonify({'numGpus': torch.cuda.device_count()})
@@ -100,6 +94,9 @@ def get_num_gpu():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=5000, required=False)
+    parser.add_argument('--expose', default=False, action='store_true', required=False)
     args = parser.parse_args()
     port = args.port
-    socketio.run(app, host='127.0.0.1', port=port)
+    expose = args.expose
+    host = '0.0.0.0' if expose else '127.0.0.1'
+    socketio.run(app, host=host, port=port)

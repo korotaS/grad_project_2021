@@ -76,6 +76,13 @@ class Main extends Component {
                 missingValue: '',
                 carouselIndex: 0,
                 error: null
+            },
+            server: {
+                remote: false,
+                creds: {
+                    host: '',
+                    port: '',
+                }
             }
         };
 
@@ -189,6 +196,14 @@ class Main extends Component {
         })
     }
 
+    changeExpName(event) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.general.expName = value;
+            return state
+        })
+    }
+
     changeView(viewKey) {
         function cap(string) {
             return string.charAt(0).toUpperCase() + string.slice(1);
@@ -198,14 +213,6 @@ class Main extends Component {
         this.setState(state => {
             let key1 = 'view' + viewKey
             state.view[key1] = !state.view[key1]
-            return state
-        })
-    }
-
-    changeExpName(event) {
-        let value = event.target.value;
-        this.setState(state => {
-            state.general.expName = value;
             return state
         })
     }
@@ -417,7 +424,6 @@ class Main extends Component {
                             />
                             <ErrorModal onHide={this.hideErrorModal.bind(this)}
                                         show={this.state.view.error !== null}
-                                        // show={false}
                                         value={this.state.view.error}/>
                         </div>
                     </Col>

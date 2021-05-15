@@ -263,3 +263,86 @@ export function ErrorModal(props) {
         </Modal>
     );
 }
+
+export class RemoteModal extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            connecting: false,
+            afterTestedMessage: '',
+            creds: {
+                host: '46.138.241.190',
+                port: '8819'
+            }
+        }
+    }
+
+    changeRemoteField(event, field) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.creds[field] = value;
+            return state
+        })
+    }
+
+    testConnection() {
+        this.setState(state => {
+            state.connecting = true
+            state.afterTestedMessage = ''
+            return state
+        })
+        ipcRenderer.send('testConnection', this.state.creds);
+    }
+
+    componentDidMount() {
+        ipcRenderer.on('testedConnection', function (e, data) {
+            this.setState(state => {
+                state.connecting = false
+                if (data.status === 'ok') {
+                    state.afterTestedMessage = 'Connected successfully!'
+                } else {
+                    state.afterTestedMessage = `Failed to connect due to error: ${data.errorName}`
+                }
+                return state
+            })
+        }.bind(this))
+    }
+
+    render() {
+        let afterTestedText
+        if (this.state.afterTestedMessage) {
+            afterTestedText = <div>{this.state.afterTestedMessage}</div>
+        }
+
+        return (
+            <Modal
+                {...this.props}
+                aria-labelledby="contained-modal-title-vcenter"
+                centered
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title id="contained-modal-title-vcenter">
+                        Change to remote
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <FormControl placeholder="Host"
+                                 onChange={(event) => this.changeRemoteField(event, 'host')}
+                                 defaultValue={this.state.creds.host}/>
+                    <FormControl placeholder="Port"
+                                 onChange={(event) => this.changeRemoteField(event, 'port')}
+                                 defaultValue={this.state.creds.port}/>
+                    {afterTestedText}
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" style={{transition: "none"}}
+                            onClick={this.testConnection.bind(this)}
+                            disabled={this.state.connecting}
+                    >{this.state.connecting ? 'Connecting' : 'Test connection'}</Button>
+                    <Button variant="primary" style={{transition: "none"}}
+                            disabled={this.state.connecting}>Connect</Button>
+                </Modal.Footer>
+            </Modal>
+        );
+    }
+}
