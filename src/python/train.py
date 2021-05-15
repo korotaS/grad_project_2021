@@ -1,10 +1,9 @@
 import json
-import logging
-import sys
-from threading import Thread
 import traceback
+from threading import Thread
 
 import yaml
+from pytorch_lightning.utilities.exceptions import MisconfigurationException
 
 from src.python.trainers import ImageClassificationTrainer, ImageSegmentationTrainer, TextClassificationTrainer
 from src.python.utils.seed import set_seed
@@ -31,7 +30,7 @@ class MainThread(Thread):
         try:
             with RedirectStdStreams(self.skt):
                 self.trainer.run()
-        except StoppingTrainingException:
+        except (StoppingTrainingException, MisconfigurationException):
             pass
         except Exception as e:
             ex_log = {
@@ -45,7 +44,7 @@ class MainThread(Thread):
     def stop_training(self):
         try:
             self.trainer.stop_training()
-        except StoppingTrainingException:
+        except (StoppingTrainingException, MisconfigurationException):
             pass
 
 
