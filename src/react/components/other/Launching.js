@@ -4,9 +4,6 @@ import React, {Component} from "react";
 const {ipcRenderer} = window.require("electron");
 
 export function TrainButtons(props) {
-    if (!props.show) {
-        return null
-    }
     if (!props.training) {
         return (
             <Button
@@ -80,14 +77,12 @@ export class TBButtons extends Component {
     }
 
     render() {
-        if (!this.props.show) {
-            return null
-        }
         if (!this.state.tbLaunched) {
             return (
                 <DropdownButton title={'Launch TensorBoard'}
-                                variant="success"
+                                variant="outline-secondary"
                                 type="submit"
+                                size={'sm'}
                                 onSelect={this.launchTB.bind(this)}
                                 disabled={this.state.waiting}>
                     <Dropdown.Item eventKey={'imclf'}>Image classification</Dropdown.Item>

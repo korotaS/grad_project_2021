@@ -4,13 +4,14 @@ import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSett
 import DataSettings from "./settings/data/DataSettings"
 import ModelSettings from "./settings/model/ModelSettings";
 import TrainingSettings from "./settings/training/TrainingSettings";
-import {TBButtons, TrainButtons} from "./Launching";
+import {TrainButtons} from "./other/Launching";
 import {TextLog} from "./settings/Common";
 import {makeConfigFromState, validateConfig} from "./utils/configSettings";
-import {ExportModal, NameMissingModal} from "./Modals";
+import {SmthWrongModal} from "./other/Modals";
 import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
 import {LeftArrow, RightArrow} from "./utils/Arrows";
+import Header from './other/Header'
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -24,13 +25,13 @@ class Main extends Component {
                 pushedTask: false,
                 subTask: '',
                 pushedSubTask: false,
-                projectName: '',
-                expName: '',
+                projectName: 'project_test',
+                expName: 'exp_1',
             },
             numGpus: -1,
             data: {
                 common: {
-                    datasetFolder: "",
+                    datasetFolder: "/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats",
                     trainLen: -1,
                     valLen: -1,
                     shuffleTrain: true,
@@ -77,7 +78,6 @@ class Main extends Component {
                 viewModel: false,
                 viewTraining: false,
                 viewFooter: false,
-                viewExport: false,
                 missingMessage: '',
                 missingValue: '',
                 carouselIndex: 0
@@ -264,13 +264,6 @@ class Main extends Component {
         })
     }
 
-    setShowExport(value) {
-        this.setState(state => {
-            state.view.viewExport = value
-            return state
-        })
-    }
-
     hideMissingModal(value = '') {
         this.setState(state => {
             state.view.missingMessage = ''
@@ -333,15 +326,13 @@ class Main extends Component {
             }
         }
         return (
-            <Row className="align-items-center" style={{minHeight: '100vh'}}>
-                <Col>
-                    <div className="Main">
-                        <header className="main">
-                            {/*<div align={'center'}>*/}
-                            {/*    <Button variant="primary" onClick={() => this.setShowExport(true)}>*/}
-                            {/*        Export*/}
-                            {/*    </Button>*/}
-                            {/*</div>*/}
+            <div>
+                <div>
+                    <Header/>
+                </div>
+                <Row className="align-items-center" style={{minHeight: '95vh'}}>
+                    <Col>
+                        <div className="Main">
                             <Carousel value={this.state.view.carouselIndex}
                                       onChange={this.handleCarouselChange}
                                       plugins={this.state.general.pushedSubTask ? [arrows] : []}
@@ -399,31 +390,21 @@ class Main extends Component {
                                                               stopTraining={this.stopTraining.bind(this)}/>
                                             </Col>
                                         </Row>
-                                        <Row style={{marginTop: "10px"}} align={'center'}>
-                                            <Col>
-                                                <TBButtons show={this.state.general.pushedSubTask}/>
-                                            </Col>
-                                        </Row>
                                         <TextLog show={this.state.general.pushedSubTask}
                                                  stopTraining={this.stopTrainingFromLogs.bind(this)}/>
                                     </div>
                                 </div>
                             </Carousel>
-
-                            <ExportModal
-                                show={this.state.view.viewExport}
-                                onHide={() => this.setShowExport(false)}
-                            />
-                            <NameMissingModal
+                            <SmthWrongModal
                                 show={this.state.view.missingMessage !== ''}
                                 onHide={this.hideMissingModal.bind(this)}
                                 message={this.state.view.missingMessage}
                                 value={this.state.view.missingValue}
                             />
-                        </header>
-                    </div>
-                </Col>
-            </Row>
+                        </div>
+                    </Col>
+                </Row>
+            </div>
         );
     }
 }

@@ -84,6 +84,11 @@ class DataSettings extends Component {
         })
     }
 
+    static getDerivedStateFromProps(props, state) {
+        console.log(props)
+        console.log(state)
+    }
+
     render() {
         if (!this.props.showFull) {
             return null

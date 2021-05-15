@@ -1,6 +1,6 @@
 import {Button, Form, FormControl, Modal} from "react-bootstrap";
 import React, {Component} from 'react';
-import '../styles/modals.css'
+import '../../styles/modals.css'
 
 const {dialog} = window.require('electron').remote;
 const {ipcRenderer} = window.require("electron");
@@ -164,7 +164,7 @@ export class ExportModal extends Component {
     }
 }
 
-export function NameMissingModal(props) {
+export function SmthWrongModal(props) {
     let buttons;
     if (props.value !== '') {
         buttons = (

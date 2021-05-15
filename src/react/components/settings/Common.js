@@ -1,7 +1,7 @@
 import {Button, Col, Form, Row} from "react-bootstrap";
 import React, {Component} from "react";
 import openSocket from 'socket.io-client';
-import {TracebackModal} from "../Modals";
+import {TracebackModal} from "../other/Modals";
 
 const {ipcRenderer} = window.require("electron");
 

@@ -9,7 +9,9 @@ export function makeConfigFromState(state) {
             project_name: state.general.projectName,
             exp_name: state.general.expName
         },
-        data: {},
+        data: {
+            dataset_folder: state.data.common.datasetFolder
+        },
         model: {},
         trainer: {},
         training: {},
@@ -66,10 +68,6 @@ export function makeConfigFromState(state) {
             }
         })
     })
-    // ADVANCED
-    config.general.project_name = 'project_test'
-    config.general.exp_name = 'exp_1'
-    config.data.dataset_folder = '/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats'
     return config
 }
 
