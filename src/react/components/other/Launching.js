@@ -1,4 +1,4 @@
-import {Button, Dropdown, DropdownButton} from "react-bootstrap";
+import {Button, Col, Dropdown, DropdownButton, Row} from "react-bootstrap";
 import React, {Component} from "react";
 
 const {ipcRenderer} = window.require("electron");
@@ -81,7 +81,7 @@ export class TBButtons extends Component {
     render() {
         if (!this.state.tbLaunched) {
             return (
-                <DropdownButton title={'Launch TensorBoard'}
+                <DropdownButton title={this.state.waiting ? 'Launching...' : 'Launch TensorBoard'}
                                 variant="outline-secondary"
                                 type="submit"
                                 size={'sm'}
@@ -93,16 +93,25 @@ export class TBButtons extends Component {
                 </DropdownButton>
             )
         } else {
-            let link = <a href={this.state.tbLink} target={'_blank'} rel={"noopener noreferrer"}>{this.state.tbLink}</a>;
+            let link = <a href={this.state.tbLink} target={'_blank'}
+                          rel={"noopener noreferrer"}>{this.state.tbLink}</a>;
+            // let link = <a href={this.state.tbLink} target={'_blank'}
+            //               rel={"noopener noreferrer"}>http://localhost:6006/</a>;
             return (
                 <div>
-                    <h5>TensorBoard is running on {link}</h5>
-                    <Button
-                        variant="danger"
-                        type="submit"
-                        size={'sm'}
-                        onClick={this.killTB}
-                    >Kill TensorBoard</Button>
+                    <Row className="justify-content-md-center">
+                        <Col md="auto">
+                            <span style={{fontSize: '10px'}}>TB is on {link}</span>
+                        </Col>
+                        <Col md="auto">
+                            <Button
+                                variant="outline-danger"
+                                type="submit"
+                                size={'sm'}
+                                onClick={this.killTB}
+                            >Kill</Button>
+                        </Col>
+                    </Row>
                 </div>
             )
         }

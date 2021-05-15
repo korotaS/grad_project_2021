@@ -415,8 +415,9 @@ class Main extends Component {
                                 message={this.state.view.missingMessage}
                                 value={this.state.view.missingValue}
                             />
-                            <ErrorModal show={this.state.view.error !== null}
-                                        onHide={this.hideErrorModal.bind(this)}
+                            <ErrorModal onHide={this.hideErrorModal.bind(this)}
+                                        show={this.state.view.error !== null}
+                                        // show={false}
                                         value={this.state.view.error}/>
                         </div>
                     </Col>
