@@ -13,6 +13,7 @@ const DEV = true;
 // be closed automatically when the JavaScript object is garbage collected.
 let mainWindow = null;
 let subpy = null;
+let host = 'localhost'
 let port = 5000;
 let numGpus = -1
 
@@ -24,10 +25,10 @@ const startPythonSubprocess = () => {
             port = await getPort({port: 5000});
             subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
             console.log(`started process at ${subpy.pid} on port ${port}`);
-            mainWindow.webContents.send('pythonPortSet', {port: port});
+            mainWindow.webContents.send('pythonPort', {port: port});
         })();
     } else {
-        mainWindow.webContents.send('pythonPortSet', {port: port});
+        mainWindow.webContents.send('pythonPort', {port: port});
     }
 };
 
@@ -97,13 +98,13 @@ app.on("activate", () => {
 // -----RUNTIME-----
 
 ipcMain.on('getPythonPort', function (e) {
-    mainWindow.webContents.send('pythonPort', JSON.stringify({port: port}));
+    mainWindow.webContents.send('pythonPort', {port: port});
 });
 
 ipcMain.on('runTraining', function (e, item) {
     const request = net.request({
         method: 'POST',
-        hostname: 'localhost',
+        hostname: host,
         port: port,
         path: '/init'
     });
@@ -119,7 +120,7 @@ ipcMain.on('runTraining', function (e, item) {
 });
 
 ipcMain.on('stopTraining', function (e) {
-    const path = `http://localhost:${port}/stopTraining`
+    const path = `http://${host}:${port}/stopTraining`
     const request = net.request(path);
     request.on('response', (response) => {
         response.on('data', (data) => {
@@ -136,44 +137,11 @@ ipcMain.on('stopTraining', function (e) {
     request.end()
 });
 
-// ipcMain.on('configChosen', function (e, item) {
-//     let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
-//     const request = net.request({
-//         method: 'POST',
-//         hostname: 'localhost',
-//         port: port,
-//         path: '/validateConfig'
-//     })
-//
-//     request.on('response', (response) => {
-//         response.on('data', (data) => {
-//             let json = JSON.parse(data.toString());
-//             // dialog.showMessageBox({message: data.toString()});
-//             if (json.status === 'ok') {
-//                 const requestInit = net.request({
-//                     method: 'POST',
-//                     hostname: 'localhost',
-//                     port: port,
-//                     path: '/init'
-//                 });
-//                 requestInit.write(post_data);
-//                 requestInit.end();
-//             } else {
-//                 alert(json.error);
-//             }
-//         })
-//     });
-//
-//     let post_data = JSON.stringify(config);
-//     request.write(post_data);
-//     request.end();
-// });
-
 ipcMain.on('export', function (e, item) {
     let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
     const request = net.request({
         method: 'POST',
-        hostname: 'localhost',
+        hostname: host,
         port: port,
         path: '/export'
     })
@@ -265,30 +233,50 @@ ipcMain.on('testConnection', function (e, item) {
 });
 
 ipcMain.on('getNumGpus', function (e) {
-    if (numGpus === -1) {
-        if (SERVER_RUNNING) {
-            const path = `http://localhost:${port}/getNumGpus`
-            const request = net.request(path);
-            request.on('response', (response) => {
-                response.on('data', (data) => {
-                    let json = JSON.parse(data.toString());
-                    numGpus = json.numGpus
-                    mainWindow.webContents.send('gotNumGpus', JSON.stringify(json));
-                })
-            });
-            request.on('error', (error) => {
-                let message = "Can't get number of GPUs because python server is not running."
-                mainWindow.webContents.send('netError', {name: error.message, message: message});
+    if (SERVER_RUNNING) {
+        const path = `http://${host}:${port}/getNumGpus`
+        const request = net.request(path);
+        request.on('response', (response) => {
+            response.on('data', (data) => {
+                let json = JSON.parse(data.toString());
+                numGpus = json.numGpus
+                mainWindow.webContents.send('gotNumGpus', json);
             })
-            request.end()
-        } else {
-            numGpus = 0
-            mainWindow.webContents.send('gotNumGpus', JSON.stringify({numGpus: numGpus}));
-        }
+        });
+        request.on('error', (error) => {
+            let message = "Can't get number of GPUs because python server is not running."
+            mainWindow.webContents.send('netError', {name: error.message, message: message});
+        })
+        request.end()
     } else {
-        mainWindow.webContents.send('gotNumGpus', JSON.stringify({numGpus: numGpus}));
+        numGpus = 0
+        mainWindow.webContents.send('gotNumGpus', {numGpus: numGpus});
     }
 });
+
+ipcMain.on('changeToRemote', function (e, item) {
+    killPythonSubprocess().then(() => {
+        subpy = null
+        host = item.host
+        port = item.port
+    })
+})
+
+ipcMain.on('startNewPython', function () {
+    if (!SERVER_RUNNING) {
+        (async () => {
+            host = 'localhost'
+            port = await getPort({port: 5000});
+            subpy = require("child_process").spawn("python", [PY_MODULE, '--port', port.toString()]);
+            console.log(`started process at ${subpy.pid} on port ${port}`);
+            mainWindow.webContents.send('startedNewPython', {port: port});
+        })();
+    } else {
+        host = 'localhost'
+        port = 5000
+        mainWindow.webContents.send('startedNewPython', {port: port});
+    }
+})
 
 // -----END OF RUNTIME-----
 
@@ -300,8 +288,6 @@ function killPythonSubprocess() {
         if (!subpy.killed) {
             console.log(`killing python subprocess with pid=${subpy.pid}`);
             subpy.kill();
-            // console.log(`killing tensorboard subprocess with pid=${subtb.pid}`);
-            // subtb.kill();
         }
         cleanup_completed = true;
         return new Promise(function (resolve, reject) {

@@ -95,8 +95,6 @@ export class TBButtons extends Component {
         } else {
             let link = <a href={this.state.tbLink} target={'_blank'}
                           rel={"noopener noreferrer"}>{this.state.tbLink}</a>;
-            // let link = <a href={this.state.tbLink} target={'_blank'}
-            //               rel={"noopener noreferrer"}>http://localhost:6006/</a>;
             return (
                 <div>
                     <Row className="justify-content-md-center">

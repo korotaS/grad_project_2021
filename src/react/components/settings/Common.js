@@ -143,10 +143,11 @@ export class LabelArray extends Component {
 export class TextLog extends Component {
     constructor(props) {
         super(props);
+
         this.state = {
-            text: '',
             log: [],
             socket: null,
+            host: 'localhost',
             port: null,
             listenerSet: false,
 
@@ -155,13 +156,11 @@ export class TextLog extends Component {
         }
 
         this.textLog = React.createRef();
-        ipcRenderer.send('getPythonPort');
     }
 
     clearLogs(event) {
         event.preventDefault();
         this.setState(state => {
-            state.text = '';
             state.log = []
             state.currentTracebackIndex = null
             return state
@@ -181,6 +180,19 @@ export class TextLog extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.textLog.current !== null) {
             this.textLog.current.scrollTop = this.textLog.current.scrollHeight;
+        }
+
+        if (this.props.host !== this.state.host || this.props.port !== this.state.port) {
+            this.setState(state => {
+                state.host = this.props.host
+                state.port = this.props.port
+                if (state.socket !== null) {
+                    state.socket.close()
+                    state.socker = null
+                }
+                state.socket = openSocket(`http://${this.props.host}:${this.props.port}`);
+                return state
+            });
         }
 
         if (this.state.socket !== null && !this.state.listenerSet) {
@@ -212,14 +224,28 @@ export class TextLog extends Component {
 
     componentDidMount() {
         ipcRenderer.on('pythonPort', function (e, data) {
-            let port = JSON.parse(data).port
             if (this.state.socket === null) {
                 this.setState(state => {
-                    state.port = port;
-                    state.socket = openSocket(`http://localhost:${port}`);
+                    if (state.socket !== null) {
+                        state.socket.close()
+                        state.socker = null
+                    }
+                    state.socket = openSocket(`http://${this.state.host}:${data.port}`);
                     return state
                 })
             }
+        }.bind(this));
+
+        ipcRenderer.on('startedNewPython', function (e, data) {
+            this.setState(state => {
+                state.host = 'localhost'
+                if (state.socket !== null) {
+                    state.socket.close()
+                    state.socker = null
+                }
+                state.socket = openSocket(`http://localhost:${data.port}`);
+                return state
+            })
         }.bind(this));
     }
 

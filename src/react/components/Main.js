@@ -80,8 +80,8 @@ class Main extends Component {
             server: {
                 remote: false,
                 creds: {
-                    host: '',
-                    port: '',
+                    host: 'localhost',
+                    port: null,
                 }
             }
         };
@@ -301,7 +301,9 @@ class Main extends Component {
 
     onHideLocalToRemoteModal(data = null) {
         if (data !== null && data.status === 'connected') {
+            ipcRenderer.send('changeToRemote', {host: data.host, port: data.port});
             this.setState(state => {
+                state.numGpus = -1
                 state.server.remote = true;
                 state.server.creds.host = data.host;
                 state.server.creds.port = data.port;
@@ -310,14 +312,22 @@ class Main extends Component {
         }
     }
 
-    onHideRemoteToLocalModal(change=false) {
-        if (change) {
+    onHideRemoteToLocalModal(changeToLocal = false) {
+        if (changeToLocal) {
             this.setState(state => {
-                state.server.remote = false;
-                state.server.creds.host = 'localhost';
-                state.server.creds.port = '5000';
+                state.numGpus = -1
                 return state
             })
+            ipcRenderer.send('startNewPython');
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (this.state.server.creds.port === null) {
+            ipcRenderer.send('getPythonPort');
+        }
+        if (this.state.numGpus === -1) {
+            ipcRenderer.send('getNumGpus');
         }
     }
 
@@ -325,11 +335,14 @@ class Main extends Component {
         if (this.state.numGpus === -1) {
             ipcRenderer.send('getNumGpus');
         }
+        if (this.state.server.creds.port === null) {
+            ipcRenderer.send('getPythonPort');
+        }
 
         ipcRenderer.on('gotNumGpus', function (e, data) {
-            let jsonData = JSON.parse(data)
+            // console.log(data.numGpus)
             this.setState(state => {
-                state.numGpus = jsonData.numGpus
+                state.numGpus = data.numGpus
                 return state;
             })
         }.bind(this));
@@ -350,6 +363,24 @@ class Main extends Component {
                 return state
             })
         }.bind(this))
+
+        ipcRenderer.on('startedNewPython', function (e, data) {
+            this.setState(state => {
+                state.server.remote = false;
+                state.server.creds.host = 'localhost';
+                state.server.creds.port = data.port;
+                return state
+            })
+        }.bind(this));
+
+        ipcRenderer.on('pythonPort', function (e, data) {
+            if (data.port) {
+                this.setState(state => {
+                    state.server.creds.port = data.port;
+                    return state
+                })
+            }
+        }.bind(this));
     }
 
     render() {
@@ -435,7 +466,9 @@ class Main extends Component {
                                             </Col>
                                         </Row>
                                         <TextLog show={this.state.general.pushedSubTask}
-                                                 stopTraining={this.stopTrainingFromLogs.bind(this)}/>
+                                                 stopTraining={this.stopTrainingFromLogs.bind(this)}
+                                                 host={this.state.server.creds.host}
+                                                 port={this.state.server.creds.port}/>
                                     </div>
                                 </div>
                             </Carousel>
