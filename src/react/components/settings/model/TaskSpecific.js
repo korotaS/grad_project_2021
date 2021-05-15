@@ -187,21 +187,23 @@ export class ModelSettingsForTxtclf extends Component {
     constructor(props) {
         super(props)
 
-        let curr_lang = props.defaultState.lang || 'en';
-        let curr_embeddings = props.defaultState.embeddings || curr_lang === 'ru' ? 'ru_fasttext_300' : 'en_glove-wiki-gigaword-50'
+        let currLang = props.defaultState.lang || 'en';
+        let currEmbeddings = props.defaultState.embeddings || currLang === 'ru' ? 'ru_fasttext_300' : 'en_glove-wiki-gigaword-50'
+        let currModelNames = currLang === 'en' ? ['distilbert-base-uncased', 'bert-base-uncased'] : ['DeepPavlov/rubert-base-cased']
+        let currModelName = props.defaultState.modelName || currLang === 'en' ? 'distilbert-base-uncased' : 'DeepPavlov/rubert-base-cased'
 
         this.state = {
-            modelNames: ['distilbert-base-uncased', 'bert-base-uncased'],
+            modelNames: currModelNames,
             embeddingNames: [
                 'en_glove-wiki-gigaword-50', 'en_glove-wiki-gigaword-100', 'en_glove-wiki-gigaword-200',
                 'en_glove-wiki-gigaword-300', 'en_glove-twitter-25', 'ru_fasttext_300', 'en_fasttext_300'
             ],
 
             modelType: props.modelType || 'lstm',
-            lang: curr_lang,
+            lang: currLang,
             nHidden: props.defaultState.nHidden || '128',
-            modelName: props.defaultState.modelName || 'distilbert-base-uncased',
-            embeddings: curr_embeddings
+            modelName: currModelName,
+            embeddings: currEmbeddings
         }
 
         this.props.clearTaskSpecificState(this.props.type);
@@ -223,19 +225,27 @@ export class ModelSettingsForTxtclf extends Component {
 
     handleLangChange(event) {
         let lang = event.target.value;
-        // change embeddings with language
-        let curr_embeddings = lang === 'ru' ? 'ru_fasttext_300' : 'en_glove-wiki-gigaword-50'
-        this.handleEmbeddingsChange(null, curr_embeddings)
+        // change embeddings and model with language
+        let currEmbeddings = lang === 'ru' ? 'ru_fasttext_300' : 'en_glove-wiki-gigaword-50'
+        let currModelName = lang === 'ru' ? 'DeepPavlov/rubert-base-cased' : 'distilbert-base-uncased'
+        this.handleEmbeddingsChange(null, currEmbeddings)
+        this.handleModelNameChange(null, currModelName)
 
         this.props.handleTaskSpecificState(this.props.type, 'lang', lang)
         this.setState(state => {
             state.lang = lang
+            state.modelNames = lang === 'en' ? ['distilbert-base-uncased', 'bert-base-uncased'] : ['DeepPavlov/rubert-base-cased']
             return state
         })
     }
 
-    handleModelNameChange(event) {
-        let value = event.target.value;
+    handleModelNameChange(event, fromValue = null) {
+        let value;
+        if (fromValue !== null) {
+            value = fromValue
+        } else {
+            value = event.target.value;
+        }
         this.props.handleTaskSpecificState(this.props.type, 'modelName', value)
         this.setState(state => {
             state.modelName = value
