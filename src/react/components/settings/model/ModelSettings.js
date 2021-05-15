@@ -26,7 +26,7 @@ class ModelSettings extends Component {
         return (
             <div align={'center'}>
                 <h3>Model</h3>
-                <div hidden={!this.props.showContent}>
+                <div>
                     {taskSpecificSettings}
                 </div>
             </div>

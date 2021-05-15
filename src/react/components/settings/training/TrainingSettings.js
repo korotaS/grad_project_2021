@@ -113,6 +113,13 @@ class TrainingSettings extends Component {
         })
     }
 
+    static getDerivedStateFromProps(props, state) {
+        if (state.advancedPushed && !props.showAdvanced) {
+            state.advancedPushed = false
+        }
+        return state
+    }
+
     render() {
         if (!this.props.showFull) {
             return null
@@ -138,7 +145,7 @@ class TrainingSettings extends Component {
             <div align={'center'}>
                 <h3>Training</h3>
 
-                <div hidden={!this.props.showContent}>
+                <div>
                     <h5>Device</h5>
                     <Form.Control as="select" custom style={{width: '50%'}}
                                   onChange={this.handleGpuChange.bind(this)}>
@@ -224,7 +231,8 @@ class TrainingSettings extends Component {
                                     this.handleNoParamsCheckbox(event)
                                 }}
                             />
-                            <div hidden={this.state.noParams || this.state.paramsValid}>Please enter the valid YAML.</div>
+                            <div hidden={this.state.noParams || this.state.paramsValid}>Please enter the valid YAML.
+                            </div>
                             <div className="container_editor_area">
                                 <Editor
                                     disabled={this.state.noParams}

@@ -85,8 +85,10 @@ class DataSettings extends Component {
     }
 
     static getDerivedStateFromProps(props, state) {
-        console.log(props)
-        console.log(state)
+        if (state.advancedPushed && !props.showAdvanced) {
+            state.advancedPushed = false
+        }
+        return state
     }
 
     render() {
@@ -134,7 +136,7 @@ class DataSettings extends Component {
                     <h3>Data</h3>
                 </div>
 
-                <div hidden={!this.props.showContent} className={'expandable'}>
+                <div>
                     <h5>Dataset folder</h5>
                     <Button
                         variant="success"

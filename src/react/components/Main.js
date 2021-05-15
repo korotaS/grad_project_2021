@@ -351,7 +351,7 @@ class Main extends Component {
                                     changeView: this.changeView,
                                     ...this.state.general
                                 })}
-                                <DataSettings showContent={true}
+                                <DataSettings showAdvanced={this.state.view.carouselIndex === 3}
                                               showFull={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
                                               changeView={this.changeView}
@@ -360,8 +360,7 @@ class Main extends Component {
                                               setCommonState={this.setCommonState.bind(this)}
                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                               clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                                <ModelSettings showContent={true}
-                                               showFull={this.state.general.pushedSubTask}
+                                <ModelSettings showFull={this.state.general.pushedSubTask}
                                                taskSubClass={this.state.general.subTask}
                                                changeView={this.changeView}
                                                data={this.state.model}
@@ -369,7 +368,7 @@ class Main extends Component {
                                                setCommonState={this.setCommonState.bind(this)}
                                                setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                                clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                                <TrainingSettings showContent={true}
+                                <TrainingSettings showAdvanced={this.state.view.carouselIndex === 5}
                                                   showFull={this.state.general.pushedSubTask}
                                                   taskSubClass={this.state.general.subTask}
                                                   changeView={this.changeView}
