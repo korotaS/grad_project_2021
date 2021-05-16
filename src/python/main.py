@@ -3,6 +3,7 @@ import json
 import os
 import sys
 
+import yaml
 from flask import jsonify, request
 import torch
 
@@ -58,18 +59,28 @@ def export():
     folder = data['folder']
     cfg_path = data['cfgPath']
     prefix = data['prefix']
-    cfg = data['cfg']
+    try:
+        cfg = yaml.full_load(open(cfg_path))
+    except FileNotFoundError:
+        return jsonify({'status': 'error', 'errorMessage': f'File {cfg_path} not found.'})
+    except Exception:
+        return jsonify({'status': 'error', 'errorMessage': f"Can't load file {cfg_path}"})
     export_type = data['exportType']
 
     global EXP_THREAD
-    EXP_THREAD = ExportThread(cfg=cfg,
-                              cfg_name=cfg_path,
-                              export_folder=folder,
-                              prefix=prefix,
-                              export_type=export_type,
-                              skt=socketio)
-    path = EXP_THREAD.run()
-    return jsonify({'status': 'ok', 'outPath': path})
+    try:
+        EXP_THREAD = ExportThread(cfg=cfg,
+                                  cfg_name=cfg_path,
+                                  export_folder=folder,
+                                  prefix=prefix,
+                                  export_type=export_type,
+                                  skt=socketio)
+        path = EXP_THREAD.run()
+        return jsonify({'status': 'ok', 'outPath': path})
+    except FileNotFoundError:
+        return jsonify({'status': 'error', 'errorMessage': f'.ckpt file for this config not found.'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'errorMessage': f'{e.__class__.__name__}: {e.args[0]}'})
 
 
 @app.route("/launchTB/<task_key>/<tb_port>")

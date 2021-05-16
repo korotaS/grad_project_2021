@@ -12,7 +12,7 @@ class ImageExporter(BaseExporter):
         self._example_input = torch.rand(1, 3, self.height, self.width)
 
     def export_onnx(self):
-        print(f'Exporting ONNX model to {self.onnx_path}')
+        # print(f'Exporting ONNX model to {self.onnx_path}')
         torch.onnx.export(
             self.model.cpu(),
             self._example_input,
@@ -29,7 +29,7 @@ class ImageExporter(BaseExporter):
         )
 
     def export_jit(self, device='cpu'):
-        print(f'Exporting JIT model to {self.jit_path}')
+        # print(f'Exporting JIT model to {self.jit_path}')
         module = torch.jit.trace(self.model.to(device), (self._example_input.to(device)))
         torch.jit.save(module, self.jit_path)
 

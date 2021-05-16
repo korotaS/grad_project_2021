@@ -29,6 +29,7 @@ class Main extends Component {
                 expName: 'exp_1',
             },
             numGpus: -1,
+            cantGetGpus: false,
             data: {
                 common: {
                     datasetFolder: "/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats",
@@ -290,6 +291,7 @@ class Main extends Component {
             ipcRenderer.send('changeToRemote', {host: data.host, port: data.port});
             this.setState(state => {
                 state.numGpus = -1
+                state.cantGetGpus = false
                 state.server.remote = true;
                 state.server.creds.host = data.host;
                 state.server.creds.port = data.port;
@@ -302,6 +304,7 @@ class Main extends Component {
         if (changeToLocal) {
             this.setState(state => {
                 state.numGpus = -1
+                state.cantGetGpus = false
                 return state
             })
             ipcRenderer.send('startNewPython');
@@ -312,7 +315,7 @@ class Main extends Component {
         if (this.state.server.creds.port === null) {
             ipcRenderer.send('getPythonPort');
         }
-        if (this.state.numGpus === -1 && this.state.error === null) {
+        if (this.state.numGpus === -1 && this.state.view.error === null && !this.state.cantGetGpus) {
             ipcRenderer.send('getNumGpus');
         }
     }
@@ -329,6 +332,7 @@ class Main extends Component {
             // console.log(data.numGpus)
             this.setState(state => {
                 state.numGpus = data.numGpus
+                state.cantGetGpus = false
                 return state;
             })
         }.bind(this));
@@ -345,6 +349,9 @@ class Main extends Component {
                 state.view.error = data;
                 if ('noTrain' in data) {
                     state.run.training = false
+                }
+                if (data.message.includes('GPU')) {
+                    state.cantGetGpus = true
                 }
                 return state
             })

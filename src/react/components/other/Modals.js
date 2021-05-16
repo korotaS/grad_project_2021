@@ -13,7 +13,7 @@ export class ExportModal extends Component {
             exportFolder: '',
             exportType: 'onnx',
             exportPrefix: '',
-            error: null
+            footerData: null
         };
 
         this.submitChoice = this.submitChoice.bind(this);
@@ -26,12 +26,19 @@ export class ExportModal extends Component {
     submitChoice(event) {
         event.preventDefault();
         if (this.state.configPath === "") {
-            alert("Choose config path please!")
+            this.setState(state => {
+                state.footerData = {message: 'Choose config path please!'}
+                return state
+            })
         } else if (this.state.exportFolder === "") {
-            alert("Choose export folder please!")
+            this.setState(state => {
+                state.footerData = {message: 'Choose export folder please!'}
+                return state
+            })
         } else {
             this.setState(state => {
-                state.error = null;
+                state.footerData = null;
+                state.waiting = true
                 return state
             })
             ipcRenderer.send('export', {
@@ -49,7 +56,8 @@ export class ExportModal extends Component {
             state.exportFolder = ''
             state.exportPrefix = ''
             state.exportType = 'onnx'
-            state.error = null
+            state.waiting = false
+            state.footerData = null
             return state
         })
     }
@@ -119,7 +127,24 @@ export class ExportModal extends Component {
     componentDidMount() {
         ipcRenderer.on('exportNetError', function (e, data) {
             this.setState(state => {
-                state.error = data;
+                state.footerData = data;
+                state.waiting = false
+                return state
+            })
+        }.bind(this))
+
+        ipcRenderer.on('exportError', function (e, data) {
+            this.setState(state => {
+                state.footerData = data;
+                state.waiting = false
+                return state
+            })
+        }.bind(this))
+
+        ipcRenderer.on('exportOk', function (e, data) {
+            this.setState(state => {
+                state.footerData = {ok: true, message: `Exported to ${data.outPath}!`};
+                state.waiting = false
                 return state
             })
         }.bind(this))
@@ -127,14 +152,15 @@ export class ExportModal extends Component {
 
     render() {
         let errorMessage;
-        if (this.state.error !== null) {
-            errorMessage = <div>{`Error: ${this.state.error.message}`}</div>
+        if (this.state.footerData !== null) {
+            errorMessage = <div>{`${'ok' in this.state.footerData ? '' : 'Error: '}${this.state.footerData.message}`}</div>
         }
         return (
             <Modal
                 {...this.props}
                 size="lg"
                 aria-labelledby="contained-modal-title-vcenter"
+                dialogClassName="modal-long"
                 centered
                 onHide={() => {
                     this.clearState();
@@ -201,7 +227,8 @@ export class ExportModal extends Component {
                                 variant="success"
                                 type="submit"
                                 onClick={this.submitChoice}
-                        >Export</Button>
+                                disabled={this.state.waiting}
+                        >{this.state.waiting ? 'Exporting...' : 'Export'}</Button>
                     </Form>
                 </Modal.Body>
             </Modal>
@@ -248,7 +275,8 @@ export function TracebackModal(props) {
             {...props}
             aria-labelledby="contained-modal-title-vcenter"
             centered
-            dialogClassName="modal-traceback"
+            size={'lg'}
+            dialogClassName="modal-long"
         >
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">

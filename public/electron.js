@@ -138,7 +138,6 @@ ipcMain.on('stopTraining', function (e) {
 });
 
 ipcMain.on('export', function (e, item) {
-    let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
     const request = net.request({
         method: 'POST',
         hostname: host,
@@ -149,10 +148,17 @@ ipcMain.on('export', function (e, item) {
     request.on('response', (response) => {
         response.on('data', (data) => {
             let json = JSON.parse(data.toString());
-            if (json.status === 'ok') {
-                // dialog.showMessageBox({message: json.outPath});
-            } else {
-
+            switch (json.status) {
+                case 'ok': {
+                    mainWindow.webContents.send('exportOk', {outPath: json.outPath});
+                    break
+                }
+                case 'error': {
+                    mainWindow.webContents.send('exportError', {message: json.errorMessage});
+                    break
+                }
+                default:
+                    break
             }
         })
     });
@@ -163,7 +169,6 @@ ipcMain.on('export', function (e, item) {
     })
 
     let post_data = {
-        cfg: config,
         cfgPath: item.configPath,
         folder: item.exportFolder,
         prefix: item.exportPrefix,

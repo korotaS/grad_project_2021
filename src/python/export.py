@@ -31,5 +31,4 @@ class ExportThread:
             elif self.export_type == 'jit':
                 self.trainer.export_jit()
                 path = self.trainer.jit_path
-            print('Export finished!')
             return path

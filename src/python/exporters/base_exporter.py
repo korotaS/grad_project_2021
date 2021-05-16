@@ -38,7 +38,8 @@ class BaseExporter:
         assert len(timestamp) > 0
         folder = 'projects/'
         paths = list(Path(folder).rglob(f'*{timestamp}.ckpt'))
-        assert len(paths) > 0
+        if len(paths) == 0:
+            raise FileNotFoundError
         path = sorted(paths, key=lambda p: p.as_posix().split('.')[-2].split('_')[-1])[-1].as_posix()
         return path
 
