@@ -68,7 +68,8 @@ export default class Header extends Component {
                     </Col>
                 </Row>
                 <ExportModal show={this.state.showExport}
-                             onHide={() => this.setShowExport(false)}/>
+                             onHide={() => this.setShowExport(false)}
+                             remote={this.props.remoteToLocal}/>
                 <LocalToRemoteModal show={this.state.showLocalToRemote}
                                     onHide={(status) => {
                                         this.setShowLocalToRemote(false)

@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button, Col, Collapse, Form, Row} from "react-bootstrap";
+import {Button, Col, Collapse, Form, FormControl, Row} from "react-bootstrap";
 import {DatasetLength} from "../Common";
 import {TaskSpecificForImclf, TaskSpecificForImsgm, TaskSpecificForTxtclf} from "./TaskSpecific";
 import {AdvancedForImclf, AdvancedForImsgm} from "./Advanced";
@@ -17,7 +17,7 @@ class DataSettings extends Component {
             advancedTexts: ['Advanced ▼', 'Advanced ▲']
         }
 
-        this.chooseDatasetFolder = this.chooseDatasetFolder.bind(this);
+        this.chooseDatasetFolderLocal = this.chooseDatasetFolderLocal.bind(this);
         this.handleLengthCheckbox = this.handleLengthCheckbox.bind(this);
         this.handleLengthNumber = this.handleLengthNumber.bind(this);
     }
@@ -27,7 +27,7 @@ class DataSettings extends Component {
         return folder === "" ? "No selected folder" : folder;
     }
 
-    chooseDatasetFolder(event) {
+    chooseDatasetFolderLocal(event) {
         event.preventDefault();
         let paths = dialog.showOpenDialogSync({
             properties: ['openDirectory'],
@@ -36,6 +36,10 @@ class DataSettings extends Component {
         if (paths != null) {
             this.props.setCommonState(this.props.type, 'datasetFolder', paths[0])
         }
+    }
+
+    changeDatasetFolderRemote(event) {
+        this.props.setCommonState(this.props.type, 'datasetFolder', event.target.value)
     }
 
     handleLengthCheckbox(event, type) {
@@ -138,12 +142,17 @@ class DataSettings extends Component {
 
                 <div>
                     <h5>Dataset folder</h5>
-                    <Button
-                        variant="success"
-                        type="submit"
-                        onClick={this.chooseDatasetFolder}
-                        size={'sm'}
-                    >choose path</Button>
+                    {this.props.remote
+                        ? <FormControl
+                            placeholder="Dataset folder on remote host"
+                            onChange={this.changeDatasetFolderRemote.bind(this)}
+                            defaultValue={this.props.data.common.datasetFolder}/>
+                        : <Button
+                            variant="success"
+                            type="submit"
+                            onClick={this.chooseDatasetFolderLocal}
+                            size={'sm'}
+                        >choose path</Button>}
                     <div style={{fontSize: 10}}>{this.getCurrentDatasetFolder()}</div>
                     {taskSpecificSettings}
                     <Button style={{marginTop: '10px'}}

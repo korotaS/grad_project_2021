@@ -90,7 +90,6 @@ class Main extends Component {
         this.changeSubTaskChoice = this.changeSubTaskChoice.bind(this);
         this.changeProjectName = this.changeProjectName.bind(this);
         this.changeExpName = this.changeExpName.bind(this);
-        this.changeView = this.changeView.bind(this);
         this.handleCarouselChange = this.handleCarouselChange.bind(this);
     }
 
@@ -204,19 +203,6 @@ class Main extends Component {
         })
     }
 
-    changeView(viewKey) {
-        function cap(string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        }
-
-        viewKey = cap(viewKey)
-        this.setState(state => {
-            let key1 = 'view' + viewKey
-            state.view[key1] = !state.view[key1]
-            return state
-        })
-    }
-
     setCommonState(type, key, data) {
         this.setState(state => {
             set(state[type].common, key, data)
@@ -326,7 +312,7 @@ class Main extends Component {
         if (this.state.server.creds.port === null) {
             ipcRenderer.send('getPythonPort');
         }
-        if (this.state.numGpus === -1) {
+        if (this.state.numGpus === -1 && this.state.error === null) {
             ipcRenderer.send('getNumGpus');
         }
     }
@@ -424,21 +410,19 @@ class Main extends Component {
                                 {ChooseNames({
                                     changeProjectName: this.changeProjectName,
                                     changeExpName: this.changeExpName,
-                                    changeView: this.changeView,
                                     ...this.state.general
                                 })}
                                 <DataSettings showAdvanced={this.state.view.carouselIndex === 3}
                                               showFull={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
-                                              changeView={this.changeView}
                                               data={this.state.data}
                                               type={'data'}
                                               setCommonState={this.setCommonState.bind(this)}
                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                              clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                                              clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}
+                                              remote={this.state.server.remote}/>
                                 <ModelSettings showFull={this.state.general.pushedSubTask}
                                                taskSubClass={this.state.general.subTask}
-                                               changeView={this.changeView}
                                                data={this.state.model}
                                                type={'model'}
                                                setCommonState={this.setCommonState.bind(this)}
@@ -447,7 +431,6 @@ class Main extends Component {
                                 <TrainingSettings showAdvanced={this.state.view.carouselIndex === 5}
                                                   showFull={this.state.general.pushedSubTask}
                                                   taskSubClass={this.state.general.subTask}
-                                                  changeView={this.changeView}
                                                   numGpus={this.state.numGpus}
                                                   data={this.state.training}
                                                   type={'training'}

@@ -71,6 +71,22 @@ export class ExportModal extends Component {
         }
     }
 
+    changeConfigRemote(event) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.configPath = value;
+            return state
+        })
+    }
+
+    changeExportFolderRemote(event) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.exportFolder = value;
+            return state
+        })
+    }
+
     chooseFolder(event) {
         event.preventDefault();
         let paths = dialog.showOpenDialogSync({
@@ -132,16 +148,26 @@ export class ExportModal extends Component {
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
-                        <Button
-                            variant="success" type="submit"
-                            onClick={this.chooseConfig}
-                        >Choose config</Button>
+                        {this.props.remote
+                            ? <FormControl
+                                placeholder="Config path on remote host"
+                                onChange={this.changeConfigRemote.bind(this)}
+                                defaultValue={this.state.configPath}/>
+                            : <Button
+                                variant="success" type="submit"
+                                onClick={this.chooseConfig}
+                            >Choose config</Button>}
                         <br/>
                         <div style={{fontSize: 10}}>{this.state.configPath}</div>
-                        <Button style={{marginTop: '10px'}}
-                                variant="success" type="submit"
-                                onClick={this.chooseFolder}
-                        >Choose export folder</Button>
+                        {this.props.remote
+                            ? <FormControl
+                                placeholder="Export folder on remote host"
+                                onChange={this.changeExportFolderRemote.bind(this)}
+                                defaultValue={this.state.exportFolder}/>
+                            : <Button style={{marginTop: '10px'}}
+                                      variant="success" type="submit"
+                                      onClick={this.chooseFolder}
+                            >Choose export folder</Button>}
                         <div style={{fontSize: 10}}>{this.state.exportFolder}</div>
                         <FormControl style={{marginTop: '10px'}}
                                      placeholder="Prefix"
