@@ -6,7 +6,7 @@ import ModelSettings from "./settings/model/ModelSettings";
 import TrainingSettings from "./settings/training/TrainingSettings";
 import {TrainButtons} from "./other/Launching";
 import {TextLog} from "./settings/Common";
-import {makeConfigFromState, validateConfig} from "./utils/configSettings";
+import {loadParamsFromConfig, makeConfigFromState} from "./utils/configSettings";
 import {ErrorModal, SmthWrongModal} from "./other/Modals";
 import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
@@ -233,11 +233,9 @@ class Main extends Component {
             return state
         })
         let config = makeConfigFromState(this.state)
-        if (validateConfig(config)) {
-            ipcRenderer.send('runTraining', {
-                config: config,
-            });
-        }
+        ipcRenderer.send('runTraining', {
+            config: config,
+        });
         console.log(config);
     }
 
@@ -277,6 +275,11 @@ class Main extends Component {
             }
             return state
         })
+    }
+
+    loadParamsFromConfig(config) {
+        let newState = loadParamsFromConfig(config, this.state)
+        this.setState(newState)
     }
 
     hideErrorModal() {
@@ -397,7 +400,8 @@ class Main extends Component {
                 <div>
                     <Header onHideLocalToRemoteModal={this.onHideLocalToRemoteModal.bind(this)}
                             onHideRemoteToLocalModal={this.onHideRemoteToLocalModal.bind(this)}
-                            remoteToLocal={this.state.server.remote}/>
+                            remoteToLocal={this.state.server.remote}
+                            loadParamsFromConfig={this.loadParamsFromConfig.bind(this)}/>
                 </div>
                 <Row className="align-items-center" style={{minHeight: '95vh'}}>
                     <Col>

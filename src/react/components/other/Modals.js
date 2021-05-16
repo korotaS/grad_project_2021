@@ -153,7 +153,8 @@ export class ExportModal extends Component {
     render() {
         let errorMessage;
         if (this.state.footerData !== null) {
-            errorMessage = <div>{`${'ok' in this.state.footerData ? '' : 'Error: '}${this.state.footerData.message}`}</div>
+            errorMessage =
+                <div>{`${'ok' in this.state.footerData ? '' : 'Error: '}${this.state.footerData.message}`}</div>
         }
         return (
             <Modal
@@ -459,4 +460,111 @@ export function RemoteToLocalModal(props) {
             </Modal.Footer>
         </Modal>
     );
+}
+
+export class LoadFromConfigModal extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            configPath: '',
+            footerData: null
+        }
+
+        this.clearState = this.clearState.bind(this);
+    }
+
+        clearState() {
+        this.setState(state => {
+            state.configPath = ''
+            state.footerData = null
+            return state
+        })
+    }
+
+    chooseConfig(event) {
+        event.preventDefault();
+        let paths = dialog.showOpenDialogSync({
+            properties: ['openFile'],
+            filters: [
+                {name: 'YAML configs', extensions: ['yaml']},
+            ],
+            defaultPath: '.'
+        });
+        if (paths != null) {
+            this.setState(state => {
+                state.configPath = paths[0];
+                return state
+            })
+        }
+    }
+
+    changeConfigRemote(event) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.configPath = value;
+            return state
+        })
+    }
+
+    sendConfig(event) {
+        event.preventDefault();
+        if (this.state.configPath === "") {
+            this.setState(state => {
+                state.footerData = {message: 'Choose config path please!'}
+                return state
+            })
+        } else {
+            this.setState(state => {
+                state.footerData = null;
+                return state
+            })
+            const yaml = require('js-yaml')
+            let config = yaml.load(this.state.configPath)
+            this.props.loadParamsFromConfig(config)
+        }
+    }
+
+    render() {
+        return (
+            <Modal
+                {...this.props}
+                size="lg"
+                aria-labelledby="contained-modal-title-vcenter"
+                dialogClassName="modal-long"
+                centered
+                onHide={() => {
+                    this.clearState();
+                    this.props.onHide()
+                }}
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title id="contained-modal-title-vcenter">
+                        Load params from config
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        {this.props.remote
+                            ? <FormControl
+                                placeholder="Config path on remote host"
+                                onChange={this.changeConfigRemote.bind(this)}
+                                defaultValue={this.state.configPath}/>
+                            : <Button
+                                variant="success" type="submit"
+                                onClick={this.chooseConfig}
+                            >Choose config</Button>}
+                        <br/>
+                        <div style={{fontSize: 10}}>{this.state.configPath}</div>
+                        {}
+                        <Button style={{marginTop: '10px'}}
+                                variant="success"
+                                type="submit"
+                                onClick={this.sendConfig}
+                                disabled={this.state.waiting}
+                        >{'Load config'}</Button>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+        )
+    }
 }

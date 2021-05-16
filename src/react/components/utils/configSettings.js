@@ -71,18 +71,27 @@ export function makeConfigFromState(state) {
     return config
 }
 
-export function validateConfig(config) {
-    if (config.general.project_name === '') {
-        alert('Please enter project name!')
-        return false
+export function loadParamsFromConfig(config, prevState) {
+    let paramsFromConfig = {}
+    // pass
+    let newConfig = recursivelyUpdate(prevState, paramsFromConfig)
+    return newConfig
+}
+
+function recursivelyUpdate(initial, update){
+    let result = {};
+    for(let prop in initial){
+        if({}.hasOwnProperty.call(initial, prop)){
+            result[prop] = initial[prop];
+            if({}.hasOwnProperty.call(update, prop)){
+                if(typeof initial[prop] === 'object' && typeof update[prop] === 'object'){
+                    result[prop] = recursivelyUpdate(initial[prop], update[prop]);
+                }
+                else{
+                    result[prop] = update[prop]
+                }
+            }
+        }
     }
-    if (config.general.exp_name === '') {
-        alert('Please enter experiment name!')
-        return false
-    }
-    if (config.data.dataset_folder === '') {
-        alert('Please choose dataset folder!')
-        return false
-    }
-    return true
+    return result;
 }
