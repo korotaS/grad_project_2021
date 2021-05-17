@@ -6,7 +6,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor
 
 
 class BaseTrainer:
-    def __init__(self, cfg, test_cfg=None, test_mode=False):
+    def __init__(self, cfg, load_cfg=None, test_cfg=None, test_mode=False):
         self.test_mode = False
         self.cfg = cfg
         # general
@@ -58,6 +58,9 @@ class BaseTrainer:
                 os.mkdir(self.exp_folder)
             with open(os.path.join(self.exp_folder, f'cfg_{self.version}.yaml'), 'w') as outfile:
                 yaml.dump(cfg, outfile, default_flow_style=False)
+            if load_cfg is not None:
+                with open(os.path.join(self.exp_folder, f'load_cfg_{self.version}.yaml'), 'w') as outfile:
+                    yaml.dump(load_cfg, outfile, default_flow_style=False)
 
     def init_model(self, test_mode_external=False):
         pass
@@ -105,8 +108,8 @@ class BaseTrainer:
 
 
 class BaseImageTrainer(BaseTrainer):
-    def __init__(self, cfg, test_cfg=None, test_mode=False):
-        super().__init__(cfg, test_cfg, test_mode)
+    def __init__(self, cfg, load_cfg=None, test_cfg=None, test_mode=False):
+        super().__init__(cfg, load_cfg, test_cfg, test_mode)
         # model
         self.architecture = self.cfg['model']['architecture']
         self.pretrained = self.cfg['model']['pretrained']
@@ -119,8 +122,8 @@ class BaseImageTrainer(BaseTrainer):
 
 
 class BaseTextTrainer(BaseTrainer):
-    def __init__(self, cfg, test_cfg=None, test_mode=False):
-        super().__init__(cfg, test_cfg, test_mode)
+    def __init__(self, cfg, load_cfg=None, test_cfg=None, test_mode=False):
+        super().__init__(cfg, load_cfg, test_cfg, test_mode)
         # model
         self.model_type = self.cfg['model']['model_type']
         # data

@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import sys
 
@@ -14,7 +13,6 @@ from src.python.train import MainThread
 from src.python.tb import TBThread
 from src.python.export import ExportThread
 from src.python.utils.utils import validate_config
-from src.python.architectures import get_image_architectures_by_type
 
 STATUS = 'ready'
 THREAD = None
@@ -28,12 +26,12 @@ def ping():
     return jsonify({'status': 'ok'})
 
 
-@app.route("/init", methods=['POST'])
+@app.route("/runTraining", methods=['POST'])
 def run_train():
     data = request.get_json(force=True)
     global STATUS
     global THREAD
-    THREAD = MainThread(data, skt=socketio)
+    THREAD = MainThread(data['config'], data['loadConfig'], skt=socketio)
     THREAD.start()
     return jsonify({'status': 'ok'})
 

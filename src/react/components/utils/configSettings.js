@@ -71,27 +71,12 @@ export function makeConfigFromState(state) {
     return config
 }
 
-export function loadParamsFromConfig(config, prevState) {
-    let paramsFromConfig = {}
-    // pass
-    let newConfig = recursivelyUpdate(prevState, paramsFromConfig)
-    return newConfig
-}
-
-function recursivelyUpdate(initial, update){
-    let result = {};
-    for(let prop in initial){
-        if({}.hasOwnProperty.call(initial, prop)){
-            result[prop] = initial[prop];
-            if({}.hasOwnProperty.call(update, prop)){
-                if(typeof initial[prop] === 'object' && typeof update[prop] === 'object'){
-                    result[prop] = recursivelyUpdate(initial[prop], update[prop]);
-                }
-                else{
-                    result[prop] = update[prop]
-                }
-            }
-        }
+export function makeLoadConfigFromState(state) {
+    return {
+        general: state.general,
+        data: state.data,
+        model: state.model,
+        training: state.training,
+        view: state.view
     }
-    return result;
 }

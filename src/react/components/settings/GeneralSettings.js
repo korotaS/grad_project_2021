@@ -99,14 +99,14 @@ export function ChooseNames(props) {
                 <FormControl
                     placeholder="Project name"
                     onChange={props.changeProjectName}
-                    defaultValue={props.projectName}
+                    value={props.projectName}
                 />
             </Col>
             <Col xs="auto">
                 <FormControl
                     placeholder="Experiment name"
                     onChange={props.changeExpName}
-                    defaultValue={props.expName}
+                    value={props.expName}
                 />
             </Col>
         </Row>

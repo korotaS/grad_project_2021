@@ -62,12 +62,12 @@ export default class Header extends Component {
         return (
             <div>
                 <Row style={{marginTop: "10px"}} align={'center'}>
-                    {/*<Col>*/}
-                    {/*    <Button variant="outline-secondary"*/}
-                    {/*            onClick={() => this.setShowLoad(true)}*/}
-                    {/*            size={'sm'}*/}
-                    {/*    >Load from config</Button>*/}
-                    {/*</Col>*/}
+                    <Col>
+                        <Button variant="outline-secondary"
+                                onClick={() => this.setShowLoad(true)}
+                                size={'sm'}
+                        >Load from config</Button>
+                    </Col>
                     <Col>
                         <Button variant="outline-secondary"
                                 onClick={() => this.setShowExport(true)}
@@ -81,10 +81,10 @@ export default class Header extends Component {
                         {serverButton}
                     </Col>
                 </Row>
-                {/*<LoadFromConfigModal show={this.state.showLoad}*/}
-                {/*                     onHide={() => this.setShowLoad(false)}*/}
-                {/*                     remote={this.props.remoteToLocal}*/}
-                {/*                     loadParamsFromConfig={this.props.loadParamsFromConfig}/>*/}
+                <LoadFromConfigModal show={this.state.showLoad}
+                                     onHide={() => this.setShowLoad(false)}
+                                     remote={this.props.remoteToLocal}
+                                     loadParamsFromConfig={this.props.loadParamsFromConfig}/>
                 <ExportModal show={this.state.showExport}
                              onHide={() => this.setShowExport(false)}
                              remote={this.props.remoteToLocal}/>

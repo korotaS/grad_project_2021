@@ -12,19 +12,20 @@ from src.python.utils.utils import StoppingTrainingException
 
 
 class MainThread(Thread):
-    def __init__(self, cfg, test_cfg=None, skt=None):
+    def __init__(self, cfg, load_cfg=None, test_cfg=None, skt=None):
         super().__init__()
         self.cfg = cfg
+        self.load_cfg = load_cfg
         self.skt = skt
         set_seed(42)
         self.test_cfg = test_cfg
         subtask = self.cfg['general']['subtask']
         if subtask == 'imclf':
-            self.trainer = ImageClassificationTrainer(self.cfg, self.test_cfg)
+            self.trainer = ImageClassificationTrainer(self.cfg, self.load_cfg, self.test_cfg)
         elif subtask == 'imsgm':
-            self.trainer = ImageSegmentationTrainer(self.cfg, self.test_cfg)
+            self.trainer = ImageSegmentationTrainer(self.cfg, self.load_cfg, self.test_cfg)
         elif subtask == 'txtclf':
-            self.trainer = TextClassificationTrainer(self.cfg, self.test_cfg)
+            self.trainer = TextClassificationTrainer(self.cfg, self.load_cfg, self.test_cfg)
 
     def run(self):
         try:

@@ -4,6 +4,7 @@ import '../../styles/modals.css'
 
 const {dialog} = window.require('electron').remote;
 const {ipcRenderer} = window.require("electron");
+const fs = window.require('fs');
 
 export class ExportModal extends Component {
     constructor(props) {
@@ -151,6 +152,9 @@ export class ExportModal extends Component {
     }
 
     render() {
+        let toModalProps = {...this.props}
+        delete toModalProps.remote
+
         let errorMessage;
         if (this.state.footerData !== null) {
             errorMessage =
@@ -158,7 +162,7 @@ export class ExportModal extends Component {
         }
         return (
             <Modal
-                {...this.props}
+                {...toModalProps}
                 size="lg"
                 aria-labelledby="contained-modal-title-vcenter"
                 dialogClassName="modal-long"
@@ -471,9 +475,10 @@ export class LoadFromConfigModal extends Component {
         }
 
         this.clearState = this.clearState.bind(this);
+        this.sendConfig = this.sendConfig.bind(this);
     }
 
-        clearState() {
+    clearState() {
         this.setState(state => {
             state.configPath = ''
             state.footerData = null
@@ -519,15 +524,28 @@ export class LoadFromConfigModal extends Component {
                 return state
             })
             const yaml = require('js-yaml')
-            let config = yaml.load(this.state.configPath)
+            let config = yaml.load(fs.readFileSync(this.state.configPath))
             this.props.loadParamsFromConfig(config)
+            this.setState(state => {
+                state.footerData = {message: 'Params loaded!'}
+                return state
+            })
         }
     }
 
     render() {
+        let toModalProps = {...this.props}
+        delete toModalProps.loadParamsFromConfig
+        delete toModalProps.remote
+
+        let errorMessage;
+        if (this.state.footerData !== null) {
+            errorMessage = <div>{this.state.footerData.message}</div>
+        }
+
         return (
             <Modal
-                {...this.props}
+                {...toModalProps}
                 size="lg"
                 aria-labelledby="contained-modal-title-vcenter"
                 dialogClassName="modal-long"
@@ -551,11 +569,11 @@ export class LoadFromConfigModal extends Component {
                                 defaultValue={this.state.configPath}/>
                             : <Button
                                 variant="success" type="submit"
-                                onClick={this.chooseConfig}
+                                onClick={this.chooseConfig.bind(this)}
                             >Choose config</Button>}
                         <br/>
                         <div style={{fontSize: 10}}>{this.state.configPath}</div>
-                        {}
+                        {errorMessage}
                         <Button style={{marginTop: '10px'}}
                                 variant="success"
                                 type="submit"

@@ -6,7 +6,7 @@ import ModelSettings from "./settings/model/ModelSettings";
 import TrainingSettings from "./settings/training/TrainingSettings";
 import {TrainButtons} from "./other/Launching";
 import {TextLog} from "./settings/Common";
-import {loadParamsFromConfig, makeConfigFromState} from "./utils/configSettings";
+import {makeConfigFromState, makeLoadConfigFromState} from "./utils/configSettings";
 import {ErrorModal, SmthWrongModal} from "./other/Modals";
 import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
@@ -154,11 +154,6 @@ class Main extends Component {
                 state.general.pushedTask = true;
                 state.general.pushedSubTask = false;
                 state.general.subTask = ''
-                for (const key of Object.keys(state.view)) {
-                    if (key.includes('view')) {
-                        state.view[key] = false
-                    }
-                }
                 state.view.carouselIndex = 1
                 return state
             })
@@ -176,11 +171,6 @@ class Main extends Component {
             this.setState(state => {
                 state.general.subTask = event.target.value;
                 state.general.pushedSubTask = true;
-                for (const key of Object.keys(state.view)) {
-                    if (key.includes('view')) {
-                        state.view[key] = false
-                    }
-                }
                 state.view.carouselIndex = 2
                 return state
             })
@@ -233,8 +223,10 @@ class Main extends Component {
             return state
         })
         let config = makeConfigFromState(this.state)
+        let loadConfig = makeLoadConfigFromState(this.state)
         ipcRenderer.send('runTraining', {
             config: config,
+            loadConfig: loadConfig
         });
         console.log(config);
     }
@@ -278,8 +270,12 @@ class Main extends Component {
     }
 
     loadParamsFromConfig(config) {
-        let newState = loadParamsFromConfig(config, this.state)
-        this.setState(newState)
+        let newState = {...this.state, ...config}
+        newState.view.carouselIndex = this.state.view.carouselIndex
+        newState.training = this.state.training
+        this.setState((state) => {return newState}, () => {
+            this.forceUpdate()
+        })
     }
 
     hideErrorModal() {

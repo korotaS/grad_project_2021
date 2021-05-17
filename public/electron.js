@@ -106,7 +106,7 @@ ipcMain.on('runTraining', function (e, item) {
         method: 'POST',
         hostname: host,
         port: port,
-        path: '/init'
+        path: '/runTraining'
     });
 
     request.on('error', (error) => {
@@ -114,7 +114,7 @@ ipcMain.on('runTraining', function (e, item) {
         mainWindow.webContents.send('netError', {name: error.message, message: message, noTrain: true});
     })
 
-    let post_data = JSON.stringify(item.config);
+    let post_data = JSON.stringify({config: item.config, loadConfig: item.loadConfig});
     request.write(post_data);
     request.end();
 });
