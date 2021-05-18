@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Col, Row} from "react-bootstrap";
+import {Col, Collapse, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
 import DataSettings from "./settings/data/DataSettings"
 import ModelSettings from "./settings/model/ModelSettings";
@@ -96,7 +96,7 @@ class Main extends Component {
 
     handleCarouselChange(value) {
         let ok = true
-        if (value === 3) {
+        if (value === 0) {
             if (this.state.general.projectName === '') {
                 this.setState(state => {
                     state.view.missingMessage = 'Please enter project name.'
@@ -110,7 +110,7 @@ class Main extends Component {
                 })
                 ok = false
             }
-        } else if (value === 4) {
+        } else if (value === 1) {
             if (this.state.data.common.datasetFolder === '') {
                 this.setState(state => {
                     state.view.missingMessage = 'Please choose dataset folder.'
@@ -124,7 +124,7 @@ class Main extends Component {
                 })
                 ok = false
             }
-        } else if (value === 6) {
+        } else if (value === 3) {
             if ('notValid' in this.state.training.common.optimizer.paramsAdd) {
                 this.setState(state => {
                     state.view.missingMessage = 'Please enter the valid YAML for optimizer params.'
@@ -154,7 +154,6 @@ class Main extends Component {
                 state.general.pushedTask = true;
                 state.general.pushedSubTask = false;
                 state.general.subTask = ''
-                state.view.carouselIndex = 1
                 return state
             })
         }
@@ -171,7 +170,6 @@ class Main extends Component {
             this.setState(state => {
                 state.general.subTask = event.target.value;
                 state.general.pushedSubTask = true;
-                state.view.carouselIndex = 2
                 return state
             })
         }
@@ -253,11 +251,9 @@ class Main extends Component {
                     state.general.pushedTask = true;
                     state.general.pushedSubTask = false;
                     state.general.subTask = ''
-                    state.view.carouselIndex = 1
                 } else {
                     state.general.subTask = value;
                     state.general.pushedSubTask = true;
-                    state.view.carouselIndex = 2
                 }
                 for (const key of Object.keys(state.view)) {
                     if (key.includes('view')) {
@@ -273,7 +269,9 @@ class Main extends Component {
         let newState = {...this.state, ...config}
         newState.view.carouselIndex = this.state.view.carouselIndex
         newState.training = this.state.training
-        this.setState((state) => {return newState}, () => {
+        this.setState((state) => {
+            return newState
+        }, () => {
             this.forceUpdate()
         })
     }
@@ -380,7 +378,8 @@ class Main extends Component {
             return null
         }
         let emptyTag = <div style={{width: '60px'}}></div>
-        let hideRight = this.state.general.pushedTask && !this.state.general.pushedSubTask
+        let hideRight = !this.state.general.pushedTask || !this.state.general.pushedSubTask
+            || this.state.general.projectName === '' || this.state.general.expName === ''
         let arrows = {
             resolve: arrowsPlugin,
             options: {
@@ -406,19 +405,31 @@ class Main extends Component {
                                       onChange={this.handleCarouselChange}
                                       plugins={this.state.general.pushedTask ? [arrows] : []}
                                       draggable={false}>
-                                {ChooseMainTask({
-                                    changeTaskChoice: this.changeTaskChoice,
-                                    ...this.state.general
-                                })}
-                                {ChooseSubTask({
-                                    changeSubTaskChoice: this.changeSubTaskChoice,
-                                    ...this.state.general
-                                })}
-                                {ChooseNames({
-                                    changeProjectName: this.changeProjectName,
-                                    changeExpName: this.changeExpName,
-                                    ...this.state.general
-                                })}
+                                <div>
+                                    <div>
+                                        {ChooseMainTask({
+                                            changeTaskChoice: this.changeTaskChoice,
+                                            ...this.state.general
+                                        })}
+                                    </div>
+                                    <Collapse in={this.state.general.pushedTask}>
+                                        <div>
+                                            {ChooseSubTask({
+                                                changeSubTaskChoice: this.changeSubTaskChoice,
+                                                ...this.state.general
+                                            })}
+                                        </div>
+                                    </Collapse>
+                                    <Collapse in={this.state.general.pushedSubTask}>
+                                        <div>
+                                            {ChooseNames({
+                                                changeProjectName: this.changeProjectName,
+                                                changeExpName: this.changeExpName,
+                                                ...this.state.general
+                                            })}
+                                        </div>
+                                    </Collapse>
+                                </div>
                                 <DataSettings showAdvanced={this.state.view.carouselIndex === 3}
                                               showFull={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
