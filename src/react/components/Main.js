@@ -110,7 +110,7 @@ class Main extends Component {
                 })
                 ok = false
             }
-        } else if (value === 1) {
+        } else if (value === 2) {
             if (this.state.data.common.datasetFolder === '') {
                 this.setState(state => {
                     state.view.missingMessage = 'Please choose dataset folder.'
@@ -124,7 +124,7 @@ class Main extends Component {
                 })
                 ok = false
             }
-        } else if (value === 3) {
+        } else if (value === 4) {
             if ('notValid' in this.state.training.common.optimizer.paramsAdd) {
                 this.setState(state => {
                     state.view.missingMessage = 'Please enter the valid YAML for optimizer params.'

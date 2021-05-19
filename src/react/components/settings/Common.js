@@ -312,3 +312,18 @@ export class TextLog extends Component {
         )
     }
 }
+
+export function SingleCheck(props) {
+    return (
+        <Form.Check type={'checkbox'} style={{fontSize: '20px', lineHeight: '22px', marginBottom: '10px'}}>
+            <Form.Check.Input type={'checkbox'} checked={props.value}
+                              onChange={(event) => {
+                                  event.persist();
+                                  props.handleCheckbox(event)
+                              }}/>
+            <Form.Check.Label>
+                {props.text}
+            </Form.Check.Label>
+        </Form.Check>
+    )
+}

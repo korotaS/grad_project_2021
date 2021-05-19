@@ -1,6 +1,6 @@
 import React, {Component} from "react";
 import {Col, Form, Row} from "react-bootstrap";
-import {Numeric} from "../Common";
+import {Numeric, SingleCheck} from "../Common";
 
 export class ModelSettingsForImclf extends Component {
     constructor(props) {
@@ -60,7 +60,7 @@ export class ModelSettingsForImclf extends Component {
         return (
             <div>
                 <h5>Architecture</h5>
-                <Form.Control as="select" custom style={{width: '50%'}}
+                <Form.Control as="select" custom style={{marginBottom: '10px'}}
                               onChange={this.handleSelectChange.bind(this)}>
                     {Object.entries(this.state.architectures).map(([archKey, archName]) => {
                         return (
@@ -69,23 +69,13 @@ export class ModelSettingsForImclf extends Component {
                     })}
                 </Form.Control>
 
-                <h5>Freeze backbone</h5>
-                <Form.Check
-                    type={'checkbox'} label={'Freeze'} checked={this.state.freezeBackbone}
-                    onChange={(event) => {
-                        event.persist();
-                        this.handleFreezeCheckbox(event)
-                    }}
-                />
+                <SingleCheck value={this.state.freezeBackbone}
+                             handleCheckbox={this.handleFreezeCheckbox.bind(this)}
+                             text={'Freeze backbone'}/>
 
-                <h5>Pretrained</h5>
-                <Form.Check
-                    type={'checkbox'} label={'Pretrained'} checked={this.state.pretrained}
-                    onChange={(event) => {
-                        event.persist();
-                        this.handlePretrainedCheckbox(event)
-                    }}
-                />
+                <SingleCheck value={this.state.pretrained}
+                             handleCheckbox={this.handlePretrainedCheckbox.bind(this)}
+                             text={'Use pretrained model'}/>
             </div>
         )
     }
@@ -151,7 +141,7 @@ export class ModelSettingsForImsgm extends Component {
         return (
             <div>
                 <h5>Architecture</h5>
-                <Form.Control as="select" custom style={{width: '50%'}}
+                <Form.Control as="select" custom style={{marginBottom: '10px'}}
                               onChange={this.handleArchChange.bind(this)}>
                     {this.state.architectures.map((obj, index) => {
                         return (
@@ -161,7 +151,7 @@ export class ModelSettingsForImsgm extends Component {
                 </Form.Control>
 
                 <h5>Backbone</h5>
-                <Form.Control as="select" custom style={{width: '50%'}}
+                <Form.Control as="select" custom style={{marginBottom: '10px'}}
                               onChange={this.handleBackboneChange.bind(this)}>
                     {Object.entries(this.state.backbones).map(([backboneKey, backboneName]) => {
                         return (
@@ -170,14 +160,9 @@ export class ModelSettingsForImsgm extends Component {
                     })}
                 </Form.Control>
 
-                <h5>Pretrained</h5>
-                <Form.Check
-                    type={'checkbox'} label={'Pretrained'} checked={this.state.pretrained}
-                    onChange={(event) => {
-                        event.persist();
-                        this.handlePretrainedCheckbox(event)
-                    }}
-                />
+                <SingleCheck value={this.state.pretrained}
+                             handleCheckbox={this.handlePretrainedCheckbox.bind(this)}
+                             text={'Use pretrained model'}/>
             </div>
         )
     }
@@ -189,8 +174,8 @@ export class ModelSettingsForTxtclf extends Component {
 
         let currLang = props.defaultState.lang || 'en';
         let currEmbeddings = props.defaultState.embeddings || currLang === 'ru' ? 'ru_fasttext_300' : 'en_glove-wiki-gigaword-50'
-        let currModelNames = currLang === 'en' ? ['distilbert-base-uncased', 'bert-base-uncased'] : ['DeepPavlov/rubert-base-cased']
-        let currModelName = props.defaultState.modelName || currLang === 'en' ? 'distilbert-base-uncased' : 'DeepPavlov/rubert-base-cased'
+        let currModelNames = currLang === 'en' ? ['distilbert-base-uncased', 'bert-base-uncased'] : ['rubert-base-cased']
+        let currModelName = props.defaultState.modelName || currLang === 'en' ? 'distilbert-base-uncased' : 'rubert-base-cased'
 
         this.state = {
             modelNames: currModelNames,
@@ -227,14 +212,14 @@ export class ModelSettingsForTxtclf extends Component {
         let lang = event.target.value;
         // change embeddings and model with language
         let currEmbeddings = lang === 'ru' ? 'ru_fasttext_300' : 'en_glove-wiki-gigaword-50'
-        let currModelName = lang === 'ru' ? 'DeepPavlov/rubert-base-cased' : 'distilbert-base-uncased'
+        let currModelName = lang === 'ru' ? 'rubert-base-cased' : 'distilbert-base-uncased'
         this.handleEmbeddingsChange(null, currEmbeddings)
         this.handleModelNameChange(null, currModelName)
 
         this.props.handleTaskSpecificState(this.props.type, 'lang', lang)
         this.setState(state => {
             state.lang = lang
-            state.modelNames = lang === 'en' ? ['distilbert-base-uncased', 'bert-base-uncased'] : ['DeepPavlov/rubert-base-cased']
+            state.modelNames = lang === 'en' ? ['distilbert-base-uncased', 'bert-base-uncased'] : ['rubert-base-cased']
             return state
         })
     }
@@ -245,6 +230,9 @@ export class ModelSettingsForTxtclf extends Component {
             value = fromValue
         } else {
             value = event.target.value;
+        }
+        if (value === 'rubert-base-cased') {
+            value = 'DeepPavlov/rubert-base-cased'
         }
         this.props.handleTaskSpecificState(this.props.type, 'modelName', value)
         this.setState(state => {
@@ -272,12 +260,12 @@ export class ModelSettingsForTxtclf extends Component {
         if (this.state.modelType === 'lstm') {
             variableModelSettings = (
                 <div>
-                    <h5>Number of hidden units</h5>
+                    <h5 style={{marginTop: '5px'}}>Number of hidden units</h5>
                     <Numeric value={this.state.nHidden} nameKey={'nHidden'} type={this.props.type}
-                             passData={this.props.handleTaskSpecificState} max={2048}/>
+                             passData={this.props.handleTaskSpecificState} max={2048} single={true}/>
 
-                    <h5>Embeddings</h5>
-                    <Form.Control as="select" custom style={{width: '50%'}}
+                    <h5 style={{marginTop: '5px'}}>Embeddings</h5>
+                    <Form.Control as="select" custom style={{width: '250px'}}
                                   onChange={this.handleEmbeddingsChange.bind(this)}>
                         {this.state.embeddingNames.map((obj, index) => {
                             if ((this.state.lang === 'en' && obj.includes('en')) ||
@@ -294,8 +282,8 @@ export class ModelSettingsForTxtclf extends Component {
         } else {
             variableModelSettings = (
                 <div>
-                    <h5>Model name</h5>
-                    <Form.Control as="select" custom style={{width: '50%'}}
+                    <h5 style={{marginTop: '5px'}}>Model name</h5>
+                    <Form.Control as="select" custom style={{width: '250px'}}
                                   onChange={this.handleModelNameChange.bind(this)}>
                         {this.state.modelNames.map((obj, index) => {
                             return (
@@ -332,7 +320,7 @@ export class ModelSettingsForTxtclf extends Component {
                     </Col>
                 </Row>
 
-                <h5>Language</h5>
+                <h5 style={{marginTop: '5px'}}>Language</h5>
                 <Row className="justify-content-md-center">
                     <Col md="auto">
                         <Form.Check

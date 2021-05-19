@@ -66,7 +66,7 @@ export class AdvancedForImclf extends Component {
 
     render() {
         return (
-            <div>
+            <div style={{marginBottom: '30px'}}>
                 <h5 style={{marginTop: '10px'}}>Train transforms</h5>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
@@ -78,7 +78,7 @@ export class AdvancedForImclf extends Component {
                 />
 
                 <Collapse in={!this.state._.transformsDefault && !this.state._.transformsValid}>
-                    <div>
+                    <div style={{marginBottom: '5px', color: 'red'}}>
                         {'Please enter the valid YAML.'}
                     </div>
                 </Collapse>

@@ -1,6 +1,6 @@
 import React, {Component} from "react";
-import {Col, Form, Row} from "react-bootstrap";
-import {LabelArray, Numeric} from "../Common";
+import {Col, Row} from "react-bootstrap";
+import {LabelArray, Numeric, SingleCheck} from "../Common";
 
 export class TaskSpecificForImclf extends Component {
     constructor(props) {
@@ -85,16 +85,9 @@ export class TaskSpecificForImsgm extends Component {
                     </Col>
                 </Row>
 
-                <Form.Check type={'checkbox'} style={{fontSize: '20px', lineHeight: '22px', marginBottom: '10px'}}>
-                    <Form.Check.Input type={'checkbox'} checked={this.state.useRle}
-                                      onChange={(event) => {
-                                          event.persist();
-                                          this.handleRleCheckbox(event)
-                                      }}/>
-                    <Form.Check.Label>
-                        {'Use RLE'}
-                    </Form.Check.Label>
-                </Form.Check>
+                <SingleCheck value={this.state.useRle}
+                             handleCheckbox={this.handleRleCheckbox.bind(this)}
+                             text={'Use RLE'}/>
 
                 <h5>Number of classes</h5>
                 <Numeric value={this.state.numClasses} nameKey={'numClasses'} type={this.props.type}
