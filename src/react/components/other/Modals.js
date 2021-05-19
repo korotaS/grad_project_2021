@@ -341,7 +341,10 @@ export class LocalToRemoteModal extends Component {
         super(props);
         this.state = {
             connecting: false,
-            message: '',
+            footerData: {
+                error: false,
+                message: ''
+            },
             creds: {
                 host: '46.138.241.190',
                 port: '8819'
@@ -362,7 +365,7 @@ export class LocalToRemoteModal extends Component {
 
     clearState() {
         this.setState(state => {
-            state.message = ''
+            state.footerData = {error: false, message: ''}
             state.connecting = false
             state.creds.host = ''
             state.creds.port = ''
@@ -373,12 +376,12 @@ export class LocalToRemoteModal extends Component {
     connect(test) {
         if (this.state.creds.host === '') {
             this.setState(state => {
-                state.message = 'Please enter host.'
+                state.footerData = {error: true, message: 'Please enter host.'}
                 return state
             })
         } else if (this.state.creds.port === '') {
             this.setState(state => {
-                state.message = 'Please enter port.'
+                state.footerData = {error: true, message: 'Please enter port.'}
                 return state
             })
         } else {
@@ -404,9 +407,9 @@ export class LocalToRemoteModal extends Component {
                 this.setState(state => {
                     state.connecting = false
                     if (data.status === 'ok') {
-                        state.message = 'Connected successfully!'
+                        state.footerData = {error: false, message: 'Connected successfully!'}
                     } else {
-                        state.message = `Failed to connect due to error: ${data.errorName}`
+                        state.footerData = {error: true, message: `Failed to connect due to error: ${data.errorName}`}
                     }
                     return state
                 })
@@ -416,8 +419,12 @@ export class LocalToRemoteModal extends Component {
 
     render() {
         let afterTestedText
-        if (this.state.message) {
-            afterTestedText = <div>{this.state.message}</div>
+        if (this.state.footerData.message !== '') {
+            afterTestedText = (
+                <div style={{marginTop: '10px', color: this.state.footerData.error ? 'red': 'black'}}>
+                    {this.state.footerData.message}
+                </div>
+            )
         }
 
         return (
@@ -437,9 +444,11 @@ export class LocalToRemoteModal extends Component {
                 </Modal.Header>
                 <Modal.Body>
                     <FormControl placeholder="Host"
+                                 style={{marginTop: '5px'}}
                                  onChange={(event) => this.changeRemoteField(event, 'host')}
                                  defaultValue={this.state.creds.host}/>
                     <FormControl placeholder="Port"
+                                 style={{marginTop: '20px', marginBottom: '5px'}}
                                  onChange={(event) => this.changeRemoteField(event, 'port')}
                                  defaultValue={this.state.creds.port}/>
                     {afterTestedText}
