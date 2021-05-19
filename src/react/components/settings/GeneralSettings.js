@@ -5,10 +5,10 @@ let marginTop = '50px'
 
 export function ChooseMainTask(props) {
     return (
-        <Row className="justify-content-md-center">
+        <Row className="justify-content-md-center" style={{lineHeight: '22px'}}>
             <Col xs="auto">
                 <Form.Check
-                    type={'radio'} label={'CV'} style={{fontSize: '28px', lineHeight: '22px'}}
+                    type={'radio'} id={'cv'} label={'CV'} style={{fontSize: '28px'}}
                     value={'cv'} checked={props.pushedTask && props.task === 'cv'}
                     onChange={(event) => {
                         event.persist();
@@ -18,7 +18,7 @@ export function ChooseMainTask(props) {
             </Col>
             <Col xs="auto">
                 <Form.Check
-                    type={'radio'} label={'NLP'} style={{fontSize: '28px', lineHeight: '22px'}}
+                    type={'radio'} id={'nlp'} label={'NLP'} style={{fontSize: '28px'}}
                     value={'nlp'} checked={props.pushedTask && props.task === 'nlp'}
                     onChange={(event) => {
                         event.persist();

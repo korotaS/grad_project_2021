@@ -1,11 +1,9 @@
-const {app, BrowserWindow, ipcMain, net, shell, dialog} = require("electron");
+const {app, BrowserWindow, ipcMain, net, shell} = require("electron");
 const path = require("path");
 const getPort = require('get-port');
-const yaml = require('js-yaml');
-const fs = require('fs');
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = false;
+const SERVER_RUNNING = true;
 const QUIT_ON_CLOSING = true;
 const DEV = true;
 
@@ -257,6 +255,30 @@ ipcMain.on('getNumGpus', function (e) {
         numGpus = 0
         mainWindow.webContents.send('gotNumGpus', {numGpus: numGpus});
     }
+});
+
+ipcMain.on('getConfig', function (e, item) {
+    const request = net.request({
+        method: 'POST',
+        hostname: host,
+        port: port,
+        path: '/getConfig'
+    })
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString());
+            mainWindow.webContents.send('gotConfig', json);
+        })
+    });
+    request.on('error', (error) => {
+        let message = "Can't get config because python server is not running."
+        mainWindow.webContents.send('gotConfig', {status: 'error', errorMessage: message});
+    })
+    let post_data = {
+        path: item.path,
+    };
+    request.write(JSON.stringify(post_data));
+    request.end()
 });
 
 ipcMain.on('changeToRemote', function (e, item) {

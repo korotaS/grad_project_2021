@@ -10,7 +10,7 @@ import {makeConfigFromState, makeLoadConfigFromState} from "./utils/configSettin
 import {ErrorModal, SmthWrongModal} from "./other/Modals";
 import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
-import {LeftArrow, RightArrow} from "./utils/Arrows";
+import {LeftArrow, RightArrow} from "./other/Arrows";
 import Header from './other/Header'
 
 const {set} = require('lodash');
@@ -430,7 +430,7 @@ class Main extends Component {
                                         </div>
                                     </Collapse>
                                 </div>
-                                <DataSettings showAdvanced={this.state.view.carouselIndex === 3}
+                                <DataSettings showAdvanced={this.state.view.carouselIndex === 1}
                                               showFull={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
                                               data={this.state.data}
@@ -446,7 +446,7 @@ class Main extends Component {
                                                setCommonState={this.setCommonState.bind(this)}
                                                setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                                clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                                <TrainingSettings showAdvanced={this.state.view.carouselIndex === 5}
+                                <TrainingSettings showAdvanced={this.state.view.carouselIndex === 3}
                                                   showFull={this.state.general.pushedSubTask}
                                                   taskSubClass={this.state.general.subTask}
                                                   numGpus={this.state.numGpus}

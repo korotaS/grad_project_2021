@@ -96,8 +96,21 @@ def kill_tb():
 
 
 @app.route("/getNumGpus")
-def get_num_gpu():
+def get_num_gpus():
     return jsonify({'numGpus': torch.cuda.device_count()})
+
+
+@app.route("/getConfig", methods=['POST'])
+def get_config():
+    data = request.get_json(force=True)
+    path = data['path']
+    try:
+        config = yaml.full_load(open(path))
+        return jsonify({'status': 'ok', 'config': config})
+    except FileNotFoundError:
+        return jsonify({'status': 'error', 'errorMessage': f'File {path} not found.'})
+    except Exception as e:
+        return jsonify({'status': 'error', 'errorMessage': e.args[0]})
 
 
 if __name__ == "__main__":
