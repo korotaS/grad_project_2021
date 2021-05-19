@@ -4,7 +4,6 @@ import '../../styles/modals.css'
 
 const {dialog} = window.require('electron').remote;
 const {ipcRenderer} = window.require("electron");
-const fs = window.require('fs');
 
 export class ExportModal extends Component {
     constructor(props) {

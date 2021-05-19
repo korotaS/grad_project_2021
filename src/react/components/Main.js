@@ -398,7 +398,7 @@ class Main extends Component {
                             remoteToLocal={this.state.server.remote}
                             loadParamsFromConfig={this.loadParamsFromConfig.bind(this)}/>
                 </div>
-                <Row className="align-items-center" style={{minHeight: '95vh'}}>
+                <Row className="align-items-center" style={{minHeight: '90vh'}}>
                     <Col>
                         <div className="Main">
                             <Carousel value={this.state.view.carouselIndex}

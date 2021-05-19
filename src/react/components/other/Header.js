@@ -60,7 +60,7 @@ export default class Header extends Component {
             )
         }
         return (
-            <div>
+            <div style={{height: '70px'}}>
                 <Row style={{marginTop: "10px"}} align={'center'}>
                     <Col>
                         <Button variant="outline-secondary"

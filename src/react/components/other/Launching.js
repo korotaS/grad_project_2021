@@ -1,4 +1,4 @@
-import {Button, Col, Dropdown, DropdownButton, Row} from "react-bootstrap";
+import {Button, Dropdown, DropdownButton} from "react-bootstrap";
 import React, {Component} from "react";
 
 const {ipcRenderer} = window.require("electron");
@@ -97,19 +97,12 @@ export class TBButtons extends Component {
                           rel={"noopener noreferrer"}>{this.state.tbLink}</a>;
             return (
                 <div>
-                    <Row className="justify-content-md-center">
-                        <Col md="auto">
-                            <span style={{fontSize: '10px'}}>TB is on {link}</span>
-                        </Col>
-                        <Col md="auto">
-                            <Button
-                                variant="outline-danger"
-                                type="submit"
-                                size={'sm'}
-                                onClick={this.killTB}
-                            >Kill</Button>
-                        </Col>
-                    </Row>
+                    <Button
+                        variant="outline-danger" type="submit" size={'sm'} style={{marginBottom: '10px'}}
+                        onClick={this.killTB}
+                    >Kill TensorBoard</Button>
+                    <br/>
+                    <span style={{fontSize: '16px'}}>TB is on {link}</span>
                 </div>
             )
         }
