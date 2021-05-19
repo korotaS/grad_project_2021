@@ -1,4 +1,4 @@
-import {Button, Col, Form, Row} from "react-bootstrap";
+import {Button, Col, Collapse, Form, Row} from "react-bootstrap";
 import React, {Component} from "react";
 import openSocket from 'socket.io-client';
 import {TracebackModal} from "../other/Modals";
@@ -21,6 +21,7 @@ export function DatasetLength(props) {
             <Col md="auto">
                 <input
                     type="number" min={1}
+                    style={{width: '70%'}}
                     value={props.lenNumeric}
                     onChange={(event) => {
                         event.persist();
@@ -65,7 +66,7 @@ export class Numeric extends Component {
                     event.persist();
                     this.handleChange(event)
                 }}
-                style={{width: '50%'}}
+                style={{width: this.props.single ? '30%' : '70%'}}
             />
         )
     }
@@ -76,7 +77,9 @@ export class LabelArray extends Component {
         super(props)
 
         this.state = {
-            labels: props.labels || ['label1', 'label2']
+            labels: props.labels || ['label1', 'label2'],
+            animate: [true, true],
+            removeIndex: null
         }
     }
 
@@ -100,6 +103,11 @@ export class LabelArray extends Component {
         this.setState(state => {
             state.labels = labels;
             return state
+        }, () => {
+            this.setState(state => {
+                state.animate = [...state.animate, true]
+                return state
+            })
         })
     }
 
@@ -109,8 +117,14 @@ export class LabelArray extends Component {
             labels.splice(index, 1)
             this.props.passData(this.props.type, 'labels', labels)
             this.setState(state => {
-                state.labels = labels;
+                state.removeIndex = index
+                state.labels = labels
                 return state
+            }, () => {
+                this.setState(state => {
+                    state.animate.splice(index, 1)
+                    return state
+                })
             })
         }
     }
@@ -118,22 +132,23 @@ export class LabelArray extends Component {
     render() {
         return (
             <div>
-                <ul>
+                <div>
                     {this.state.labels.map((obj, index) => {
                         return (
-                            <li key={index}>
-                                name:<input
-                                type="text"
-                                value={obj}
-                                onChange={(e) => this.handleArrayChange(e, index)}/>
-                                <Button size={'sm'}
-                                        onClick={(e) => this.removeElement(e, index)}
-                                >Delete
-                                </Button>
-                            </li>
+                            <Collapse in={this.state.animate[index]} key={index}>
+                                <div key={index} style={{marginBottom: '10px', lineHeight: '25px'}}>
+                                    <input type="text" value={obj}
+                                           style={{verticalAlign: 'middle', marginRight: '10px'}}
+                                           onChange={(e) => this.handleArrayChange(e, index)}/>
+                                    <Button size={'sm'} style={{verticalAlign: 'middle'}} variant={'outline-danger'}
+                                            disabled={this.state.labels.length === 2}
+                                            onClick={(e) => this.removeElement(e, index)}
+                                    >Delete</Button>
+                                </div>
+                            </Collapse>
                         )
                     })}
-                </ul>
+                </div>
                 <Button size={'sm'} onClick={this.addLabel}>Add label</Button>
             </div>
         )

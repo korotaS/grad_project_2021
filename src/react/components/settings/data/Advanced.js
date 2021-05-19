@@ -1,5 +1,5 @@
 import React, {Component} from "react";
-import {Col, Form, Row} from "react-bootstrap";
+import {Col, Collapse, Form, Row} from "react-bootstrap";
 import Editor from 'react-simple-code-editor';
 import {highlight, languages} from 'prismjs/components/prism-core';
 import 'prismjs/components/prism-yaml';
@@ -33,7 +33,8 @@ export class AdvancedForImclf extends Component {
         let transformsConfig = 'not valid'
         try {
             transformsConfig = yaml.load(this.state._.transformsTrainCache)
-        } catch {}
+        } catch {
+        }
         this.props.handleTaskSpecificState(this.props.type, 'transformsTrain', event.target.checked ? 'default' : transformsConfig)
         this.setState(state => {
             state._.transformsDefault = event.target.checked
@@ -66,30 +67,35 @@ export class AdvancedForImclf extends Component {
     render() {
         return (
             <div>
-                <h5>Train transforms</h5>
+                <h5 style={{marginTop: '10px'}}>Train transforms</h5>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
+                    style={{marginBottom: '10px'}}
                     onChange={(event) => {
                         event.persist();
                         this.handleDefaultCheckbox(event)
                     }}
                 />
-                <div hidden={this.state._.transformsDefault || this.state._.transformsValid}>Please enter the valid YAML.</div>
-                <div className="container_editor_area">
-                    <Editor
-                        disabled={this.state._.transformsDefault}
-                        value={this.state._.transformsTrainCache}
-                        onValueChange={this.handleTransformsTrain.bind(this)}
-                        highlight={code => highlight(code, languages.yaml, 'yaml')}
-                        padding={10}
-                        onClick={() => {
-                        }}
-                        style={{
-                            fontSize: 15,
-                            width: '50%',
-                        }}
-                    />
-                </div>
+
+                <Collapse in={!this.state._.transformsDefault && !this.state._.transformsValid}>
+                    <div>
+                        {'Please enter the valid YAML.'}
+                    </div>
+                </Collapse>
+
+                <Collapse in={!this.state._.transformsDefault}>
+                    <div className="container_editor_area">
+                        <Editor
+                            value={this.state._.transformsTrainCache}
+                            onValueChange={this.handleTransformsTrain.bind(this)}
+                            highlight={code => highlight(code, languages.yaml, 'yaml')}
+                            padding={10}
+                            onClick={() => {
+                            }}
+                            style={{fontSize: 15, width: '70%', border: '1px solid'}}
+                        />
+                    </div>
+                </Collapse>
             </div>
         )
     }
@@ -134,7 +140,8 @@ export class AdvancedForImsgm extends Component {
         let transformsConfig = 'default'
         try {
             transformsConfig = yaml.load(this.state._.transformsTrainCache)
-        } catch {}
+        } catch {
+        }
         this.props.handleTaskSpecificState(this.props.type, 'transformsTrain', event.target.checked ? 'default' : transformsConfig)
         this.setState(state => {
             state._.transformsDefault = event.target.checked

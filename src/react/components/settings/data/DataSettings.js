@@ -148,12 +148,11 @@ class DataSettings extends Component {
                             onChange={this.changeDatasetFolderRemote.bind(this)}
                             defaultValue={this.props.data.common.datasetFolder}/>
                         : <Button
-                            variant="success"
-                            type="submit"
+                            variant="primary" type="submit"
                             onClick={this.chooseDatasetFolderLocal}
-                            size={'sm'}
-                        >choose path</Button>}
-                    <div style={{fontSize: 10}}>{this.getCurrentDatasetFolder()}</div>
+                            style={{marginTop: '5px'}}
+                        >Choose path</Button>}
+                    <div style={{fontSize: 10, color: 'grey', marginBottom: '10px'}}>{this.getCurrentDatasetFolder()}</div>
                     {taskSpecificSettings}
                     <Button style={{marginTop: '10px'}}
                             variant="outline-secondary"
@@ -163,7 +162,7 @@ class DataSettings extends Component {
                     {/*Common advanced*/}
                     <Collapse in={this.state.advancedPushed}>
                         <div>
-                            <h5>Train dataset length</h5>
+                            <h5 style={{marginTop: '10px'}}>Train dataset length</h5>
                             <DatasetLength
                                 len={this.props.data.common.trainLen}
                                 type={'train'}
@@ -172,7 +171,7 @@ class DataSettings extends Component {
                                 handleLengthNumber={this.handleLengthNumber}
                             />
 
-                            <h5>Val dataset length</h5>
+                            <h5 style={{marginTop: '10px'}}>Val dataset length</h5>
                             <DatasetLength
                                 len={this.props.data.common.valLen}
                                 type={'val'}
@@ -181,7 +180,7 @@ class DataSettings extends Component {
                                 handleLengthNumber={this.handleLengthNumber}
                             />
 
-                            <h5>Shuffle</h5>
+                            <h5 style={{marginTop: '10px'}}>Shuffle</h5>
                             <Row className="justify-content-md-center">
                                 <Col md="auto">
                                     <div>Train</div>
@@ -194,7 +193,7 @@ class DataSettings extends Component {
                                         }}
                                     />
                                 </Col>
-                                <Col md="Val">
+                                <Col md="auto">
                                     <div>Val</div>
                                     <Form.Check
                                         type={'checkbox'}
@@ -206,7 +205,7 @@ class DataSettings extends Component {
                                     />
                                 </Col>
                             </Row>
-                            Task specific advanced
+                            {/*Task specific advanced*/}
                             {advancedSettings}
                         </div>
                     </Collapse>

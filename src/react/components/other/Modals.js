@@ -259,7 +259,7 @@ export function SmthWrongModal(props) {
         buttons = (
             <div>
                 <Button variant="secondary" onClick={() => props.onHide()}
-                        style={{transition: "none"}}>Close</Button>
+                        style={{transition: "none", marginRight: '10px'}}>Close</Button>
                 <Button variant="success" onClick={() => props.onHide(props.value)}
                         style={{transition: "none"}}>Change</Button>
             </div>
