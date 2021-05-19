@@ -171,6 +171,8 @@ export class TextLog extends Component {
         }
 
         this.textLog = React.createRef();
+        this.socketLogListener = this.socketLogListener.bind(this);
+        this.socketExceptionListener = this.socketExceptionListener.bind(this);
     }
 
     clearLogs(event) {
@@ -192,6 +194,25 @@ export class TextLog extends Component {
         });
     }
 
+    socketLogListener(data) {
+        this.setState(state => {
+            if (data.toString().trim().length > 0) {
+                state.log = state.log.concat({text: data.toString().trim(), error: false})
+            }
+            return state
+        });
+    }
+
+    socketExceptionListener(data) {
+        let ex = JSON.parse(data.toString())
+        let ex_string = `Error: ${ex.name}\nMessage: ${ex.message}`
+        this.setState(state => {
+            state.log = state.log.concat({text: ex_string, error: true, traceback: ex.traceback})
+            return state
+        });
+        this.props.stopTraining()
+    }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.textLog.current !== null) {
             this.textLog.current.scrollTop = this.textLog.current.scrollHeight;
@@ -206,34 +227,10 @@ export class TextLog extends Component {
                     state.socker = null
                 }
                 state.socket = openSocket(`http://${this.props.host}:${this.props.port}`);
+                state.socket.on('log', this.socketLogListener)
+                state.socket.on('exception', this.socketExceptionListener)
                 return state
             });
-        }
-
-        if (this.state.socket !== null && !this.state.listenerSet) {
-            this.setState(state => {
-                state.listenerSet = true
-                return state
-            });
-
-            this.state.socket.on('log', data => {
-                this.setState(state => {
-                    if (data.toString().trim().length > 0) {
-                        state.log = state.log.concat({text: data.toString().trim(), error: false})
-                    }
-                    return state
-                });
-            })
-
-            this.state.socket.on('exception', data => {
-                let ex = JSON.parse(data.toString())
-                let ex_string = `Error: ${ex.name}\nMessage: ${ex.message}`
-                this.setState(state => {
-                    state.log = state.log.concat({text: ex_string, error: true, traceback: ex.traceback})
-                    return state
-                });
-                this.props.stopTraining()
-            })
         }
     }
 
@@ -246,6 +243,8 @@ export class TextLog extends Component {
                         state.socker = null
                     }
                     state.socket = openSocket(`http://${this.state.host}:${data.port}`);
+                    state.socket.on('log', this.socketLogListener)
+                    state.socket.on('exception', this.socketExceptionListener)
                     return state
                 })
             }
@@ -259,6 +258,8 @@ export class TextLog extends Component {
                     state.socker = null
                 }
                 state.socket = openSocket(`http://localhost:${data.port}`);
+                state.socket.on('log', this.socketLogListener)
+                state.socket.on('exception', this.socketExceptionListener)
                 return state
             })
         }.bind(this));
