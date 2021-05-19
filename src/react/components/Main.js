@@ -76,6 +76,7 @@ class Main extends Component {
                 missingMessage: '',
                 missingValue: '',
                 carouselIndex: 0,
+                showTextLog: false,
                 error: null
             },
             server: {
@@ -214,10 +215,18 @@ class Main extends Component {
         })
     }
 
+    setShowTextLog(value) {
+        this.setState(state => {
+            state.view.showTextLog = value
+            return state
+        })
+    }
+
     runTraining() {
         console.log('Running training with these params:')
         this.setState(state => {
             state.run.training = true
+            state.view.showTextLog = true
             return state
         })
         let config = makeConfigFromState(this.state)
@@ -456,7 +465,6 @@ class Main extends Component {
                                                   setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                                   clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
                                 <div hidden={!this.state.general.pushedSubTask} align={'center'}>
-                                    <h3>Run</h3>
                                     <div>
                                         <Row style={{marginTop: "10px"}} align={'center'}>
                                             <Col>
@@ -466,10 +474,14 @@ class Main extends Component {
                                                               stopTraining={this.stopTraining.bind(this)}/>
                                             </Col>
                                         </Row>
-                                        <TextLog show={this.state.general.pushedSubTask}
-                                                 stopTraining={this.stopTrainingFromLogs.bind(this)}
-                                                 host={this.state.server.creds.host}
-                                                 port={this.state.server.creds.port}/>
+                                        <Collapse in={this.state.view.showTextLog}>
+                                            <div>
+                                                <TextLog show={this.state.general.pushedSubTask}
+                                                         stopTraining={this.stopTrainingFromLogs.bind(this)}
+                                                         host={this.state.server.creds.host}
+                                                         port={this.state.server.creds.port}/>
+                                            </div>
+                                        </Collapse>
                                     </div>
                                 </div>
                             </Carousel>

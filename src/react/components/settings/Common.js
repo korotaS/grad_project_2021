@@ -196,8 +196,9 @@ export class TextLog extends Component {
 
     socketLogListener(data) {
         this.setState(state => {
-            if (data.toString().trim().length > 0) {
-                state.log = state.log.concat({text: data.toString().trim(), error: false})
+            let str = data.toString().trim()
+            if (str.length > 0 && state.log[state.log.length-1] !== str) {
+                state.log = state.log.concat({text: str, error: false})
             }
             return state
         });
@@ -219,6 +220,7 @@ export class TextLog extends Component {
         }
 
         if (this.props.host !== this.state.host || this.props.port !== this.state.port) {
+            console.log('update', Date.now())
             this.setState(state => {
                 state.host = this.props.host
                 state.port = this.props.port
@@ -235,21 +237,6 @@ export class TextLog extends Component {
     }
 
     componentDidMount() {
-        ipcRenderer.on('pythonPort', function (e, data) {
-            if (this.state.socket === null) {
-                this.setState(state => {
-                    if (state.socket !== null) {
-                        state.socket.close()
-                        state.socker = null
-                    }
-                    state.socket = openSocket(`http://${this.state.host}:${data.port}`);
-                    state.socket.on('log', this.socketLogListener)
-                    state.socket.on('exception', this.socketExceptionListener)
-                    return state
-                })
-            }
-        }.bind(this));
-
         ipcRenderer.on('startedNewPython', function (e, data) {
             this.setState(state => {
                 state.host = 'localhost'
