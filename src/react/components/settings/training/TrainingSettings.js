@@ -147,7 +147,7 @@ class TrainingSettings extends Component {
 
                 <div>
                     <h5>Device</h5>
-                    <Form.Control as="select" custom style={{width: '50%'}}
+                    <Form.Control as="select" custom
                                   onChange={this.handleGpuChange.bind(this)}>
                         {['cpu'].concat(this.getGpuRange()).map((obj, index) => {
                             return (
@@ -156,11 +156,11 @@ class TrainingSettings extends Component {
                         })}
                     </Form.Control>
 
-                    <h5>Max epochs</h5>
+                    <h5 style={{marginTop: '10px'}}>Max epochs</h5>
                     <Numeric value={this.props.data.common.maxEpochs} nameKey={'maxEpochs'} type={this.props.type}
-                             passData={this.props.setCommonState}/>
+                             passData={this.props.setCommonState} single={true}/>
 
-                    <h5>Batch size</h5>
+                    <h5 style={{marginTop: '10px'}}>Batch size</h5>
                     <Row className="justify-content-md-center">
                         <Col md="auto">
                             <div>Train</div>
@@ -190,11 +190,11 @@ class TrainingSettings extends Component {
                         </Col>
                     </Row>
 
-                    <h5>Workers</h5>
+                    <h5 style={{marginTop: '10px'}}>Workers</h5>
                     <Numeric value={this.props.data.common.workers} nameKey={'workers'} type={this.props.type}
-                             passData={this.props.setCommonState} min={0}/>
+                             passData={this.props.setCommonState} min={0} single={true}/>
 
-                    <h5>Learning rate</h5>
+                    <h5 style={{marginTop: '10px'}}>Learning rate</h5>
                     <input
                         type="number" min={0} max={Infinity} step={0.1}
                         value={this.props.data.common.optimizer.params.lr}
@@ -210,10 +210,10 @@ class TrainingSettings extends Component {
                     >{this.state.advancedTexts[this.state.advancedPushed ? 1 : 0]}</Button>
                     {/*Common advanced*/}
                     <Collapse in={this.state.advancedPushed}>
-                        <div>
-                            <h5>Optimizer</h5>
+                        <div style={{marginBottom: '30px'}}>
+                            <h5 style={{marginTop: '10px'}}>Optimizer</h5>
                             <div>Name</div>
-                            <Form.Control as="select" custom style={{width: '50%'}}
+                            <Form.Control as="select" custom
                                           onChange={(event) => {
                                               this.handleOptNameChange(event)
                                           }}>
@@ -223,33 +223,37 @@ class TrainingSettings extends Component {
                                     )
                                 })}
                             </Form.Control>
-                            <div>Params</div>
+                            <div style={{marginTop: '10px'}}>Params</div>
                             <Form.Check
                                 label={'no params'} type={'checkbox'} checked={this.state.noParams}
+                                style={{lineHeight: '21px'}}
                                 onChange={(event) => {
                                     event.persist();
                                     this.handleNoParamsCheckbox(event)
                                 }}
                             />
-                            <div hidden={this.state.noParams || this.state.paramsValid}>Please enter the valid YAML.
-                            </div>
-                            <div className="container_editor_area">
-                                <Editor
-                                    disabled={this.state.noParams}
-                                    value={this.state.params}
-                                    onValueChange={this.handleParams.bind(this)}
-                                    highlight={code => highlight(code, languages.yaml, 'yaml')}
-                                    padding={10}
-                                    onClick={() => {
-                                    }}
-                                    style={{
-                                        fontSize: 15,
-                                        width: '50%',
-                                    }}
-                                />
-                            </div>
 
-                            <h5>Checkpoint</h5>
+                            <Collapse in={!this.state.noParams && !this.state.paramsValid}>
+                                <div style={{marginBottom: '5px', color: 'red'}}>
+                                    {'Please enter valid YAML.'}
+                                </div>
+                            </Collapse>
+
+                            <Collapse in={!this.state.noParams}>
+                                <div className="container_editor_area">
+                                    <Editor
+                                        value={this.state.params}
+                                        onValueChange={this.handleParams.bind(this)}
+                                        highlight={code => highlight(code, languages.yaml, 'yaml')}
+                                        padding={10}
+                                        onClick={() => {
+                                        }}
+                                        style={{fontSize: 15, border: '1px solid'}}
+                                    />
+                                </div>
+                            </Collapse>
+
+                            <h5 style={{marginTop: '10px'}}>Checkpoint</h5>
                             <div>Monitor</div>
                             <Row className="justify-content-md-center">
                                 <Col xs="auto">
@@ -275,7 +279,7 @@ class TrainingSettings extends Component {
                             <div>Save top K</div>
                             <Numeric value={this.props.data.common.checkpointCallback.save_top_k}
                                      nameKey={'checkpointCallback.save_top_k'}
-                                     type={this.props.type}
+                                     type={this.props.type} single={true}
                                      passData={this.props.setCommonState} max={100}/>
                         </div>
                     </Collapse>

@@ -260,11 +260,11 @@ export class ModelSettingsForTxtclf extends Component {
         if (this.state.modelType === 'lstm') {
             variableModelSettings = (
                 <div>
-                    <h5 style={{marginTop: '5px'}}>Number of hidden units</h5>
+                    <h5 style={{marginTop: '10px'}}>Number of hidden units</h5>
                     <Numeric value={this.state.nHidden} nameKey={'nHidden'} type={this.props.type}
                              passData={this.props.handleTaskSpecificState} max={2048} single={true}/>
 
-                    <h5 style={{marginTop: '5px'}}>Embeddings</h5>
+                    <h5 style={{marginTop: '10px'}}>Embeddings</h5>
                     <Form.Control as="select" custom style={{width: '250px'}}
                                   onChange={this.handleEmbeddingsChange.bind(this)}>
                         {this.state.embeddingNames.map((obj, index) => {
@@ -282,7 +282,7 @@ export class ModelSettingsForTxtclf extends Component {
         } else {
             variableModelSettings = (
                 <div>
-                    <h5 style={{marginTop: '5px'}}>Model name</h5>
+                    <h5 style={{marginTop: '10px'}}>Model name</h5>
                     <Form.Control as="select" custom style={{width: '250px'}}
                                   onChange={this.handleModelNameChange.bind(this)}>
                         {this.state.modelNames.map((obj, index) => {
@@ -320,7 +320,7 @@ export class ModelSettingsForTxtclf extends Component {
                     </Col>
                 </Row>
 
-                <h5 style={{marginTop: '5px'}}>Language</h5>
+                <h5 style={{marginTop: '10px'}}>Language</h5>
                 <Row className="justify-content-md-center">
                     <Col md="auto">
                         <Form.Check

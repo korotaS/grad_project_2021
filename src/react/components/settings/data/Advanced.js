@@ -70,7 +70,7 @@ export class AdvancedForImclf extends Component {
                 <h5 style={{marginTop: '10px'}}>Train transforms</h5>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
-                    style={{marginBottom: '10px'}}
+                    style={{marginBottom: '10px', lineHeight: '21px'}}
                     onChange={(event) => {
                         event.persist();
                         this.handleDefaultCheckbox(event)
@@ -79,7 +79,7 @@ export class AdvancedForImclf extends Component {
 
                 <Collapse in={!this.state._.transformsDefault && !this.state._.transformsValid}>
                     <div style={{marginBottom: '5px', color: 'red'}}>
-                        {'Please enter the valid YAML.'}
+                        {'Please enter valid YAML.'}
                     </div>
                 </Collapse>
 
