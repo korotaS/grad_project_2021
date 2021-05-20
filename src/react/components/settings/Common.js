@@ -1,4 +1,4 @@
-import {Button, Col, Collapse, Form, Row} from "react-bootstrap";
+import {Button, Col, Collapse, Form, ProgressBar, Row} from "react-bootstrap";
 import React, {Component} from "react";
 import openSocket from 'socket.io-client';
 import {TracebackModal} from "../other/Modals";
@@ -198,8 +198,14 @@ export class TextLog extends Component {
         let str = data.toString().trim()
         let len = this.state.log.length
         this.setState(state => {
-            if (str.length > 0 && (len === 0 || state.log[len-1].text !== str)) {
-                state.log = state.log.concat({text: str, error: false})
+            if (str.length > 0 && (len === 0 || state.log[len - 1].text !== str)) {
+                let newType = this.progressType(str)
+                let lastType = len === 0 ? null : this.progressType(state.log[len - 1].text)
+                if (lastType !== null && newType === lastType) {
+                    state.log[len - 1] = {text: str, error: false}
+                } else {
+                    state.log = state.log.concat({text: str, error: false})
+                }
             }
             return state
         });
@@ -252,18 +258,63 @@ export class TextLog extends Component {
         }.bind(this));
     }
 
+    progressType(text) {
+        if (text.includes('Validation sanity check')) {
+            return 'valc'
+        } else if (text.includes('Epoch')) {
+            return 'tr'
+        } else if (text.includes('Validating')) {
+            return 'val'
+        }
+        return null
+    }
+
+    renderLine(line, error) {
+        let progType = this.progressType(line)
+        if (progType) {
+            let split = line.split('|')
+            if (split.length !== 3) {
+                return (
+                    <p style={{color: error ? 'red' : 'black', marginBottom: '0px', whiteSpace: 'pre-line'}}>
+                        {line}
+                    </p>
+                )
+            }
+            let [p1, p2, p3] = split
+            let percent = parseInt(p1.split(':')[1].split('%')[0].trim())
+            return (
+                <div>
+                    <p style={{marginBottom: '0px', whiteSpace: 'pre-line', float: 'left'}}>
+                        {p1}
+                    </p>
+                    <p style={{marginBottom: '0px', whiteSpace: 'pre-line', float: 'right'}}>
+                        {p3}
+                    </p>
+                    <br/>
+                    <ProgressBar now={percent} style={{width: '100%', height: '20px'}}
+                                 variant={progType.includes('val') ? 'warning' : 'success'}/>
+                    <br/>
+                </div>
+            )
+        }
+        return (
+            <p style={{color: error ? 'red' : 'black', marginBottom: '0px', whiteSpace: 'pre-line'}}>
+                {line}
+            </p>
+        )
+    }
+
     renderLog() {
         return (
-            <div style={{height: '300px', width: '600px', overflow: 'auto', border: '4px solid black'}}
-                 align={'left'} ref={this.textLog}>
+            <div style={{
+                height: '400px', width: '900px',
+                overflow: 'auto', border: '2px solid black',
+                borderRadius: '15px', padding: '15px'
+            }} align={'left'} ref={this.textLog}>
                 {this.state.log.map((obj, index) => {
                     return (
                         <div key={index}>
-                            <p style={{
-                                color: obj.error ? 'red' : 'black',
-                                marginBottom: '0px',
-                                whiteSpace: 'pre-line'
-                            }}>{obj.text}</p>
+                            {this.renderLine(obj.text, obj.error)}
                             {obj.error
                                 ? <div style={{color: 'gray'}}
                                        onClick={() => this.setShowTraceback(true, index)}>(show full traceback)</div>
@@ -280,16 +331,35 @@ export class TextLog extends Component {
             return null
         }
 
+        let clearButton
+        if (this.state.log.length > -1) {
+            clearButton = (
+                <div>
+                    <style type="text/css">
+                        {`
+                          .btn-small {
+                            padding: 0.2rem 0.2rem;
+                            font-size: 13px;
+                            margin-top: 5px
+                          }
+                        `}
+                    </style>
+                    <Button
+                        variant="outline-secondary" size={'small'}
+                        type="submit"
+                        onClick={this.clearLogs.bind(this)}
+                    >Clear logs</Button>
+                </div>
+
+            )
+        }
+
         let log = this.renderLog()
         return (
             <div style={{marginBottom: '10px'}}>
                 <Form style={{marginLeft: '10px', marginRight: '10px'}}>
                     {log}
-                    <Button
-                        variant="success"
-                        type="submit"
-                        onClick={this.clearLogs.bind(this)}
-                    >Clear logs</Button>
+                    {clearButton}
                 </Form>
                 <TracebackModal show={this.state.showTraceback}
                                 onHide={() => this.setShowTraceback(false)}

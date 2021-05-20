@@ -32,7 +32,7 @@ export function TrainButtons(props) {
                     {`
                       .btn-small {
                         padding: 0.2rem 0.2rem;
-                        font-size: 15px;
+                        font-size: 13px;
                         margin-top: 10px
                       }
                     `}

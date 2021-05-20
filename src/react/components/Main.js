@@ -480,7 +480,7 @@ class Main extends Component {
                                             </Col>
                                         </Row>
                                         <Collapse in={this.state.view.showTextLog}>
-                                            <div style={{marginTop: '20px'}}>
+                                            <div style={{marginTop: '10px'}}>
                                                 <TextLog show={this.state.general.pushedSubTask}
                                                          stopTraining={this.stopTrainingFromLogs.bind(this)}
                                                          host={this.state.server.creds.host}
