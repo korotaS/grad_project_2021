@@ -77,6 +77,7 @@ class Main extends Component {
                 missingValue: '',
                 carouselIndex: 0,
                 showTextLog: false,
+                showTextLogButton: false,
                 error: null
             },
             server: {
@@ -227,6 +228,7 @@ class Main extends Component {
         this.setState(state => {
             state.run.training = true
             state.view.showTextLog = true
+            state.view.showTextLogButton = true
             return state
         })
         let config = makeConfigFromState(this.state)
@@ -464,18 +466,21 @@ class Main extends Component {
                                                   setCommonState={this.setCommonState.bind(this)}
                                                   setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                                   clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                                <div hidden={!this.state.general.pushedSubTask} align={'center'}>
+                                <div align={'center'}>
                                     <div>
                                         <Row style={{marginTop: "10px"}} align={'center'}>
                                             <Col>
                                                 <TrainButtons show={this.state.general.pushedSubTask}
                                                               training={this.state.run.training}
                                                               runTraining={this.runTraining.bind(this)}
-                                                              stopTraining={this.stopTraining.bind(this)}/>
+                                                              stopTraining={this.stopTraining.bind(this)}
+                                                              showLog={this.state.view.showTextLog}
+                                                              setShowLog={this.setShowTextLog.bind(this)}
+                                                              showTextLogButton={this.state.view.showTextLogButton}/>
                                             </Col>
                                         </Row>
                                         <Collapse in={this.state.view.showTextLog}>
-                                            <div>
+                                            <div style={{marginTop: '20px'}}>
                                                 <TextLog show={this.state.general.pushedSubTask}
                                                          stopTraining={this.stopTrainingFromLogs.bind(this)}
                                                          host={this.state.server.creds.host}
