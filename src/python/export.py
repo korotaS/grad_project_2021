@@ -2,7 +2,7 @@ from src.python.exporters import ImageExporter, TextClassificationExporter
 from src.python.utils.streams import RedirectStdStreams
 
 
-class ExportThread:
+class Exporter:
     def __init__(self, cfg, cfg_name, export_folder, prefix, export_type, skt=None):
         super().__init__()
         self.cfg = cfg

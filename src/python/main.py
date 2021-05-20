@@ -11,7 +11,7 @@ sys.path.append(os.getcwd())
 from src.python.app import socketio, app
 from src.python.train import MainThread
 from src.python.tb import TBThread
-from src.python.export import ExportThread
+from src.python.export import Exporter
 from src.python.utils.utils import validate_config
 
 STATUS = 'ready'
@@ -67,12 +67,12 @@ def export():
 
     global EXP_THREAD
     try:
-        EXP_THREAD = ExportThread(cfg=cfg,
-                                  cfg_name=cfg_path,
-                                  export_folder=folder,
-                                  prefix=prefix,
-                                  export_type=export_type,
-                                  skt=socketio)
+        EXP_THREAD = Exporter(cfg=cfg,
+                              cfg_name=cfg_path,
+                              export_folder=folder,
+                              prefix=prefix,
+                              export_type=export_type,
+                              skt=socketio)
         path = EXP_THREAD.run()
         return jsonify({'status': 'ok', 'outPath': path})
     except FileNotFoundError:
