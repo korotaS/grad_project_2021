@@ -195,9 +195,10 @@ export class TextLog extends Component {
     }
 
     socketLogListener(data) {
+        let str = data.toString().trim()
+        let len = this.state.log.length
         this.setState(state => {
-            let str = data.toString().trim()
-            if (str.length > 0 && state.log[state.log.length-1] !== str) {
+            if (str.length > 0 && (len === 0 || state.log[len-1].text !== str)) {
                 state.log = state.log.concat({text: str, error: false})
             }
             return state
@@ -220,7 +221,6 @@ export class TextLog extends Component {
         }
 
         if (this.props.host !== this.state.host || this.props.port !== this.state.port) {
-            console.log('update', Date.now())
             this.setState(state => {
                 state.host = this.props.host
                 state.port = this.props.port
