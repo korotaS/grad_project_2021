@@ -161,6 +161,7 @@ export class TextLog extends Component {
 
         this.state = {
             log: [],
+            validating: false,
             socket: null,
             host: 'localhost',
             port: null,
@@ -196,15 +197,32 @@ export class TextLog extends Component {
 
     socketLogListener(data) {
         let str = data.toString().trim()
+        if (str.startsWith('Validating: 0it')) {
+            return
+        }
         let len = this.state.log.length
         this.setState(state => {
             if (str.length > 0 && (len === 0 || state.log[len - 1].text !== str)) {
-                let newType = this.progressType(str)
-                let lastType = len === 0 ? null : this.progressType(state.log[len - 1].text)
-                if (lastType !== null && newType === lastType) {
-                    state.log[len - 1] = {text: str, error: false}
+                let newType = this.getProgressType(str)
+                if (newType === 'val') {
+                    state.validating = true
+                    if (this.getPercent(str) === 0) {
+                        state.log = state.log.concat({text: str, error: false})
+                    } else {
+                        state.log[len - 1] = {text: str, error: false}
+                    }
                 } else {
-                    state.log = state.log.concat({text: str, error: false})
+                    if (state.validating && newType === 'tr') {
+                        state.log[len - 2] = {text: str, error: false}
+                        state.validating = this.getPercent(str) !== 100;
+                    } else {
+                        let lastType = len === 0 ? null : this.getProgressType(state.log[len - 1].text)
+                        if (lastType && newType === lastType) {
+                            state.log[len - 1] = {text: str, error: false}
+                        } else {
+                            state.log = state.log.concat({text: str, error: false})
+                        }
+                    }
                 }
             }
             return state
@@ -258,36 +276,53 @@ export class TextLog extends Component {
         }.bind(this));
     }
 
-    progressType(text) {
+    getProgressType(text) {
         if (text.includes('Validation sanity check')) {
             return 'valc'
         } else if (text.includes('Epoch')) {
-            return 'tr'
+            if (text.includes('was not in') || text.includes('saving')) {
+                return 'ckpt'
+            } else {
+                return 'tr'
+            }
         } else if (text.includes('Validating')) {
             return 'val'
         }
         return null
     }
 
+    getPercent(text, split = null) {
+        split = split || text.split('|')
+        if (split.length !== 3) {
+            return -1
+        }
+        let p1 = split[0]
+        return parseInt(p1.split(':')[1].split('%')[0].trim())
+    }
+
     renderLine(line, error) {
-        let progType = this.progressType(line)
+        let marginBot = '3px'
+        let progType = this.getProgressType(line)
         if (progType) {
             let split = line.split('|')
             if (split.length !== 3) {
                 return (
-                    <p style={{color: error ? 'red' : 'black', marginBottom: '0px', whiteSpace: 'pre-line'}}>
+                    <p style={{
+                        color: error ? 'red' : 'black', whiteSpace: 'pre-line', marginBottom: marginBot,
+                        wordBreak: progType === 'ckpt' ? 'break-all' : 'normal'
+                    }}>
                         {line}
                     </p>
                 )
             }
             let [p1, p2, p3] = split
-            let percent = parseInt(p1.split(':')[1].split('%')[0].trim())
+            let percent = this.getPercent(line, split)
             return (
                 <div>
-                    <p style={{marginBottom: '0px', whiteSpace: 'pre-line', float: 'left'}}>
+                    <p style={{marginBottom: marginBot, whiteSpace: 'pre-line', float: 'left'}}>
                         {p1}
                     </p>
-                    <p style={{marginBottom: '0px', whiteSpace: 'pre-line', float: 'right'}}>
+                    <p style={{marginBottom: marginBot, whiteSpace: 'pre-line', float: 'right'}}>
                         {p3}
                     </p>
                     <br/>
@@ -298,7 +333,10 @@ export class TextLog extends Component {
             )
         }
         return (
-            <p style={{color: error ? 'red' : 'black', marginBottom: '0px', whiteSpace: 'pre-line'}}>
+            <p style={{
+                color: error ? 'red' : 'black', whiteSpace: 'pre-line', marginBottom: marginBot,
+                wordBreak: progType === 'ckpt' ? 'break-all' : 'normal'
+            }}>
                 {line}
             </p>
         )
