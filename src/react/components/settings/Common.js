@@ -161,6 +161,7 @@ export class TextLog extends Component {
 
         this.state = {
             log: [],
+            training: false,
             validating: false,
             socket: null,
             host: 'localhost',
@@ -198,6 +199,24 @@ export class TextLog extends Component {
     socketLogListener(data) {
         let str = data.toString().trim()
         if (str.startsWith('Validating: 0it')) {
+            return
+        }
+        if (str === 'START') {
+            this.setState(state => {
+                state.training = true
+            })
+            return
+        }
+        if (str === 'STOPPING TRAINING') {
+            this.setState(state => {
+                state.training = false
+                state.log = state.log.concat({text: str, error: false})
+            }, () => {
+                this.forceUpdate()
+            })
+            return
+        }
+        if (!this.state.training) {
             return
         }
         let len = this.state.log.length

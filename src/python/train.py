@@ -30,6 +30,7 @@ class MainThread(Thread):
     def run(self):
         try:
             with RedirectStdStreams(self.skt):
+                self.skt.emit('log', 'START')
                 self.trainer.run()
         except (StoppingTrainingException, MisconfigurationException):
             pass
