@@ -68,6 +68,10 @@ export class AdvancedForImclf extends Component {
         return (
             <div style={{marginBottom: '30px'}}>
                 <h5 style={{marginTop: '10px'}}>Train transforms</h5>
+                {/*<h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>*/}
+                {/*<div className="help-tip">*/}
+                {/*    <p>Kek</p>*/}
+                {/*</div>*/}
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
                     style={{marginBottom: '10px', lineHeight: '21px'}}
@@ -137,7 +141,7 @@ export class AdvancedForImsgm extends Component {
     }
 
     handleDefaultCheckbox(event) {
-        let transformsConfig = 'default'
+        let transformsConfig = 'not valid'
         try {
             transformsConfig = yaml.load(this.state._.transformsTrainCache)
         } catch {
@@ -150,7 +154,7 @@ export class AdvancedForImsgm extends Component {
     }
 
     handleTransformsTrain(value) {
-        let transformsConfig = 'default'
+        let transformsConfig = 'not valid'
         try {
             transformsConfig = yaml.load(value)
             this.setState(state => {

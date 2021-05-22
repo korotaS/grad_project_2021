@@ -12,6 +12,7 @@ import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
 import {LeftArrow, RightArrow} from "./other/Arrows";
 import Header from './other/Header'
+import '../styles/addinfo.css'
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");

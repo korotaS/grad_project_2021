@@ -152,7 +152,11 @@ class DataSettings extends Component {
                             onClick={this.chooseDatasetFolderLocal}
                             style={{marginTop: '5px'}}
                         >Choose path</Button>}
-                    <div style={{fontSize: 10, color: 'grey', marginBottom: '10px'}}>{this.getCurrentDatasetFolder()}</div>
+                    <div style={{
+                        fontSize: 10,
+                        color: 'grey',
+                        marginBottom: '10px'
+                    }}>{this.getCurrentDatasetFolder()}</div>
                     {taskSpecificSettings}
                     <Button style={{marginTop: '10px'}}
                             variant="outline-secondary"
@@ -181,6 +185,10 @@ class DataSettings extends Component {
                             />
 
                             <h5 style={{marginTop: '10px'}}>Shuffle</h5>
+                            {/*<h5 style={{marginTop: '10px', display: 'inline-block'}}>Shuffle</h5>*/}
+                            {/*<div className="help-tip">*/}
+                            {/*    <p>Kek</p>*/}
+                            {/*</div>*/}
                             <Row className="justify-content-md-center">
                                 <Col md="auto">
                                     <div>Train</div>
