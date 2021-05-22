@@ -33,3 +33,5 @@ TBD
 ## Tips
 
 - In order to create correct dataset structure, check [datasets.md](datasets.md)
+- You can run inference of the model with appropriate preprocessing class, see 
+  example in this [notebook](examples/inference_onnx_model.ipynb)
