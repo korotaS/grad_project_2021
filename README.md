@@ -29,3 +29,7 @@ sh run-macos.sh
 ### Windows
 
 TBD
+
+## Tips
+
+- In order to create correct dataset structure, check [datasets.md](datasets.md)
