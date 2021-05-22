@@ -29,8 +29,7 @@ info.json:
     "1": {
         "filename": "image2.jpg",
         "label": "label2"
-    },
-    ...
+    }
 }
 ```
 
@@ -69,8 +68,7 @@ info.json:
     "1": {
         "image_filename": "image2.jpg",
         "mask_filename": "mask2.png"
-    },
-    ...
+    }
 }
 ```
 
@@ -98,8 +96,7 @@ train/val.json:
     "1": {
         "text": "This is text 2.",
         "label": "label2"
-    },
-    ...
+    }
 }
 ```
 
