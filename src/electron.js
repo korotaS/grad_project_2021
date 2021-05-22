@@ -3,9 +3,9 @@ const path = require("path");
 const getPort = require('get-port');
 
 const PY_MODULE = "src/python/main.py";
-const SERVER_RUNNING = true;
+const SERVER_RUNNING = false;
 const QUIT_ON_CLOSING = true;
-const DEV = true;
+const DEV = false;
 
 // Keep a global reference of the mainWindow object, if you don't, the mainWindow will
 // be closed automatically when the JavaScript object is garbage collected.
