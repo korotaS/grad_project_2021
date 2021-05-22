@@ -1,18 +1,35 @@
-# Graduation project 2021
+# Graduation project 2021 at SE FCS HSE
+#### "Cross-platform Desktop Application for Automated Machine Learning Pipeline Building"
+
+## Prerequisites
+
+In order to run the application correctly, noy need to have:
+
+- node.js 14+ and npm 6+
+- python 3.6+
 
 ## Installation
 
-#### JS things:
-```shell script
-npm install
+### macOS
+```shell
+sh init-macos.sh
 ```
 
-#### Python things:
-```shell script
-pip install -r requirements.txt
+### Windows
+
+TBD
+
+## Run app
+
+### macOS
+```shell
+sh run-macos.sh
 ```
 
-## Run electron app (and also flask app)
-```shell script
-npm start
-```
+### Windows
+
+TBD
+
+## Tips
+
+- In order to create correct dataset structure, check [datasets.md](datasets.md)
