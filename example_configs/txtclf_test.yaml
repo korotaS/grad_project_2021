@@ -1,9 +1,0 @@
-dataset_folder: 'projects/datasets/imdb_dataset/'
-split: false
-data_len: -1
-shuffle: false
-num_workers_test: 0
-batch_size: 64
-gpus: '3'
-ckpt_path: 'projects/project_3/experiment_1_20210417T154503/weights/epoch=1_val_acc=0.89_20210417T154503.ckpt'
-#ckpt_path: 'projects/project_3/experiment_1_20210417T152656/weights/epoch=7_val_acc=0.64_20210417T152656.ckpt'
