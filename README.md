@@ -17,18 +17,16 @@ sh init-macos.sh
 
 ### Windows
 
-TBD
-
-## Run app
-
-### macOS
 ```shell
-sh run-macos.sh
+init-win.bat
 ```
 
-### Windows
+## Run app
+Don't forget to enter the python environment!
 
-TBD
+```shell
+npm start
+```
 
 ## Tips
 

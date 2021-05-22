@@ -21,7 +21,7 @@ const startPythonSubprocess = () => {
     if (!SERVER_RUNNING) {
         (async () => {
             port = await getPort({port: 5000});
-            let command = navigator.platform.toLowerCase().includes('win') ? 'py' : 'python'
+            let command = process.platform.toLowerCase() === 'win32' ? 'py' : 'python'
             subpy = require("child_process").spawn(command, [PY_MODULE, '--port', port.toString()]);
             console.log(`started process at ${subpy.pid} on port ${port}`);
             mainWindow.webContents.send('pythonPort', {port: port});
