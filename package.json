@@ -35,11 +35,11 @@
   },
   "scripts": {
     "start-react": "react-scripts start",
-    "start-electron": "ELECTRON_DISABLE_SECURITY_WARNINGS=true electron .",
+    "start-electron": "electron .",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "start": "ELECTRON_DISABLE_SECURITY_WARNINGS=true concurrently \"cross-env BROWSER=none npm run start-react\" \"wait-on http://localhost:3000 && electron .\""
+    "start": "concurrently \"cross-env BROWSER=none npm run start-react\" \"wait-on http://localhost:3000 && electron .\""
   },
   "eslintConfig": {
     "extends": "react-app"
