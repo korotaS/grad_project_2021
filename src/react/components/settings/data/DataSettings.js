@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button, Col, Collapse, Form, Row} from "react-bootstrap";
+import {Button, Col, Collapse, Form, FormControl, Row} from "react-bootstrap";
 import {DatasetLength} from "../Common";
 import {TaskSpecificForImclf, TaskSpecificForImsgm, TaskSpecificForTxtclf} from "./TaskSpecific";
 import {AdvancedForImclf, AdvancedForImsgm} from "./Advanced";
@@ -17,7 +17,7 @@ class DataSettings extends Component {
             advancedTexts: ['Advanced ▼', 'Advanced ▲']
         }
 
-        this.chooseDatasetFolder = this.chooseDatasetFolder.bind(this);
+        this.chooseDatasetFolderLocal = this.chooseDatasetFolderLocal.bind(this);
         this.handleLengthCheckbox = this.handleLengthCheckbox.bind(this);
         this.handleLengthNumber = this.handleLengthNumber.bind(this);
     }
@@ -27,7 +27,7 @@ class DataSettings extends Component {
         return folder === "" ? "No selected folder" : folder;
     }
 
-    chooseDatasetFolder(event) {
+    chooseDatasetFolderLocal(event) {
         event.preventDefault();
         let paths = dialog.showOpenDialogSync({
             properties: ['openDirectory'],
@@ -36,6 +36,10 @@ class DataSettings extends Component {
         if (paths != null) {
             this.props.setCommonState(this.props.type, 'datasetFolder', paths[0])
         }
+    }
+
+    changeDatasetFolderRemote(event) {
+        this.props.setCommonState(this.props.type, 'datasetFolder', event.target.value)
     }
 
     handleLengthCheckbox(event, type) {
@@ -138,13 +142,21 @@ class DataSettings extends Component {
 
                 <div>
                     <h5>Dataset folder</h5>
-                    <Button
-                        variant="success"
-                        type="submit"
-                        onClick={this.chooseDatasetFolder}
-                        size={'sm'}
-                    >choose path</Button>
-                    <div style={{fontSize: 10}}>{this.getCurrentDatasetFolder()}</div>
+                    {this.props.remote
+                        ? <FormControl
+                            placeholder="Dataset folder on remote host"
+                            onChange={this.changeDatasetFolderRemote.bind(this)}
+                            defaultValue={this.props.data.common.datasetFolder}/>
+                        : <Button
+                            variant="primary" type="submit"
+                            onClick={this.chooseDatasetFolderLocal}
+                            style={{marginTop: '5px'}}
+                        >Choose path</Button>}
+                    <div style={{
+                        fontSize: 10,
+                        color: 'grey',
+                        marginBottom: '10px'
+                    }}>{this.getCurrentDatasetFolder()}</div>
                     {taskSpecificSettings}
                     <Button style={{marginTop: '10px'}}
                             variant="outline-secondary"
@@ -154,7 +166,7 @@ class DataSettings extends Component {
                     {/*Common advanced*/}
                     <Collapse in={this.state.advancedPushed}>
                         <div>
-                            <h5>Train dataset length</h5>
+                            <h5 style={{marginTop: '10px'}}>Train dataset length</h5>
                             <DatasetLength
                                 len={this.props.data.common.trainLen}
                                 type={'train'}
@@ -163,7 +175,7 @@ class DataSettings extends Component {
                                 handleLengthNumber={this.handleLengthNumber}
                             />
 
-                            <h5>Val dataset length</h5>
+                            <h5 style={{marginTop: '10px'}}>Val dataset length</h5>
                             <DatasetLength
                                 len={this.props.data.common.valLen}
                                 type={'val'}
@@ -172,7 +184,11 @@ class DataSettings extends Component {
                                 handleLengthNumber={this.handleLengthNumber}
                             />
 
-                            <h5>Shuffle</h5>
+                            <h5 style={{marginTop: '10px'}}>Shuffle</h5>
+                            {/*<h5 style={{marginTop: '10px', display: 'inline-block'}}>Shuffle</h5>*/}
+                            {/*<div className="help-tip">*/}
+                            {/*    <p>Kek</p>*/}
+                            {/*</div>*/}
                             <Row className="justify-content-md-center">
                                 <Col md="auto">
                                     <div>Train</div>
@@ -185,7 +201,7 @@ class DataSettings extends Component {
                                         }}
                                     />
                                 </Col>
-                                <Col md="Val">
+                                <Col md="auto">
                                     <div>Val</div>
                                     <Form.Check
                                         type={'checkbox'}
@@ -197,7 +213,7 @@ class DataSettings extends Component {
                                     />
                                 </Col>
                             </Row>
-                            Task specific advanced
+                            {/*Task specific advanced*/}
                             {advancedSettings}
                         </div>
                     </Collapse>

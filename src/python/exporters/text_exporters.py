@@ -11,7 +11,7 @@ class TextClassificationExporter(BaseExporter):
         self.max_len = self.cfg['data']['max_item_len']
         self.model.cpu()
         if self.model_type == 'bert':
-            self.model_name = self.cfg['model']['model_name']
+            # self.model_name = self.cfg['model']['model_name']
             self._example_input = (torch.randint(1, 5, (1, self.max_len)),  # input_ids
                                    torch.randint(1, 5, (1, self.max_len)),  # input_mask
                                    torch.randint(1, 5, (1, self.max_len)))  # segment_ids
@@ -20,7 +20,7 @@ class TextClassificationExporter(BaseExporter):
                                    torch.randint(1, 5, (1,)))  # input_lengths
 
     def export_onnx(self):
-        print(f'Exporting ONNX model to {self.onnx_path}')
+        # print(f'Exporting ONNX model to {self.onnx_path}')
         if self.model_type == 'bert':
             torch.onnx.export(
                 self.model,

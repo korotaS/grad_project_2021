@@ -1,11 +1,12 @@
-import {Button, Col, Dropdown, DropdownButton, Row} from "react-bootstrap";
+import {Button, Dropdown, DropdownButton} from "react-bootstrap";
 import React, {Component} from "react";
 
 const {ipcRenderer} = window.require("electron");
 
 export function TrainButtons(props) {
+    let trainStopButton;
     if (!props.training) {
-        return (
+        trainStopButton = (
             <Button
                 variant="success"
                 type="submit"
@@ -14,7 +15,7 @@ export function TrainButtons(props) {
             >Train!</Button>
         )
     } else {
-        return (
+        trainStopButton = (
             <Button
                 variant="danger"
                 type="submit"
@@ -23,6 +24,34 @@ export function TrainButtons(props) {
             >Stop training!</Button>
         )
     }
+    let textLogButton;
+    if (props.showTextLogButton) {
+        textLogButton = (
+            <div>
+                <style type="text/css">
+                    {`
+                      .btn-small {
+                        padding: 0.2rem 0.2rem;
+                        font-size: 13px;
+                        margin-top: 10px
+                      }
+                    `}
+                </style>
+
+                <Button variant={'outline-secondary'} size={'small'}
+                        onClick={() => props.setShowLog(!props.showLog)}>
+                    {props.showLog ? 'hide logs' : 'show logs'}
+                </Button>
+            </div>
+        )
+    }
+
+    return (
+        <div>
+            {trainStopButton}
+            {textLogButton}
+        </div>
+    )
 }
 
 export class TBButtons extends Component {
@@ -97,19 +126,12 @@ export class TBButtons extends Component {
                           rel={"noopener noreferrer"}>{this.state.tbLink}</a>;
             return (
                 <div>
-                    <Row className="justify-content-md-center">
-                        <Col md="auto">
-                            <span style={{fontSize: '10px'}}>TB is on {link}</span>
-                        </Col>
-                        <Col md="auto">
-                            <Button
-                                variant="outline-danger"
-                                type="submit"
-                                size={'sm'}
-                                onClick={this.killTB}
-                            >Kill</Button>
-                        </Col>
-                    </Row>
+                    <Button
+                        variant="outline-danger" type="submit" size={'sm'} style={{marginBottom: '10px'}}
+                        onClick={this.killTB}
+                    >Kill TensorBoard</Button>
+                    <br/>
+                    <span style={{fontSize: '16px'}}>TB is on {link}</span>
                 </div>
             )
         }

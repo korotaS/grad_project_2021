@@ -71,18 +71,12 @@ export function makeConfigFromState(state) {
     return config
 }
 
-export function validateConfig(config) {
-    if (config.general.project_name === '') {
-        alert('Please enter project name!')
-        return false
+export function makeLoadConfigFromState(state) {
+    return {
+        general: state.general,
+        data: state.data,
+        model: state.model,
+        training: state.training,
+        view: state.view
     }
-    if (config.general.exp_name === '') {
-        alert('Please enter experiment name!')
-        return false
-    }
-    if (config.data.dataset_folder === '') {
-        alert('Please choose dataset folder!')
-        return false
-    }
-    return true
 }

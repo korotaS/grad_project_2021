@@ -18,8 +18,8 @@ ssl._create_default_https_context = ssl._create_unverified_context
 
 
 class ImageClassificationTrainer(BaseImageTrainer):
-    def __init__(self, cfg, test_cfg=None, test_mode=False):
-        super().__init__(cfg, test_cfg, test_mode)
+    def __init__(self, cfg, load_cfg=None, test_cfg=None, test_mode=False):
+        super().__init__(cfg, load_cfg, test_cfg, test_mode)
         self.freeze = self.cfg['model']['freeze_backbone']
         self.labels = self.cfg['data']['labels']
         self.num_classes = len(self.labels)
@@ -99,8 +99,8 @@ class ImageClassificationTrainer(BaseImageTrainer):
 
 
 class ImageSegmentationTrainer(BaseImageTrainer):
-    def __init__(self, cfg, test_cfg=None, test_mode=False):
-        super().__init__(cfg, test_cfg, test_mode)
+    def __init__(self, cfg, load_cfg=None, test_cfg=None, test_mode=False):
+        super().__init__(cfg, load_cfg, test_cfg, test_mode)
         self.backbone = self.cfg['model']['backbone']
         self.in_channels = self.cfg['data']['in_channels']
         self.num_classes = self.cfg['data']['num_classes']

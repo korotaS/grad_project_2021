@@ -1,6 +1,6 @@
 import React, {Component} from "react";
-import {Col, Form, Row} from "react-bootstrap";
-import {LabelArray, Numeric} from "../Common";
+import {Col, Row} from "react-bootstrap";
+import {LabelArray, Numeric, SingleCheck} from "../Common";
 
 export class TaskSpecificForImclf extends Component {
     constructor(props) {
@@ -21,8 +21,8 @@ export class TaskSpecificForImclf extends Component {
     render() {
         return (
             <div>
-                <h5>Width/Height</h5>
-                <Row className="justify-content-md-center">
+                <h5>Image width/height</h5>
+                <Row className="justify-content-md-center" style={{marginBottom: '10px'}}>
                     <Col md="auto">
                         <div>Width</div>
                         <Numeric value={this.state.width} nameKey={'width'} type={this.props.type}
@@ -71,8 +71,8 @@ export class TaskSpecificForImsgm extends Component {
     render() {
         return (
             <div>
-                <h5>Width/Height</h5>
-                <Row className="justify-content-md-center">
+                <h5>Image width/height</h5>
+                <Row className="justify-content-md-center" style={{marginBottom: '10px'}}>
                     <Col md="auto">
                         <div>Width</div>
                         <Numeric value={this.state.width} nameKey={'width'} type={this.props.type}
@@ -85,18 +85,13 @@ export class TaskSpecificForImsgm extends Component {
                     </Col>
                 </Row>
 
-                <h5>Use RLE</h5>
-                <Form.Check
-                    type={'checkbox'} label={'Use RLE'} checked={this.state.useRle}
-                    onChange={(event) => {
-                        event.persist();
-                        this.handleRleCheckbox(event)
-                    }}
-                />
+                <SingleCheck value={this.state.useRle}
+                             handleCheckbox={this.handleRleCheckbox.bind(this)}
+                             text={'Use RLE'}/>
 
                 <h5>Number of classes</h5>
                 <Numeric value={this.state.numClasses} nameKey={'numClasses'} type={this.props.type}
-                         passData={this.props.handleTaskSpecificState} max={1000}/>
+                         passData={this.props.handleTaskSpecificState} max={1000} single={true}/>
             </div>
         )
     }
@@ -122,9 +117,9 @@ export class TaskSpecificForTxtclf extends Component {
             <div>
                 <h5>Max item len</h5>
                 <Numeric value={this.state.maxItemLen} nameKey={'maxItemLen'} type={this.props.type}
-                         passData={this.props.handleTaskSpecificState} max={512}/>
+                         passData={this.props.handleTaskSpecificState} max={512} single={true}/>
 
-                <h5>Labels</h5>
+                <h5 style={{marginTop: '10px'}}>Labels</h5>
                 <LabelArray labels={this.state.labels} type={this.props.type}
                             passData={this.props.handleTaskSpecificState}/>
             </div>

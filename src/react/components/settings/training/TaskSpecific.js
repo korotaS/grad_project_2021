@@ -30,7 +30,7 @@ export class TrainingSettingsForImclf extends Component {
         return (
             <div>
                 <h5>Loss</h5>
-                <Form.Control as="select" custom style={{width: '50%'}}
+                <Form.Control as="select" custom
                               onChange={(event) => {
                                   this.handleLossChange(event)
                               }}>
@@ -75,7 +75,7 @@ export class TrainingSettingsForImsgm extends Component {
         return (
             <div>
                 <h5>Loss</h5>
-                <Form.Control as="select" custom style={{width: '50%'}}
+                <Form.Control as="select" custom
                               onChange={(event) => {
                                   this.handleLossChange(event)
                               }}>
@@ -119,7 +119,7 @@ export class TrainingSettingsForTxtclf extends Component {
         return (
             <div>
                 <h5>Loss</h5>
-                <Form.Control as="select" custom style={{width: '50%'}}
+                <Form.Control as="select" custom
                               onChange={(event) => {
                                   this.handleLossChange(event)
                               }}>

@@ -13,7 +13,7 @@ export class ExportModal extends Component {
             exportFolder: '',
             exportType: 'onnx',
             exportPrefix: '',
-            error: null
+            footerData: null
         };
 
         this.submitChoice = this.submitChoice.bind(this);
@@ -26,12 +26,19 @@ export class ExportModal extends Component {
     submitChoice(event) {
         event.preventDefault();
         if (this.state.configPath === "") {
-            alert("Choose config path please!")
+            this.setState(state => {
+                state.footerData = {message: 'Choose config path please!'}
+                return state
+            })
         } else if (this.state.exportFolder === "") {
-            alert("Choose export folder please!")
+            this.setState(state => {
+                state.footerData = {message: 'Choose export folder please!'}
+                return state
+            })
         } else {
             this.setState(state => {
-                state.error = null;
+                state.footerData = null;
+                state.waiting = true
                 return state
             })
             ipcRenderer.send('export', {
@@ -43,13 +50,22 @@ export class ExportModal extends Component {
         }
     }
 
+    stripPath(path) {
+        if (path === '') {
+            return path
+        }
+        let splitPath = path.split('/')
+        return splitPath[splitPath.length - 1]
+    }
+
     clearState() {
         this.setState(state => {
             state.configPath = ''
             state.exportFolder = ''
             state.exportPrefix = ''
             state.exportType = 'onnx'
-            state.error = null
+            state.waiting = false
+            state.footerData = null
             return state
         })
     }
@@ -64,11 +80,29 @@ export class ExportModal extends Component {
             defaultPath: '.'
         });
         if (paths != null) {
+
             this.setState(state => {
                 state.configPath = paths[0];
+                state.footerData = null
                 return state
             })
         }
+    }
+
+    changeConfigRemote(event) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.configPath = value;
+            return state
+        })
+    }
+
+    changeExportFolderRemote(event) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.exportFolder = value;
+            return state
+        })
     }
 
     chooseFolder(event) {
@@ -80,6 +114,7 @@ export class ExportModal extends Component {
         if (paths != null) {
             this.setState(state => {
                 state.exportFolder = paths[0];
+                state.footerData = null
                 return state
             })
         }
@@ -103,22 +138,47 @@ export class ExportModal extends Component {
     componentDidMount() {
         ipcRenderer.on('exportNetError', function (e, data) {
             this.setState(state => {
-                state.error = data;
+                state.footerData = data;
+                state.waiting = false
+                return state
+            })
+        }.bind(this))
+
+        ipcRenderer.on('exportError', function (e, data) {
+            this.setState(state => {
+                state.footerData = data;
+                state.waiting = false
+                return state
+            })
+        }.bind(this))
+
+        ipcRenderer.on('exportOk', function (e, data) {
+            this.setState(state => {
+                state.footerData = {ok: true, message: `Exported to ${data.outPath}!`};
+                state.waiting = false
                 return state
             })
         }.bind(this))
     }
 
     render() {
+        let toModalProps = {...this.props}
+        delete toModalProps.remote
+
+        let marginTop = '20px'
+
         let errorMessage;
-        if (this.state.error !== null) {
-            errorMessage = <div>{`Error: ${this.state.error.message}`}</div>
+        if (this.state.footerData !== null) {
+            errorMessage =
+                <div style={{marginTop: marginTop, color: 'ok' in this.state.footerData ? 'black' : 'red'}}>
+                    {`${'ok' in this.state.footerData ? '' : 'Error: '}${this.state.footerData.message}`}
+                </div>
         }
         return (
             <Modal
-                {...this.props}
-                size="lg"
+                {...toModalProps}
                 aria-labelledby="contained-modal-title-vcenter"
+                dialogClassName="modal-long"
                 centered
                 onHide={() => {
                     this.clearState();
@@ -132,24 +192,33 @@ export class ExportModal extends Component {
                 </Modal.Header>
                 <Modal.Body>
                     <Form>
-                        <Button
-                            variant="success" type="submit"
-                            onClick={this.chooseConfig}
-                        >Choose config</Button>
-                        <br/>
-                        <div style={{fontSize: 10}}>{this.state.configPath}</div>
-                        <Button style={{marginTop: '10px'}}
-                                variant="success" type="submit"
-                                onClick={this.chooseFolder}
-                        >Choose export folder</Button>
-                        <div style={{fontSize: 10}}>{this.state.exportFolder}</div>
-                        <FormControl style={{marginTop: '10px'}}
+                        {this.props.remote
+                            ? <FormControl
+                                placeholder="Config path on remote host"
+                                onChange={this.changeConfigRemote.bind(this)}
+                                defaultValue={this.state.configPath}/>
+                            : <Button
+                                variant="primary" type="submit"
+                                onClick={this.chooseConfig}
+                            >Choose config</Button>}
+                        <div style={{fontSize: 10, color: 'gray'}}>{this.stripPath(this.state.configPath)}</div>
+                        {this.props.remote
+                            ? <FormControl
+                                placeholder="Export folder on remote host"
+                                onChange={this.changeExportFolderRemote.bind(this)}
+                                defaultValue={this.state.exportFolder}/>
+                            : <Button style={{marginTop: marginTop}}
+                                      variant="primary" type="submit"
+                                      onClick={this.chooseFolder}
+                            >Choose export folder</Button>}
+                        <div style={{fontSize: 10, color: 'gray'}}>{this.state.exportFolder}</div>
+                        <FormControl style={{marginTop: marginTop}}
                                      placeholder="Prefix"
                                      aria-label="prefix"
                                      onChange={this.handlePrefixChange}
                                      defaultValue={this.state.exportPrefix}
                         />
-                        <input style={{marginTop: '10px'}}
+                        <input style={{marginTop: marginTop}}
                                type="radio"
                                value="onnx"
                                checked={this.state.exportType === "onnx"}
@@ -159,7 +228,7 @@ export class ExportModal extends Component {
                                }}
                         />
                         <span style={{marginLeft: "5px"}}>ONNX</span>
-                        <input style={{marginTop: '10px', marginLeft: "10px"}}
+                        <input style={{marginTop: marginTop, marginLeft: "10px"}}
                                type="radio"
                                value="jit"
                                checked={this.state.exportType === "jit"}
@@ -171,11 +240,12 @@ export class ExportModal extends Component {
                         <span style={{marginLeft: "5px"}}>JIT</span>
                         <br/>
                         {errorMessage}
-                        <Button style={{marginTop: '10px'}}
+                        <Button style={{marginTop: marginTop}}
                                 variant="success"
                                 type="submit"
                                 onClick={this.submitChoice}
-                        >Export</Button>
+                                disabled={this.state.waiting}
+                        >{this.state.waiting ? 'Exporting...' : 'Export'}</Button>
                     </Form>
                 </Modal.Body>
             </Modal>
@@ -189,8 +259,8 @@ export function SmthWrongModal(props) {
         buttons = (
             <div>
                 <Button variant="secondary" onClick={() => props.onHide()}
-                        style={{transition: "none"}}>Close</Button>
-                <Button variant="primary" onClick={() => props.onHide(props.value)}
+                        style={{transition: "none", marginRight: '10px'}}>Close</Button>
+                <Button variant="success" onClick={() => props.onHide(props.value)}
                         style={{transition: "none"}}>Change</Button>
             </div>
         )
@@ -222,7 +292,8 @@ export function TracebackModal(props) {
             {...props}
             aria-labelledby="contained-modal-title-vcenter"
             centered
-            dialogClassName="modal-traceback"
+            size={'lg'}
+            dialogClassName="modal-long"
         >
             <Modal.Header closeButton>
                 <Modal.Title id="contained-modal-title-vcenter">
@@ -233,7 +304,7 @@ export function TracebackModal(props) {
                 <p style={{whiteSpace: 'pre-line'}}>{props.value}</p>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="primary" onClick={props.onHide} style={{transition: "none"}}>Close</Button>
+                <Button variant="secondary" onClick={props.onHide} style={{transition: "none"}}>Close</Button>
             </Modal.Footer>
         </Modal>
     );
@@ -258,7 +329,7 @@ export function ErrorModal(props) {
                 <h5>{errorMessage}</h5>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="primary" onClick={props.onHide} style={{transition: "none"}}>Close</Button>
+                <Button variant="secondary" onClick={props.onHide} style={{transition: "none"}}>Close</Button>
             </Modal.Footer>
         </Modal>
     );
@@ -269,7 +340,10 @@ export class LocalToRemoteModal extends Component {
         super(props);
         this.state = {
             connecting: false,
-            message: '',
+            footerData: {
+                error: false,
+                message: ''
+            },
             creds: {
                 host: '46.138.241.190',
                 port: '8819'
@@ -290,7 +364,7 @@ export class LocalToRemoteModal extends Component {
 
     clearState() {
         this.setState(state => {
-            state.message = ''
+            state.footerData = {error: false, message: ''}
             state.connecting = false
             state.creds.host = ''
             state.creds.port = ''
@@ -301,12 +375,12 @@ export class LocalToRemoteModal extends Component {
     connect(test) {
         if (this.state.creds.host === '') {
             this.setState(state => {
-                state.message = 'Please enter host.'
+                state.footerData = {error: true, message: 'Please enter host.'}
                 return state
             })
         } else if (this.state.creds.port === '') {
             this.setState(state => {
-                state.message = 'Please enter port.'
+                state.footerData = {error: true, message: 'Please enter port.'}
                 return state
             })
         } else {
@@ -332,9 +406,9 @@ export class LocalToRemoteModal extends Component {
                 this.setState(state => {
                     state.connecting = false
                     if (data.status === 'ok') {
-                        state.message = 'Connected successfully!'
+                        state.footerData = {error: false, message: 'Connected successfully!'}
                     } else {
-                        state.message = `Failed to connect due to error: ${data.errorName}`
+                        state.footerData = {error: true, message: `Failed to connect due to error: ${data.errorName}`}
                     }
                     return state
                 })
@@ -344,8 +418,12 @@ export class LocalToRemoteModal extends Component {
 
     render() {
         let afterTestedText
-        if (this.state.message) {
-            afterTestedText = <div>{this.state.message}</div>
+        if (this.state.footerData.message !== '') {
+            afterTestedText = (
+                <div style={{marginTop: '10px', color: this.state.footerData.error ? 'red': 'black'}}>
+                    {this.state.footerData.message}
+                </div>
+            )
         }
 
         return (
@@ -365,9 +443,11 @@ export class LocalToRemoteModal extends Component {
                 </Modal.Header>
                 <Modal.Body>
                     <FormControl placeholder="Host"
+                                 style={{marginTop: '5px'}}
                                  onChange={(event) => this.changeRemoteField(event, 'host')}
                                  defaultValue={this.state.creds.host}/>
                     <FormControl placeholder="Port"
+                                 style={{marginTop: '20px', marginBottom: '5px'}}
                                  onChange={(event) => this.changeRemoteField(event, 'port')}
                                  defaultValue={this.state.creds.port}/>
                     {afterTestedText}
@@ -377,7 +457,7 @@ export class LocalToRemoteModal extends Component {
                             onClick={() => this.connect(true)}
                             disabled={this.state.connecting}
                     >{this.state.connecting ? 'Connecting...' : 'Test connection'}</Button>
-                    <Button variant="primary" style={{transition: "none"}}
+                    <Button variant="success" style={{transition: "none"}}
                             onClick={() => this.connect(false)}
                             disabled={this.state.connecting}>Connect</Button>
                 </Modal.Footer>
@@ -405,4 +485,179 @@ export function RemoteToLocalModal(props) {
             </Modal.Footer>
         </Modal>
     );
+}
+
+export class LoadFromConfigModal extends Component {
+    constructor(props) {
+        super(props);
+        this.state = {
+            configPath: '',
+            footerData: {
+                error: false,
+                message: 'It needs to be a load config file with name of type "load_cfg_YYYYMMDDTHHMMSS.yaml".'
+            },
+            footerInitial: 'It needs to be a load config file with name of type "load_cfg_YYYYMMDDTHHMMSS.yaml".'
+        }
+
+        this.clearState = this.clearState.bind(this);
+        this.sendConfig = this.sendConfig.bind(this);
+    }
+
+    clearState() {
+        this.setState(state => {
+            state.configPath = ''
+            state.footerData = {error: false, message: state.footerInitial}
+            return state
+        })
+    }
+
+    chooseConfig(event) {
+        event.preventDefault();
+        let paths = dialog.showOpenDialogSync({
+            properties: ['openFile'],
+            filters: [
+                {name: 'YAML configs', extensions: ['yaml']},
+            ],
+            defaultPath: '.'
+        });
+        if (paths != null) {
+            let path = paths[0]
+            if (this.isLoadCfg(path)) {
+                this.setState(state => {
+                    state.configPath = path;
+                    return state
+                })
+            } else {
+                this.setState(state => {
+                    state.footerData = {error: true, message: 'The chosen file it not the "load_cfg" file.'}
+                    return state
+                })
+            }
+        }
+    }
+
+    stripPath(path) {
+        if (path === '') {
+            return path
+        }
+        let splitPath = path.split('/')
+        return splitPath[splitPath.length - 1]
+    }
+
+    isLoadCfg(path) {
+        let fileName = this.stripPath(path)
+        return fileName.match('^load_cfg_\\d{8}T\\d{6}\\.yaml$') !== null
+    }
+
+    changeConfigRemote(event) {
+        let value = event.target.value;
+        this.setState(state => {
+            state.configPath = value;
+            if (!this.isLoadCfg(value)) {
+                state.footerData = {error: true, message: 'The chosen file it not the "load_cfg" file.'}
+            }
+            return state
+        })
+    }
+
+    sendConfig(event) {
+        event.preventDefault();
+        if (this.state.configPath === "") {
+            this.setState(state => {
+                state.footerData = {error: true, message: 'Choose config path please!'}
+                return state
+            })
+        } else if (!this.isLoadCfg(this.state.configPath)) {
+            this.setState(state => {
+                state.footerData = {error: true, message: 'The chosen file it not the "load_cfg" file.'}
+                return state
+            })
+        } else {
+            this.setState(state => {
+                state.footerData = null;
+                return state
+            })
+            ipcRenderer.send('getConfig', {path: this.state.configPath})
+            this.setState(state => {
+                state.footerData = {error: false, message: 'Params loaded!'}
+                return state
+            })
+        }
+    }
+
+    componentDidMount() {
+        ipcRenderer.on('gotConfig', function (e, data) {
+            if (data.status === 'ok') {
+                this.props.loadParamsFromConfig(data.config)
+                this.setState(state => {
+                    state.footerData = {error: false, message: 'Params loaded!'}
+                    return state
+                })
+            } else {
+                this.setState(state => {
+                    state.footerData = {error: true, message: data.errorMessage}
+                    return state
+                })
+            }
+        }.bind(this))
+    }
+
+    render() {
+        let toModalProps = {...this.props}
+        delete toModalProps.loadParamsFromConfig
+        delete toModalProps.remote
+
+        let errorMessage;
+        if (this.state.footerData !== null) {
+            errorMessage = (
+                <div style={{
+                    marginTop: '20px',
+                    color: this.state.footerData.message.toLowerCase().includes('cho') ? 'red' : 'black'
+                }}>
+                    {this.state.footerData.message}
+                </div>
+            )
+        }
+
+        return (
+            <Modal
+                {...toModalProps}
+                aria-labelledby="contained-modal-title-vcenter"
+                dialogClassName="modal-long"
+                centered
+                onHide={() => {
+                    this.clearState();
+                    this.props.onHide()
+                }}
+            >
+                <Modal.Header closeButton>
+                    <Modal.Title id="contained-modal-title-vcenter">
+                        Load params from config
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form>
+                        {this.props.remote
+                            ? <FormControl
+                                placeholder="Config path on remote host"
+                                onChange={this.changeConfigRemote.bind(this)}
+                                defaultValue={this.state.configPath}/>
+                            : <Button
+                                variant="primary" type="submit"
+                                style={{marginTop: '5px'}}
+                                onClick={this.chooseConfig.bind(this)}
+                            >Choose config</Button>}
+                        <div style={{fontSize: 10, color: 'gray'}}>{this.stripPath(this.state.configPath)}</div>
+                        {errorMessage}
+                        <Button style={{marginTop: '20px'}}
+                                variant="success"
+                                type="submit"
+                                onClick={this.sendConfig}
+                                disabled={this.state.waiting}
+                        >{'Load config'}</Button>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+        )
+    }
 }

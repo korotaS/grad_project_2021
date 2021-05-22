@@ -14,8 +14,8 @@ from src.python.utils.seed import worker_init_fn
 
 
 class TextClassificationTrainer(BaseTextTrainer):
-    def __init__(self, cfg, test_cfg=None, test_mode=False):
-        super().__init__(cfg, test_cfg, test_mode)
+    def __init__(self, cfg, load_cfg=None, test_cfg=None, test_mode=False):
+        super().__init__(cfg, load_cfg, test_cfg, test_mode)
         self.labels = self.cfg['data']['labels']
         self.num_classes = len(self.labels)
 

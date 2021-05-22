@@ -1,4 +1,4 @@
-import {Button, Col, Form, Row} from "react-bootstrap";
+import {Button, Col, Collapse, Form, ProgressBar, Row} from "react-bootstrap";
 import React, {Component} from "react";
 import openSocket from 'socket.io-client';
 import {TracebackModal} from "../other/Modals";
@@ -21,6 +21,7 @@ export function DatasetLength(props) {
             <Col md="auto">
                 <input
                     type="number" min={1}
+                    style={{width: '70%'}}
                     value={props.lenNumeric}
                     onChange={(event) => {
                         event.persist();
@@ -65,7 +66,7 @@ export class Numeric extends Component {
                     event.persist();
                     this.handleChange(event)
                 }}
-                style={{width: '50%'}}
+                style={{width: this.props.single ? '30%' : '70%'}}
             />
         )
     }
@@ -76,7 +77,9 @@ export class LabelArray extends Component {
         super(props)
 
         this.state = {
-            labels: props.labels || ['label1', 'label2']
+            labels: props.labels || ['label1', 'label2'],
+            animate: [true, true],
+            removeIndex: null
         }
     }
 
@@ -100,6 +103,11 @@ export class LabelArray extends Component {
         this.setState(state => {
             state.labels = labels;
             return state
+        }, () => {
+            this.setState(state => {
+                state.animate = [...state.animate, true]
+                return state
+            })
         })
     }
 
@@ -109,8 +117,14 @@ export class LabelArray extends Component {
             labels.splice(index, 1)
             this.props.passData(this.props.type, 'labels', labels)
             this.setState(state => {
-                state.labels = labels;
+                state.removeIndex = index
+                state.labels = labels
                 return state
+            }, () => {
+                this.setState(state => {
+                    state.animate.splice(index, 1)
+                    return state
+                })
             })
         }
     }
@@ -118,22 +132,23 @@ export class LabelArray extends Component {
     render() {
         return (
             <div>
-                <ul>
+                <div>
                     {this.state.labels.map((obj, index) => {
                         return (
-                            <li key={index}>
-                                name:<input
-                                type="text"
-                                value={obj}
-                                onChange={(e) => this.handleArrayChange(e, index)}/>
-                                <Button size={'sm'}
-                                        onClick={(e) => this.removeElement(e, index)}
-                                >Delete
-                                </Button>
-                            </li>
+                            <Collapse in={this.state.animate[index]} key={index}>
+                                <div key={index} style={{marginBottom: '10px', lineHeight: '25px'}}>
+                                    <input type="text" value={obj}
+                                           style={{verticalAlign: 'middle', marginRight: '10px'}}
+                                           onChange={(e) => this.handleArrayChange(e, index)}/>
+                                    <Button size={'sm'} style={{verticalAlign: 'middle'}} variant={'outline-danger'}
+                                            disabled={this.state.labels.length === 2}
+                                            onClick={(e) => this.removeElement(e, index)}
+                                    >Delete</Button>
+                                </div>
+                            </Collapse>
                         )
                     })}
-                </ul>
+                </div>
                 <Button size={'sm'} onClick={this.addLabel}>Add label</Button>
             </div>
         )
@@ -146,6 +161,8 @@ export class TextLog extends Component {
 
         this.state = {
             log: [],
+            training: false,
+            validating: false,
             socket: null,
             host: 'localhost',
             port: null,
@@ -156,6 +173,8 @@ export class TextLog extends Component {
         }
 
         this.textLog = React.createRef();
+        this.socketLogListener = this.socketLogListener.bind(this);
+        this.socketExceptionListener = this.socketExceptionListener.bind(this);
     }
 
     clearLogs(event) {
@@ -177,6 +196,68 @@ export class TextLog extends Component {
         });
     }
 
+    socketLogListener(data) {
+        let str = data.toString().trim()
+        if (str.startsWith('Validating: 0it')) {
+            return
+        }
+        if (str === 'START') {
+            this.setState(state => {
+                state.training = true
+            })
+            return
+        }
+        if (str === 'STOPPING TRAINING') {
+            this.setState(state => {
+                state.training = false
+                state.log = state.log.concat({text: str, error: false})
+            }, () => {
+                this.forceUpdate()
+            })
+            return
+        }
+        if (!this.state.training) {
+            return
+        }
+        let len = this.state.log.length
+        this.setState(state => {
+            if (str.length > 0 && (len === 0 || state.log[len - 1].text !== str)) {
+                let newType = this.getProgressType(str)
+                if (newType === 'val') {
+                    state.validating = true
+                    if (this.getPercent(str) === 0) {
+                        state.log = state.log.concat({text: str, error: false})
+                    } else {
+                        state.log[len - 1] = {text: str, error: false}
+                    }
+                } else {
+                    if (state.validating && newType === 'tr') {
+                        state.log[len - 2] = {text: str, error: false}
+                        state.validating = this.getPercent(str) !== 100;
+                    } else {
+                        let lastType = len === 0 ? null : this.getProgressType(state.log[len - 1].text)
+                        if (lastType && newType === lastType) {
+                            state.log[len - 1] = {text: str, error: false}
+                        } else {
+                            state.log = state.log.concat({text: str, error: false})
+                        }
+                    }
+                }
+            }
+            return state
+        });
+    }
+
+    socketExceptionListener(data) {
+        let ex = JSON.parse(data.toString())
+        let ex_string = `Error: ${ex.name}\nMessage: ${ex.message}`
+        this.setState(state => {
+            state.log = state.log.concat({text: ex_string, error: true, traceback: ex.traceback})
+            return state
+        });
+        this.props.stopTraining()
+    }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (this.textLog.current !== null) {
             this.textLog.current.scrollTop = this.textLog.current.scrollHeight;
@@ -191,51 +272,14 @@ export class TextLog extends Component {
                     state.socker = null
                 }
                 state.socket = openSocket(`http://${this.props.host}:${this.props.port}`);
+                state.socket.on('log', this.socketLogListener)
+                state.socket.on('exception', this.socketExceptionListener)
                 return state
             });
-        }
-
-        if (this.state.socket !== null && !this.state.listenerSet) {
-            this.setState(state => {
-                state.listenerSet = true
-                return state
-            });
-
-            this.state.socket.on('log', data => {
-                this.setState(state => {
-                    if (data.toString().trim().length > 0) {
-                        state.log = state.log.concat({text: data.toString().trim(), error: false})
-                    }
-                    return state
-                });
-            })
-
-            this.state.socket.on('exception', data => {
-                let ex = JSON.parse(data.toString())
-                let ex_string = `Error: ${ex.name}\nMessage: ${ex.message}`
-                this.setState(state => {
-                    state.log = state.log.concat({text: ex_string, error: true, traceback: ex.traceback})
-                    return state
-                });
-                this.props.stopTraining()
-            })
         }
     }
 
     componentDidMount() {
-        ipcRenderer.on('pythonPort', function (e, data) {
-            if (this.state.socket === null) {
-                this.setState(state => {
-                    if (state.socket !== null) {
-                        state.socket.close()
-                        state.socker = null
-                    }
-                    state.socket = openSocket(`http://${this.state.host}:${data.port}`);
-                    return state
-                })
-            }
-        }.bind(this));
-
         ipcRenderer.on('startedNewPython', function (e, data) {
             this.setState(state => {
                 state.host = 'localhost'
@@ -244,23 +288,90 @@ export class TextLog extends Component {
                     state.socker = null
                 }
                 state.socket = openSocket(`http://localhost:${data.port}`);
+                state.socket.on('log', this.socketLogListener)
+                state.socket.on('exception', this.socketExceptionListener)
                 return state
             })
         }.bind(this));
     }
 
+    getProgressType(text) {
+        if (text.includes('Validation sanity check')) {
+            return 'valc'
+        } else if (text.includes('Epoch')) {
+            if (text.includes('was not in') || text.includes('saving')) {
+                return 'ckpt'
+            } else {
+                return 'tr'
+            }
+        } else if (text.includes('Validating')) {
+            return 'val'
+        }
+        return null
+    }
+
+    getPercent(text, split = null) {
+        split = split || text.split('|')
+        if (split.length !== 3) {
+            return -1
+        }
+        let p1 = split[0]
+        return parseInt(p1.split(':')[1].split('%')[0].trim())
+    }
+
+    renderLine(line, error) {
+        let marginBot = '3px'
+        let progType = this.getProgressType(line)
+        if (progType) {
+            let split = line.split('|')
+            if (split.length !== 3) {
+                return (
+                    <p style={{
+                        color: error ? 'red' : 'black', whiteSpace: 'pre-line', marginBottom: marginBot,
+                        wordBreak: progType === 'ckpt' ? 'break-all' : 'normal'
+                    }}>
+                        {line}
+                    </p>
+                )
+            }
+            let [p1, p2, p3] = split
+            let percent = this.getPercent(line, split)
+            return (
+                <div>
+                    <p style={{marginBottom: marginBot, whiteSpace: 'pre-line', float: 'left'}}>
+                        {p1}
+                    </p>
+                    <p style={{marginBottom: marginBot, whiteSpace: 'pre-line', float: 'right'}}>
+                        {p3}
+                    </p>
+                    <br/>
+                    <ProgressBar now={percent} style={{width: '100%', height: '20px'}}
+                                 variant={progType.includes('val') ? 'warning' : 'success'}/>
+                    <br/>
+                </div>
+            )
+        }
+        return (
+            <p style={{
+                color: error ? 'red' : 'black', whiteSpace: 'pre-line', marginBottom: marginBot,
+                wordBreak: progType === 'ckpt' ? 'break-all' : 'normal'
+            }}>
+                {line}
+            </p>
+        )
+    }
+
     renderLog() {
         return (
-            <div style={{height: '300px', width: '600px', overflow: 'auto', border: '4px solid black'}}
-                 align={'left'} ref={this.textLog}>
+            <div style={{
+                height: '400px', width: '900px',
+                overflow: 'auto', border: '2px solid black',
+                borderRadius: '15px', padding: '15px'
+            }} align={'left'} ref={this.textLog}>
                 {this.state.log.map((obj, index) => {
                     return (
                         <div key={index}>
-                            <p style={{
-                                color: obj.error ? 'red' : 'black',
-                                marginBottom: '0px',
-                                whiteSpace: 'pre-line'
-                            }}>{obj.text}</p>
+                            {this.renderLine(obj.text, obj.error)}
                             {obj.error
                                 ? <div style={{color: 'gray'}}
                                        onClick={() => this.setShowTraceback(true, index)}>(show full traceback)</div>
@@ -277,16 +388,35 @@ export class TextLog extends Component {
             return null
         }
 
+        let clearButton
+        if (this.state.log.length > -1) {
+            clearButton = (
+                <div>
+                    <style type="text/css">
+                        {`
+                          .btn-small {
+                            padding: 0.2rem 0.2rem;
+                            font-size: 13px;
+                            margin-top: 5px
+                          }
+                        `}
+                    </style>
+                    <Button
+                        variant="outline-secondary" size={'small'}
+                        type="submit"
+                        onClick={this.clearLogs.bind(this)}
+                    >Clear logs</Button>
+                </div>
+
+            )
+        }
+
         let log = this.renderLog()
         return (
             <div style={{marginBottom: '10px'}}>
                 <Form style={{marginLeft: '10px', marginRight: '10px'}}>
                     {log}
-                    <Button
-                        variant="success"
-                        type="submit"
-                        onClick={this.clearLogs.bind(this)}
-                    >Clear logs</Button>
+                    {clearButton}
                 </Form>
                 <TracebackModal show={this.state.showTraceback}
                                 onHide={() => this.setShowTraceback(false)}
@@ -296,4 +426,19 @@ export class TextLog extends Component {
             </div>
         )
     }
+}
+
+export function SingleCheck(props) {
+    return (
+        <Form.Check type={'checkbox'} style={{fontSize: '20px', lineHeight: '22px', marginBottom: '10px'}}>
+            <Form.Check.Input type={'checkbox'} checked={props.value}
+                              onChange={(event) => {
+                                  event.persist();
+                                  props.handleCheckbox(event)
+                              }}/>
+            <Form.Check.Label>
+                {props.text}
+            </Form.Check.Label>
+        </Form.Check>
+    )
 }

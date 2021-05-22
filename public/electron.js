@@ -1,8 +1,6 @@
-const {app, BrowserWindow, ipcMain, net, shell, dialog} = require("electron");
+const {app, BrowserWindow, ipcMain, net, shell} = require("electron");
 const path = require("path");
 const getPort = require('get-port');
-const yaml = require('js-yaml');
-const fs = require('fs');
 
 const PY_MODULE = "src/python/main.py";
 const SERVER_RUNNING = true;
@@ -106,7 +104,7 @@ ipcMain.on('runTraining', function (e, item) {
         method: 'POST',
         hostname: host,
         port: port,
-        path: '/init'
+        path: '/runTraining'
     });
 
     request.on('error', (error) => {
@@ -114,7 +112,7 @@ ipcMain.on('runTraining', function (e, item) {
         mainWindow.webContents.send('netError', {name: error.message, message: message, noTrain: true});
     })
 
-    let post_data = JSON.stringify(item.config);
+    let post_data = JSON.stringify({config: item.config, loadConfig: item.loadConfig});
     request.write(post_data);
     request.end();
 });
@@ -138,7 +136,6 @@ ipcMain.on('stopTraining', function (e) {
 });
 
 ipcMain.on('export', function (e, item) {
-    let config = yaml.load(fs.readFileSync(item.configPath, 'utf8'));
     const request = net.request({
         method: 'POST',
         hostname: host,
@@ -149,10 +146,17 @@ ipcMain.on('export', function (e, item) {
     request.on('response', (response) => {
         response.on('data', (data) => {
             let json = JSON.parse(data.toString());
-            if (json.status === 'ok') {
-                // dialog.showMessageBox({message: json.outPath});
-            } else {
-
+            switch (json.status) {
+                case 'ok': {
+                    mainWindow.webContents.send('exportOk', {outPath: json.outPath});
+                    break
+                }
+                case 'error': {
+                    mainWindow.webContents.send('exportError', {message: json.errorMessage});
+                    break
+                }
+                default:
+                    break
             }
         })
     });
@@ -163,7 +167,6 @@ ipcMain.on('export', function (e, item) {
     })
 
     let post_data = {
-        cfg: config,
         cfgPath: item.configPath,
         folder: item.exportFolder,
         prefix: item.exportPrefix,
@@ -252,6 +255,30 @@ ipcMain.on('getNumGpus', function (e) {
         numGpus = 0
         mainWindow.webContents.send('gotNumGpus', {numGpus: numGpus});
     }
+});
+
+ipcMain.on('getConfig', function (e, item) {
+    const request = net.request({
+        method: 'POST',
+        hostname: host,
+        port: port,
+        path: '/getConfig'
+    })
+    request.on('response', (response) => {
+        response.on('data', (data) => {
+            let json = JSON.parse(data.toString());
+            mainWindow.webContents.send('gotConfig', json);
+        })
+    });
+    request.on('error', (error) => {
+        let message = "Can't get config because python server is not running."
+        mainWindow.webContents.send('gotConfig', {status: 'error', errorMessage: message});
+    })
+    let post_data = {
+        path: item.path,
+    };
+    request.write(JSON.stringify(post_data));
+    request.end()
 });
 
 ipcMain.on('changeToRemote', function (e, item) {
