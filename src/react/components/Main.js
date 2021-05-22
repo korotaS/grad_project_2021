@@ -1,17 +1,18 @@
 import React, {Component} from 'react';
-import {Col, Row} from "react-bootstrap";
+import {Col, Collapse, Row} from "react-bootstrap";
 import {ChooseMainTask, ChooseNames, ChooseSubTask} from "./settings/GeneralSettings";
 import DataSettings from "./settings/data/DataSettings"
 import ModelSettings from "./settings/model/ModelSettings";
 import TrainingSettings from "./settings/training/TrainingSettings";
 import {TrainButtons} from "./other/Launching";
 import {TextLog} from "./settings/Common";
-import {makeConfigFromState, validateConfig} from "./utils/configSettings";
+import {makeConfigFromState, makeLoadConfigFromState} from "./utils/configSettings";
 import {ErrorModal, SmthWrongModal} from "./other/Modals";
 import Carousel, {arrowsPlugin} from '@brainhubeu/react-carousel';
 import '@brainhubeu/react-carousel/lib/style.css';
-import {LeftArrow, RightArrow} from "./utils/Arrows";
+import {LeftArrow, RightArrow} from "./other/Arrows";
 import Header from './other/Header'
+import '../styles/addinfo.css'
 
 const {set} = require('lodash');
 const {ipcRenderer} = window.require("electron");
@@ -29,6 +30,7 @@ class Main extends Component {
                 expName: 'exp_1',
             },
             numGpus: -1,
+            cantGetGpus: false,
             data: {
                 common: {
                     datasetFolder: "/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats",
@@ -75,6 +77,8 @@ class Main extends Component {
                 missingMessage: '',
                 missingValue: '',
                 carouselIndex: 0,
+                showTextLog: false,
+                showTextLogButton: false,
                 error: null
             },
             server: {
@@ -90,13 +94,12 @@ class Main extends Component {
         this.changeSubTaskChoice = this.changeSubTaskChoice.bind(this);
         this.changeProjectName = this.changeProjectName.bind(this);
         this.changeExpName = this.changeExpName.bind(this);
-        this.changeView = this.changeView.bind(this);
         this.handleCarouselChange = this.handleCarouselChange.bind(this);
     }
 
     handleCarouselChange(value) {
         let ok = true
-        if (value === 3) {
+        if (value === 0) {
             if (this.state.general.projectName === '') {
                 this.setState(state => {
                     state.view.missingMessage = 'Please enter project name.'
@@ -110,7 +113,7 @@ class Main extends Component {
                 })
                 ok = false
             }
-        } else if (value === 4) {
+        } else if (value === 2) {
             if (this.state.data.common.datasetFolder === '') {
                 this.setState(state => {
                     state.view.missingMessage = 'Please choose dataset folder.'
@@ -124,7 +127,7 @@ class Main extends Component {
                 })
                 ok = false
             }
-        } else if (value === 6) {
+        } else if (value === 4) {
             if ('notValid' in this.state.training.common.optimizer.paramsAdd) {
                 this.setState(state => {
                     state.view.missingMessage = 'Please enter the valid YAML for optimizer params.'
@@ -154,12 +157,6 @@ class Main extends Component {
                 state.general.pushedTask = true;
                 state.general.pushedSubTask = false;
                 state.general.subTask = ''
-                for (const key of Object.keys(state.view)) {
-                    if (key.includes('view')) {
-                        state.view[key] = false
-                    }
-                }
-                state.view.carouselIndex = 1
                 return state
             })
         }
@@ -176,12 +173,6 @@ class Main extends Component {
             this.setState(state => {
                 state.general.subTask = event.target.value;
                 state.general.pushedSubTask = true;
-                for (const key of Object.keys(state.view)) {
-                    if (key.includes('view')) {
-                        state.view[key] = false
-                    }
-                }
-                state.view.carouselIndex = 2
                 return state
             })
         }
@@ -200,19 +191,6 @@ class Main extends Component {
         let value = event.target.value;
         this.setState(state => {
             state.general.expName = value;
-            return state
-        })
-    }
-
-    changeView(viewKey) {
-        function cap(string) {
-            return string.charAt(0).toUpperCase() + string.slice(1);
-        }
-
-        viewKey = cap(viewKey)
-        this.setState(state => {
-            let key1 = 'view' + viewKey
-            state.view[key1] = !state.view[key1]
             return state
         })
     }
@@ -239,18 +217,27 @@ class Main extends Component {
         })
     }
 
+    setShowTextLog(value) {
+        this.setState(state => {
+            state.view.showTextLog = value
+            return state
+        })
+    }
+
     runTraining() {
         console.log('Running training with these params:')
         this.setState(state => {
             state.run.training = true
+            state.view.showTextLog = true
+            state.view.showTextLogButton = true
             return state
         })
         let config = makeConfigFromState(this.state)
-        if (validateConfig(config)) {
-            ipcRenderer.send('runTraining', {
-                config: config,
-            });
-        }
+        let loadConfig = makeLoadConfigFromState(this.state)
+        ipcRenderer.send('runTraining', {
+            config: config,
+            loadConfig: loadConfig
+        });
         console.log(config);
     }
 
@@ -276,11 +263,9 @@ class Main extends Component {
                     state.general.pushedTask = true;
                     state.general.pushedSubTask = false;
                     state.general.subTask = ''
-                    state.view.carouselIndex = 1
                 } else {
                     state.general.subTask = value;
                     state.general.pushedSubTask = true;
-                    state.view.carouselIndex = 2
                 }
                 for (const key of Object.keys(state.view)) {
                     if (key.includes('view')) {
@@ -289,6 +274,17 @@ class Main extends Component {
                 }
             }
             return state
+        })
+    }
+
+    loadParamsFromConfig(config) {
+        let newState = {...this.state, ...config}
+        newState.view.carouselIndex = this.state.view.carouselIndex
+        newState.training = this.state.training
+        this.setState((state) => {
+            return newState
+        }, () => {
+            this.forceUpdate()
         })
     }
 
@@ -304,6 +300,7 @@ class Main extends Component {
             ipcRenderer.send('changeToRemote', {host: data.host, port: data.port});
             this.setState(state => {
                 state.numGpus = -1
+                state.cantGetGpus = false
                 state.server.remote = true;
                 state.server.creds.host = data.host;
                 state.server.creds.port = data.port;
@@ -316,6 +313,7 @@ class Main extends Component {
         if (changeToLocal) {
             this.setState(state => {
                 state.numGpus = -1
+                state.cantGetGpus = false
                 return state
             })
             ipcRenderer.send('startNewPython');
@@ -326,7 +324,7 @@ class Main extends Component {
         if (this.state.server.creds.port === null) {
             ipcRenderer.send('getPythonPort');
         }
-        if (this.state.numGpus === -1) {
+        if (this.state.numGpus === -1 && this.state.view.error === null && !this.state.cantGetGpus) {
             ipcRenderer.send('getNumGpus');
         }
     }
@@ -343,6 +341,7 @@ class Main extends Component {
             // console.log(data.numGpus)
             this.setState(state => {
                 state.numGpus = data.numGpus
+                state.cantGetGpus = false
                 return state;
             })
         }.bind(this));
@@ -359,6 +358,9 @@ class Main extends Component {
                 state.view.error = data;
                 if ('noTrain' in data) {
                     state.run.training = false
+                }
+                if (data.message.includes('GPU')) {
+                    state.cantGetGpus = true
                 }
                 return state
             })
@@ -388,7 +390,8 @@ class Main extends Component {
             return null
         }
         let emptyTag = <div style={{width: '60px'}}></div>
-        let hideRight = this.state.general.pushedTask && !this.state.general.pushedSubTask
+        let hideRight = !this.state.general.pushedTask || !this.state.general.pushedSubTask
+            || this.state.general.projectName === '' || this.state.general.expName === ''
         let arrows = {
             resolve: arrowsPlugin,
             options: {
@@ -404,71 +407,87 @@ class Main extends Component {
                 <div>
                     <Header onHideLocalToRemoteModal={this.onHideLocalToRemoteModal.bind(this)}
                             onHideRemoteToLocalModal={this.onHideRemoteToLocalModal.bind(this)}
-                            remoteToLocal={this.state.server.remote}/>
+                            remoteToLocal={this.state.server.remote}
+                            loadParamsFromConfig={this.loadParamsFromConfig.bind(this)}/>
                 </div>
-                <Row className="align-items-center" style={{minHeight: '95vh'}}>
+                <Row className="align-items-center" style={{minHeight: '90vh'}}>
                     <Col>
                         <div className="Main">
                             <Carousel value={this.state.view.carouselIndex}
                                       onChange={this.handleCarouselChange}
                                       plugins={this.state.general.pushedTask ? [arrows] : []}
                                       draggable={false}>
-                                {ChooseMainTask({
-                                    changeTaskChoice: this.changeTaskChoice,
-                                    ...this.state.general
-                                })}
-                                {ChooseSubTask({
-                                    changeSubTaskChoice: this.changeSubTaskChoice,
-                                    ...this.state.general
-                                })}
-                                {ChooseNames({
-                                    changeProjectName: this.changeProjectName,
-                                    changeExpName: this.changeExpName,
-                                    changeView: this.changeView,
-                                    ...this.state.general
-                                })}
-                                <DataSettings showAdvanced={this.state.view.carouselIndex === 3}
+                                <div>
+                                    <div>
+                                        {ChooseMainTask({
+                                            changeTaskChoice: this.changeTaskChoice,
+                                            ...this.state.general
+                                        })}
+                                    </div>
+                                    <Collapse in={this.state.general.pushedTask}>
+                                        <div>
+                                            {ChooseSubTask({
+                                                changeSubTaskChoice: this.changeSubTaskChoice,
+                                                ...this.state.general
+                                            })}
+                                        </div>
+                                    </Collapse>
+                                    <Collapse in={this.state.general.pushedSubTask}>
+                                        <div>
+                                            {ChooseNames({
+                                                changeProjectName: this.changeProjectName,
+                                                changeExpName: this.changeExpName,
+                                                ...this.state.general
+                                            })}
+                                        </div>
+                                    </Collapse>
+                                </div>
+                                <DataSettings showAdvanced={this.state.view.carouselIndex === 1}
                                               showFull={this.state.general.pushedSubTask}
                                               taskSubClass={this.state.general.subTask}
-                                              changeView={this.changeView}
                                               data={this.state.data}
                                               type={'data'}
                                               setCommonState={this.setCommonState.bind(this)}
                                               setTaskSpecificState={this.setTaskSpecificState.bind(this)}
-                                              clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
+                                              clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}
+                                              remote={this.state.server.remote}/>
                                 <ModelSettings showFull={this.state.general.pushedSubTask}
                                                taskSubClass={this.state.general.subTask}
-                                               changeView={this.changeView}
                                                data={this.state.model}
                                                type={'model'}
                                                setCommonState={this.setCommonState.bind(this)}
                                                setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                                clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                                <TrainingSettings showAdvanced={this.state.view.carouselIndex === 5}
+                                <TrainingSettings showAdvanced={this.state.view.carouselIndex === 3}
                                                   showFull={this.state.general.pushedSubTask}
                                                   taskSubClass={this.state.general.subTask}
-                                                  changeView={this.changeView}
                                                   numGpus={this.state.numGpus}
                                                   data={this.state.training}
                                                   type={'training'}
                                                   setCommonState={this.setCommonState.bind(this)}
                                                   setTaskSpecificState={this.setTaskSpecificState.bind(this)}
                                                   clearTaskSpecificState={this.clearTaskSpecificState.bind(this)}/>
-                                <div hidden={!this.state.general.pushedSubTask} align={'center'}>
-                                    <h3>Run</h3>
+                                <div align={'center'}>
                                     <div>
                                         <Row style={{marginTop: "10px"}} align={'center'}>
                                             <Col>
                                                 <TrainButtons show={this.state.general.pushedSubTask}
                                                               training={this.state.run.training}
                                                               runTraining={this.runTraining.bind(this)}
-                                                              stopTraining={this.stopTraining.bind(this)}/>
+                                                              stopTraining={this.stopTraining.bind(this)}
+                                                              showLog={this.state.view.showTextLog}
+                                                              setShowLog={this.setShowTextLog.bind(this)}
+                                                              showTextLogButton={this.state.view.showTextLogButton}/>
                                             </Col>
                                         </Row>
-                                        <TextLog show={this.state.general.pushedSubTask}
-                                                 stopTraining={this.stopTrainingFromLogs.bind(this)}
-                                                 host={this.state.server.creds.host}
-                                                 port={this.state.server.creds.port}/>
+                                        <Collapse in={this.state.view.showTextLog}>
+                                            <div style={{marginTop: '10px'}}>
+                                                <TextLog show={this.state.general.pushedSubTask}
+                                                         stopTraining={this.stopTrainingFromLogs.bind(this)}
+                                                         host={this.state.server.creds.host}
+                                                         port={this.state.server.creds.port}/>
+                                            </div>
+                                        </Collapse>
                                     </div>
                                 </div>
                             </Carousel>

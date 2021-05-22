@@ -5,10 +5,17 @@ import sys
 class SocketStdOut(object):
     def __init__(self, skt):
         self.skt = skt
+        self.last_log = None
 
     def write(self, string):
         if '\\x1b' not in repr(string):
-            self.skt.emit('log', string.rstrip('\n'))
+            stripped = string.rstrip('\n')
+            if string != '\n':
+                if stripped != self.last_log:
+                    self.skt.emit('log', stripped)
+                    self.last_log = stripped
+            else:
+                self.skt.emit('log', stripped)
 
     def flush(self):
         pass
