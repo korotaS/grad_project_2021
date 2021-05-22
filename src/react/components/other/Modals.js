@@ -345,8 +345,8 @@ export class LocalToRemoteModal extends Component {
                 message: ''
             },
             creds: {
-                host: '46.138.241.190',
-                port: '8819'
+                host: '',
+                port: ''
             }
         }
 

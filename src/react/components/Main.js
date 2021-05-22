@@ -26,14 +26,14 @@ class Main extends Component {
                 pushedTask: false,
                 subTask: '',
                 pushedSubTask: false,
-                projectName: 'project_test',
-                expName: 'exp_1',
+                projectName: '',
+                expName: '',
             },
             numGpus: -1,
             cantGetGpus: false,
             data: {
                 common: {
-                    datasetFolder: "/Users/a18277818/Documents/ДИПЛОМ/grad_project_2021/projects/datasets/dogscats",
+                    datasetFolder: "",
                     trainLen: -1,
                     valLen: -1,
                     shuffleTrain: true,
