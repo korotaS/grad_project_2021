@@ -429,16 +429,31 @@ export class TextLog extends Component {
 }
 
 export function SingleCheck(props) {
+    let hint;
+    if (props.hint) {
+        hint = (
+            <div className="help-tip" style={{marginTop: '-8px'}}>
+                <p>{props.hint}</p>
+            </div>
+        )
+    }
     return (
-        <Form.Check type={'checkbox'} style={{fontSize: '20px', lineHeight: '22px', marginBottom: '10px'}}>
-            <Form.Check.Input type={'checkbox'} checked={props.value}
-                              onChange={(event) => {
-                                  event.persist();
-                                  props.handleCheckbox(event)
-                              }}/>
-            <Form.Check.Label>
-                {props.text}
-            </Form.Check.Label>
-        </Form.Check>
+        <div>
+            <Form.Check type={'checkbox'}
+                        style={{
+                            fontSize: '20px', lineHeight: '22px', marginBottom: '10px',
+                            display: props.hint ? 'inline-block' : 'block'
+                        }}>
+                <Form.Check.Input type={'checkbox'} checked={props.value}
+                                  onChange={(event) => {
+                                      event.persist();
+                                      props.handleCheckbox(event)
+                                  }}/>
+                <Form.Check.Label>
+                    {props.text}
+                </Form.Check.Label>
+            </Form.Check>
+            {hint}
+        </div>
     )
 }

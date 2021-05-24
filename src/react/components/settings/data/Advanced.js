@@ -67,11 +67,10 @@ export class AdvancedForImclf extends Component {
     render() {
         return (
             <div style={{marginBottom: '30px'}}>
-                <h5 style={{marginTop: '10px'}}>Train transforms</h5>
-                {/*<h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>*/}
-                {/*<div className="help-tip">*/}
-                {/*    <p>Kek</p>*/}
-                {/*</div>*/}
+                <h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>
+                <div className="help-tip">
+                    <p>You can read the instruction and see some examples on (((link))).</p>
+                </div>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
                     style={{marginBottom: '10px', lineHeight: '21px'}}
@@ -178,7 +177,10 @@ export class AdvancedForImsgm extends Component {
     render() {
         return (
             <div>
-                <h5 style={{marginTop: '10px'}}>Train transforms</h5>
+                <h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>
+                <div className="help-tip">
+                    <p>You can read the instruction and see some examples on (((link))).</p>
+                </div>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
                     style={{marginBottom: '10px', lineHeight: '21px'}}

@@ -35,7 +35,10 @@ export class TaskSpecificForImclf extends Component {
                     </Col>
                 </Row>
 
-                <h5>Labels</h5>
+                <h5 style={{marginTop: '10px', display: 'inline-block'}}>Labels</h5>
+                <div className="help-tip">
+                    <p>Labels have to match those in info.json.</p>
+                </div>
                 <LabelArray labels={this.state.labels} type={this.props.type}
                             passData={this.props.handleTaskSpecificState}/>
             </div>
@@ -69,6 +72,10 @@ export class TaskSpecificForImsgm extends Component {
     }
 
     render() {
+        let link = <a
+            href={'https://github.com/korotaS/grad_project_2021/blob/234866394b22dcdcc7d55e49d1a2cc4d15610998/src/python/utils/utils.py#L31'}
+            target={'_blank'} rel={"noopener noreferrer"}>this</a>;
+        let hint = (<div>Run length encoding. You can convert your masks to RLE with {link} function.</div>)
         return (
             <div>
                 <h5>Image width/height</h5>
@@ -87,7 +94,8 @@ export class TaskSpecificForImsgm extends Component {
 
                 <SingleCheck value={this.state.useRle}
                              handleCheckbox={this.handleRleCheckbox.bind(this)}
-                             text={'Use RLE'}/>
+                             text={'Use RLE'}
+                             hint={hint}/>
 
                 <h5>Number of classes</h5>
                 <Numeric value={this.state.numClasses} nameKey={'numClasses'} type={this.props.type}
