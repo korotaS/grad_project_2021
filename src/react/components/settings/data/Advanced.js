@@ -65,11 +65,16 @@ export class AdvancedForImclf extends Component {
     }
 
     render() {
+        let link = <a
+            href={''}
+            target={'_blank'} rel={"noopener noreferrer"}>here</a>;
+        let hint = (<div>You can read the instruction and see some examples {link}.</div>)
+
         return (
             <div style={{marginBottom: '30px'}}>
                 <h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>
                 <div className="help-tip">
-                    <p>You can read the instruction and see some examples on (((link))).</p>
+                    <p>{hint}</p>
                 </div>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
@@ -175,11 +180,15 @@ export class AdvancedForImsgm extends Component {
     }
 
     render() {
+        let link = <a
+            href={''}
+            target={'_blank'} rel={"noopener noreferrer"}>here</a>;
+        let hint = (<div>You can read the instruction and see some examples {link}.</div>)
         return (
             <div>
                 <h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>
                 <div className="help-tip">
-                    <p>You can read the instruction and see some examples on (((link))).</p>
+                    <p>{hint}</p>
                 </div>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
