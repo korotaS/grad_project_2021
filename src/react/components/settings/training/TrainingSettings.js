@@ -143,9 +143,9 @@ class TrainingSettings extends Component {
         }
 
         let link = <a
-            href={'https://github.com/korotaS/grad_project_2021/blob/234866394b22dcdcc7d55e49d1a2cc4d15610998/src/python/utils/utils.py#L31'}
+            href={'https://github.com/korotaS/grad_project_2021/blob/GP-55/release/yaml_inputs.md#optimizer-params'}
             target={'_blank'} rel={"noopener noreferrer"}>here</a>;
-        let hint = (<div>You can check examples {link}.</div>)
+        let hint = (<div>You can read the instruction and see some examples {link}.</div>)
         return (
             <div align={'center'}>
                 <h3>Training</h3>
@@ -260,7 +260,7 @@ class TrainingSettings extends Component {
 
                             <h5 style={{marginTop: '10px'}}>Checkpoint</h5>
                             <div style={{marginTop: '0px', display: 'inline-block'}}>Monitor</div>
-                            <div className="help-tip" style={{marginTop: '-4px'}}>
+                            <div className="help-tip" style={{marginTop: '-4px', zIndex: 90}}>
                                 <p>{'If you choose to monitor loss, the best model will be model with smallest loss.\n' +
                                 'If you choose to monitor metric, the best model will be model with biggest metric'}</p>
                             </div>
