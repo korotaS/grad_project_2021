@@ -181,7 +181,7 @@ export class AdvancedForImsgm extends Component {
 
     render() {
         let link = <a
-            href={'https://github.com/korotaS/grad_project_2021/blob/GP-55/release/yaml_inputs.md#train-transforms'}
+            href={'https://github.com/korotaS/grad_project_2021/blob/master/yaml_inputs.md#train-transforms'}
             target={'_blank'} rel={"noopener noreferrer"}>here</a>;
         let hint = (<div>You can read the instruction and see some examples {link}.</div>)
         return (

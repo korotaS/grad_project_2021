@@ -143,7 +143,7 @@ class TrainingSettings extends Component {
         }
 
         let link = <a
-            href={'https://github.com/korotaS/grad_project_2021/blob/GP-55/release/yaml_inputs.md#optimizer-params'}
+            href={'https://github.com/korotaS/grad_project_2021/blob/master/yaml_inputs.md#optimizer-params'}
             target={'_blank'} rel={"noopener noreferrer"}>here</a>;
         let hint = (<div>You can read the instruction and see some examples {link}.</div>)
         return (

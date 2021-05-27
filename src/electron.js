@@ -48,6 +48,8 @@ const createMainWindow = (x_custom, y_custom) => {
         }
     });
 
+    mainWindow.removeMenu();
+
     // Load the index page
     mainWindow.loadURL(
         DEV
