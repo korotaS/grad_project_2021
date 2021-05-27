@@ -65,13 +65,17 @@ export class AdvancedForImclf extends Component {
     }
 
     render() {
+        let link = <a
+            href={'https://github.com/korotaS/grad_project_2021/blob/GP-55/release/yaml_inputs.md#train-transforms'}
+            target={'_blank'} rel={"noopener noreferrer"}>here</a>;
+        let hint = (<div>You can read the instruction and see some examples {link}.</div>)
+
         return (
             <div style={{marginBottom: '30px'}}>
-                <h5 style={{marginTop: '10px'}}>Train transforms</h5>
-                {/*<h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>*/}
-                {/*<div className="help-tip">*/}
-                {/*    <p>Kek</p>*/}
-                {/*</div>*/}
+                <h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>
+                <div className="help-tip">
+                    <p>{hint}</p>
+                </div>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
                     style={{marginBottom: '10px', lineHeight: '21px'}}
@@ -176,9 +180,16 @@ export class AdvancedForImsgm extends Component {
     }
 
     render() {
+        let link = <a
+            href={'https://github.com/korotaS/grad_project_2021/blob/GP-55/release/yaml_inputs.md#train-transforms'}
+            target={'_blank'} rel={"noopener noreferrer"}>here</a>;
+        let hint = (<div>You can read the instruction and see some examples {link}.</div>)
         return (
             <div>
-                <h5 style={{marginTop: '10px'}}>Train transforms</h5>
+                <h5 style={{marginTop: '10px', display: 'inline-block'}}>Train transforms</h5>
+                <div className="help-tip">
+                    <p>{hint}</p>
+                </div>
                 <Form.Check
                     label={'default'} type={'checkbox'} checked={this.state._.transformsDefault}
                     style={{marginBottom: '10px', lineHeight: '21px'}}

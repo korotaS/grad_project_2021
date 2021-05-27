@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {Button, Col, Collapse, Form, Row} from "react-bootstrap";
-import {Numeric} from "../Common";
+import {Numeric, SingleCheck} from "../Common";
 import {TrainingSettingsForImclf, TrainingSettingsForImsgm, TrainingSettingsForTxtclf} from "./TaskSpecific";
 import Editor from 'react-simple-code-editor';
 import {highlight, languages} from 'prismjs/components/prism-core';
@@ -141,6 +141,11 @@ class TrainingSettings extends Component {
                                                               defaultState={this.props.data.taskSpecificCache}
                                                               type={this.props.type}/>
         }
+
+        let link = <a
+            href={'https://github.com/korotaS/grad_project_2021/blob/GP-55/release/yaml_inputs.md#optimizer-params'}
+            target={'_blank'} rel={"noopener noreferrer"}>here</a>;
+        let hint = (<div>You can read the instruction and see some examples {link}.</div>)
         return (
             <div align={'center'}>
                 <h3>Training</h3>
@@ -151,7 +156,7 @@ class TrainingSettings extends Component {
                                   onChange={this.handleGpuChange.bind(this)}>
                         {['cpu'].concat(this.getGpuRange()).map((obj, index) => {
                             return (
-                                <option key={index} value={obj}>{obj}</option>
+                                <option key={index} value={obj}>{obj === 'cpu' ? 'cpu' : `cuda:${obj}`}</option>
                             )
                         })}
                     </Form.Control>
@@ -190,7 +195,11 @@ class TrainingSettings extends Component {
                         </Col>
                     </Row>
 
-                    <h5 style={{marginTop: '10px'}}>Workers</h5>
+                    <h5 style={{marginTop: '10px', display: 'inline-block'}}>Workers</h5>
+                    <div className="help-tip">
+                        <p>Number of processes which will process data in DataLoaders.</p>
+                    </div>
+                    <br/>
                     <Numeric value={this.props.data.common.workers} nameKey={'workers'} type={this.props.type}
                              passData={this.props.setCommonState} min={0} single={true}/>
 
@@ -223,15 +232,11 @@ class TrainingSettings extends Component {
                                     )
                                 })}
                             </Form.Control>
-                            <div style={{marginTop: '10px'}}>Params</div>
-                            <Form.Check
-                                label={'no params'} type={'checkbox'} checked={this.state.noParams}
-                                style={{lineHeight: '21px'}}
-                                onChange={(event) => {
-                                    event.persist();
-                                    this.handleNoParamsCheckbox(event)
-                                }}
-                            />
+                            <h5 style={{marginTop: '10px', display: 'inline-block'}}>Params</h5>
+                            <SingleCheck value={this.state.noParams}
+                                         handleCheckbox={this.handleNoParamsCheckbox.bind(this)}
+                                         text={'no params'}
+                                         hint={hint}/>
 
                             <Collapse in={!this.state.noParams && !this.state.paramsValid}>
                                 <div style={{marginBottom: '5px', color: 'red'}}>
@@ -254,7 +259,11 @@ class TrainingSettings extends Component {
                             </Collapse>
 
                             <h5 style={{marginTop: '10px'}}>Checkpoint</h5>
-                            <div>Monitor</div>
+                            <div style={{marginTop: '0px', display: 'inline-block'}}>Monitor</div>
+                            <div className="help-tip" style={{marginTop: '-4px', zIndex: 90}}>
+                                <p>{'If you choose to monitor loss, the best model will be model with smallest loss.\n' +
+                                'If you choose to monitor metric, the best model will be model with biggest metric'}</p>
+                            </div>
                             <Row className="justify-content-md-center">
                                 <Col xs="auto">
                                     <Form.Check

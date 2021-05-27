@@ -134,6 +134,12 @@ class DataSettings extends Component {
         } else {
             // nothing advanced and task specific for txtclf
         }
+
+        let link = <a
+            href={'https://github.com/korotaS/grad_project_2021/blob/master/datasets.md'}
+            target={'_blank'} rel={"noopener noreferrer"}>here</a>;
+        let hint = (<div>You can read about dataset structures {link}.</div>)
+
         return (
             <div align={'center'}>
                 <div>
@@ -141,7 +147,11 @@ class DataSettings extends Component {
                 </div>
 
                 <div>
-                    <h5>Dataset folder</h5>
+                    <h3 style={{marginTop: '10px', display: 'inline-block'}}>Dataset folder</h3>
+                    <div className="help-tip">
+                        <p>{hint}</p>
+                    </div>
+                    <br/>
                     {this.props.remote
                         ? <FormControl
                             placeholder="Dataset folder on remote host"
@@ -184,11 +194,11 @@ class DataSettings extends Component {
                                 handleLengthNumber={this.handleLengthNumber}
                             />
 
-                            <h5 style={{marginTop: '10px'}}>Shuffle</h5>
-                            {/*<h5 style={{marginTop: '10px', display: 'inline-block'}}>Shuffle</h5>*/}
-                            {/*<div className="help-tip">*/}
-                            {/*    <p>Kek</p>*/}
-                            {/*</div>*/}
+                            <h5 style={{marginTop: '10px', display: 'inline-block'}}>Shuffle</h5>
+                            <div className="help-tip">
+                                <p>For most cases, you should shuffle train data and not shuffle valid data to keep
+                                    results consistent.</p>
+                            </div>
                             <Row className="justify-content-md-center">
                                 <Col md="auto">
                                     <div>Train</div>
