@@ -3,7 +3,7 @@
 
 ## Prerequisites
 
-In order to run the application correctly, noy need to have:
+In order to run the application correctly, you need to have:
 
 - node.js 14+ and npm 6+
 - python 3.6+
